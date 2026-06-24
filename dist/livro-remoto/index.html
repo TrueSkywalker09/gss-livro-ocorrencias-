@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Livro de OcorrÃªncias â€” GSS</title>
+  <title>Livro de Ocorrências — GSS</title>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--primary:#0369a1;--primary-hover:#0284c7;--success:#15803d;--error:#b91c1c;--warning:#b45309;--bg:#f1f5f9;--surface:#fff;--text:#0f172a;--text2:#64748b;--border:#e2e8f0;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,.08)}
@@ -73,12 +73,12 @@
 </head>
 <body>
 
-<!-- â•â•â•â•â•â•â•â•â•â• TELA DE LOGIN â•â•â•â•â•â•â•â•â•â• -->
+<!-- ══════════ TELA DE LOGIN ══════════ -->
 <div id="login-overlay">
   <div class="login-box">
     <div class="login-logo"><img src="logo-gss.png" alt="GSS"/></div>
-    <div class="login-titulo">Livro de OcorrÃªncias</div>
-    <div class="login-sub">GSS RJ â€” Acesso Restrito</div>
+    <div class="login-titulo">Livro de Ocorrências</div>
+    <div class="login-sub">GSS RJ — Acesso Restrito</div>
     <div class="login-err" id="login-erro"></div>
     <div class="login-field">
       <label>Login</label>
@@ -87,11 +87,11 @@
     <div class="login-field">
       <label>Senha</label>
       <div class="pw-wrap">
-        <input type="password" id="senha-input" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="current-password"/>
-        <span class="pw-eye" onclick="togglePw()">ðŸ‘</span>
+        <input type="password" id="senha-input" placeholder="••••••" autocomplete="current-password"/>
+        <span class="pw-eye" onclick="togglePw()">👁</span>
       </div>
     </div>
-    <button class="btn btn-primary login-btn" id="btn-login" onclick="fazerLogin()">Entrar â†’</button>
+    <button class="btn btn-primary login-btn" id="btn-login" onclick="fazerLogin()">Entrar →</button>
   </div>
 </div>
 
@@ -112,55 +112,55 @@
     <div class="alert alert-error" id="trocar-erro" style="display:none"></div>
     <div class="field">
       <label>Nova Senha</label>
-      <input type="password" id="nova-senha-input" placeholder="MÃ­nimo 6 caracteres" autocomplete="new-password"/>
+      <input type="password" id="nova-senha-input" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
     </div>
     <div class="field">
       <label>Confirmar Senha</label>
       <input type="password" id="confirmar-senha-input" placeholder="Repita a nova senha" autocomplete="new-password"/>
     </div>
-    <button class="btn btn-primary" id="btn-trocar" onclick="trocarSenha()">Salvar Nova Senha â†’</button>
+    <button class="btn btn-primary" id="btn-trocar" onclick="trocarSenha()">Salvar Nova Senha →</button>
   </div>
 
-  <!-- Livros DisponÃ­veis -->
+  <!-- Livros Disponíveis -->
   <div class="card" id="livros-screen" style="display:none">
     <div class="logo">
-      <h1>Livros DisponÃ­veis</h1>
-      <p>Selecione o livro de ocorrÃªncia</p>
+      <h1>Livros Disponíveis</h1>
+      <p>Selecione o livro de ocorrência</p>
     </div>
     <div id="livros-user-info" class="user-info"></div>
     <div id="livros-lista"></div>
     <div style="margin-top:16px">
-      <button class="btn btn-outline" onclick="fazerLogout()">â† Sair</button>
+      <button class="btn btn-outline" onclick="fazerLogout()">← Sair</button>
     </div>
   </div>
 
-  <!-- FormulÃ¡rio -->
+  <!-- Formulário -->
   <div class="card" id="form-screen" style="display:none">
     <div class="user-bar" id="form-user-bar"></div>
     <div id="form-posto-badge" class="posto-badge"></div>
     <div class="field">
-      <label>Relato da OcorrÃªncia</label>
-      <textarea id="relato-input" placeholder="Descreva a ocorrÃªncia detalhadamente..."></textarea>
+      <label>Relato da Ocorrência</label>
+      <textarea id="relato-input" placeholder="Descreva a ocorrência detalhadamente..."></textarea>
     </div>
-    <button class="btn btn-primary" onclick="enviarOcorrencia()">Registrar OcorrÃªncia â†’</button>
+    <button class="btn btn-primary" onclick="enviarOcorrencia()">Registrar Ocorrência →</button>
     <div style="margin-top:10px">
-      <button class="btn btn-outline" onclick="voltarLivros()">â† Voltar aos Livros</button>
+      <button class="btn btn-outline" onclick="voltarLivros()">← Voltar aos Livros</button>
     </div>
   </div>
 
   <!-- Sucesso -->
   <div class="card" id="sucesso-screen" style="display:none">
     <div class="success-screen">
-      <div class="success-icon">âœ…</div>
-      <h2>OcorrÃªncia Registrada!</h2>
-      <p>Sua ocorrÃªncia foi registrada com sucesso.<br/>Obrigado pelo relato!</p>
-      <button class="btn btn-primary" onclick="voltarLivros()" style="margin-bottom:10px">Registrar Nova OcorrÃªncia</button>
+      <div class="success-icon">✅</div>
+      <h2>Ocorrência Registrada!</h2>
+      <p>Sua ocorrência foi registrada com sucesso.<br/>Obrigado pelo relato!</p>
+      <button class="btn btn-primary" onclick="voltarLivros()" style="margin-bottom:10px">Registrar Nova Ocorrência</button>
       <button class="btn btn-outline" onclick="fazerLogout()">Sair</button>
     </div>
   </div>
 </div>
 
-<div class="footer">GSS Controle Gerencial â€” Livro de OcorrÃªncias EletrÃ´nico</div>
+<div class="footer">GSS Controle Gerencial — Livro de Ocorrências Eletrônico</div>
 
 <script>
 (function() {
@@ -190,10 +190,10 @@
     var eye = inp.parentNode.querySelector('.pw-eye');
     if (inp.type === 'password') {
       inp.type = 'text';
-      eye.textContent = 'ðŸ™ˆ';
+      eye.textContent = '🙈';
     } else {
       inp.type = 'password';
-      eye.textContent = 'ðŸ‘';
+      eye.textContent = '👁';
     }
   };
 
@@ -224,13 +224,13 @@
     return new Date().toISOString().slice(0, 10);
   }
 
-  // â”€â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── INIT ─────────────────────────────────────────────────────────────────
   function init() {
     showScreen('login-screen');
     document.getElementById('login-input').focus();
   }
 
-  // â”€â”€â”€ LOGIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── LOGIN ────────────────────────────────────────────────────────────────
   window.fazerLogin = async function() {
     var login = (document.getElementById('login-input').value || '').trim();
     var senha = (document.getElementById('senha-input').value || '').trim();
@@ -255,7 +255,7 @@
       var dados = await resp.json();
       if (!dados || dados.length === 0) {
         showScreen('login-screen');
-        showErro(erroEl, 'Login nÃ£o encontrado.');
+        showErro(erroEl, 'Login não encontrado.');
         return;
       }
 
@@ -286,10 +286,10 @@
     }
   };
 
-  // â”€â”€â”€ TROCAR SENHA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── TROCAR SENHA ─────────────────────────────────────────────────────────
   function showTrocarSenha(user) {
     var infoEl = document.getElementById('trocar-user-info');
-    infoEl.innerHTML = 'OlÃ¡ <strong>' + escapeHtml(user.nome) + '</strong>! Defina uma nova senha para sua conta.';
+    infoEl.innerHTML = 'Olá <strong>' + escapeHtml(user.nome) + '</strong>! Defina uma nova senha para sua conta.';
     infoEl.style.display = 'block';
     showScreen('trocar-senha-screen');
     document.getElementById('nova-senha-input').focus();
@@ -302,7 +302,7 @@
     erroEl.style.display = 'none';
 
     if (nova.length < 6) { showErro(erroEl, 'A senha deve ter pelo menos 6 caracteres.'); return; }
-    if (nova !== conf) { showErro(erroEl, 'As senhas nÃ£o conferem.'); return; }
+    if (nova !== conf) { showErro(erroEl, 'As senhas não conferem.'); return; }
 
     showScreen('loading-screen');
 
@@ -327,7 +327,7 @@
     }
   };
 
-  // â”€â”€â”€ CARREGAR LIVROS DISPONÃVEIS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── CARREGAR LIVROS DISPONÍVEIS ──────────────────────────────────────────
   async function carregarLivros(user) {
     showScreen('loading-screen');
 
@@ -356,14 +356,14 @@
 
   function showNoLivros(user) {
     var infoEl = document.getElementById('livros-user-info');
-    infoEl.innerHTML = 'OlÃ¡ <strong>' + escapeHtml(user.nome) + '</strong>';
+    infoEl.innerHTML = 'Olá <strong>' + escapeHtml(user.nome) + '</strong>';
     infoEl.style.display = 'block';
 
     document.getElementById('livros-lista').innerHTML =
       '<div class="no-livro">' +
-        '<div class="no-livro-icon">ðŸ“­</div>' +
-        '<h3 style="font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text)">Nenhum Livro DisponÃ­vel</h3>' +
-        '<p style="font-size:13px;color:var(--text2)">VocÃª nÃ£o possui livro de ocorrÃªncia cadastrado para hoje.<br/>Contacte o administrador.</p>' +
+        '<div class="no-livro-icon">📭</div>' +
+        '<h3 style="font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text)">Nenhum Livro Disponível</h3>' +
+        '<p style="font-size:13px;color:var(--text2)">Você não possui livro de ocorrência cadastrado para hoje.<br/>Contacte o administrador.</p>' +
       '</div>';
 
     showScreen('livros-screen');
@@ -371,7 +371,7 @@
 
   function showLivros(user, escalas) {
     var infoEl = document.getElementById('livros-user-info');
-    infoEl.innerHTML = 'OlÃ¡ <strong>' + escapeHtml(user.nome) + '</strong> â€” ' + escalas.length + ' livro(s) disponÃ­vel(is) hoje';
+    infoEl.innerHTML = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ' + escalas.length + ' livro(s) disponível(is) hoje';
     infoEl.style.display = 'block';
 
     var html = escalas.map(function(esc, idx) {
@@ -384,9 +384,9 @@
       } catch(e) {}
 
       return '<div class="livro-item" onclick="abrirLivro(' + idx + ')">' +
-        '<h3>ðŸ“‹ Livro â€” ' + escapeHtml(esc.id_posto) + '</h3>' +
-        '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' â†’ ' + fmtData(esc.data_fim) + '</div>' +
-        '<div class="abrir">Abrir Livro â†’</div>' +
+        '<h3>📋 Livro — ' + escapeHtml(esc.id_posto) + '</h3>' +
+        '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' → ' + fmtData(esc.data_fim) + '</div>' +
+        '<div class="abrir">Abrir Livro →</div>' +
       '</div>';
     }).join('');
 
@@ -401,9 +401,9 @@
     escalaAtual = escala;
 
     var infoBar = document.getElementById('form-user-bar');
-    infoBar.innerHTML = '<span>ðŸ‘¤ ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span><span>Login: ' + escapeHtml(usuarioLogado.login) + '</span>';
+    infoBar.innerHTML = '<span>👤 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span><span>Login: ' + escapeHtml(usuarioLogado.login) + '</span>';
 
-    document.getElementById('form-posto-badge').textContent = 'ðŸ“‹ Livro â€” ' + escala.id_posto;
+    document.getElementById('form-posto-badge').textContent = '📋 Livro — ' + escala.id_posto;
     document.getElementById('relato-input').value = '';
 
     showScreen('form-screen');
@@ -415,12 +415,12 @@
     carregarLivros(usuarioLogado);
   };
 
-  // â”€â”€â”€ ENVIAR OCORRÃŠNCIA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── ENVIAR OCORRÊNCIA ────────────────────────────────────────────────────
   window.enviarOcorrencia = async function() {
     var relato = (document.getElementById('relato-input').value || '').trim();
-    if (!relato) { alert('Descreva a ocorrÃªncia antes de registrar.'); return; }
+    if (!relato) { alert('Descreva a ocorrência antes de registrar.'); return; }
 
-    if (!escalaAtual || !usuarioLogado) { alert('SessÃ£o expirada. FaÃ§a login novamente.'); return; }
+    if (!escalaAtual || !usuarioLogado) { alert('Sessão expirada. Faça login novamente.'); return; }
 
     var body = {
       id_posto: escalaAtual.id_posto,
@@ -440,11 +440,11 @@
 
       showScreen('sucesso-screen');
     } catch (err) {
-      alert('Erro ao registrar ocorrÃªncia. Tente novamente.');
+      alert('Erro ao registrar ocorrência. Tente novamente.');
     }
   };
 
-  // â”€â”€â”€ LOGOUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── LOGOUT ───────────────────────────────────────────────────────────────
   window.fazerLogout = function() {
     usuarioLogado = null;
     escalaAtual = null;
@@ -456,7 +456,7 @@
     init();
   };
 
-  // â”€â”€â”€ ENTER KEY HANDLERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── ENTER KEY HANDLERS ───────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('senha-input').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') window.fazerLogin();
@@ -476,5 +476,5 @@
 
 })();
 </script>
-</body
-<!-- v1 -->
+</body>
+</html>
