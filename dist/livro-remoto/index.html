@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Livro de Ocorrências — GSS</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--primary:#0369a1;--primary-hover:#0284c7;--success:#15803d;--error:#b91c1c;--warning:#b45309;--bg:#f1f5f9;--surface:#fff;--text:#0f172a;--text2:#64748b;--border:#e2e8f0;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,.08)}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    #login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0c1a2e 0%,#0f3460 55%,#0369a1 100%);z-index:1000;display:flex;align-items:center;justify-content:center}
+    #login-overlay .login-box{background:#fff;border-radius:20px;padding:36px 38px;width:360px;max-width:93%;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+    .login-logo{text-align:center;margin-bottom:8px}
+    .login-logo img{max-width:120px;max-height:50px}
+    .login-titulo{font-size:20px;font-weight:800;color:#0f172a;text-align:center;margin-bottom:3px}
+    .login-sub{font-size:12px;color:#64748b;text-align:center;margin-bottom:24px}
+    .login-err{background:#fff1f2;border:1px solid #fca5a5;border-radius:8px;padding:8px 12px;font-size:12px;color:#b91c1c;margin-bottom:12px;display:none}
+    .login-field{margin-bottom:16px}
+    .login-field label{display:block;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+    .login-field input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--surface);transition:border-color .15s}
+    .login-field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(3,105,161,.12)}
+    .pw-wrap{position:relative;display:flex;align-items:center}
+    .pw-wrap input{padding-right:38px !important;width:100%}
+    .pw-eye{position:absolute;right:10px;cursor:pointer;color:#94a3b8;font-size:16px;line-height:1;user-select:none;transition:color .15s;flex-shrink:0}
+    .pw-eye:hover{color:#475569}
+    .login-btn{width:100%;justify-content:center;padding:12px;font-size:14px}
+    .container{width:100%;max-width:500px}
+    .card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px;margin-bottom:16px}
+    .logo{text-align:center;margin-bottom:24px}
+    .logo h1{font-size:18px;font-weight:800;color:var(--text);margin-top:8px}
+    .logo p{font-size:13px;color:var(--text2);margin-top:4px}
+    .field{margin-bottom:18px}
+    .field label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+    .field input,.field textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--surface);transition:border-color .15s}
+    .field input:focus,.field textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(3,105,161,.12)}
+    .field textarea{min-height:140px;resize:vertical;line-height:1.6}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 20px;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;transition:all .15s}
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-primary:hover{background:var(--primary-hover)}
+    .btn-primary:disabled{background:#94a3b8;cursor:not-allowed}
+    .btn-success{background:var(--success);color:#fff}
+    .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+    .btn-outline:hover{background:var(--bg)}
+    .alert{padding:14px 16px;border-radius:8px;font-size:13px;margin-bottom:18px;display:none}
+    .alert-error{background:#fef2f2;border:1px solid #fecaca;color:var(--error);display:block}
+    .alert-success{background:#f0fdf4;border:1px solid #bbf7d0;color:var(--success);display:block}
+    .alert-info{background:#f0f9ff;border:1px solid #bae6fd;color:var(--primary);display:block}
+    .posto-badge{display:inline-block;background:#e0f2fe;color:var(--primary);padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;margin-bottom:16px}
+    .loading{display:none;text-align:center;padding:40px}
+    .loading.active{display:block}
+    .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .blocked{text-align:center;padding:40px 20px}
+    .blocked-icon{font-size:48px;margin-bottom:12px}
+    .blocked h2{font-size:18px;font-weight:700;margin-bottom:8px}
+    .blocked p{font-size:13px;color:var(--text2)}
+    .success-screen{text-align:center;padding:30px 20px}
+    .success-icon{font-size:56px;margin-bottom:12px}
+    .success-screen h2{font-size:20px;font-weight:800;color:var(--success);margin-bottom:8px}
+    .success-screen p{font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6}
+    .footer{text-align:center;margin-top:16px;font-size:11px;color:var(--text2)}
+    .user-info{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:var(--primary);display:none}
+    .livro-item{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;cursor:pointer;transition:all .15s}
+    .livro-item:hover{border-color:var(--primary);box-shadow:0 2px 12px rgba(3,105,161,.15)}
+    .livro-item h3{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+    .livro-item .periodo{font-size:12px;color:var(--text2);margin-bottom:8px}
+    .livro-item .abrir{font-size:13px;font-weight:700;color:var(--primary)}
+    .no-livro{text-align:center;padding:40px 20px;color:var(--text2)}
+    .no-livro-icon{font-size:48px;margin-bottom:12px}
+    .user-bar{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:var(--primary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
+    @media(max-width:480px){.card{padding:24px 18px}.field input,.field textarea{font-size:16px}}
+  </style>
+</head>
+<body>
+
+<!-- ══════════ TELA DE LOGIN ══════════ -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo"><img src="logo-gss.png" alt="GSS"/></div>
+    <div class="login-titulo">Livro de Ocorrências</div>
+    <div class="login-sub">GSS RJ — Acesso Restrito</div>
+    <div class="login-err" id="login-erro"></div>
+    <div class="login-field">
+      <label>Login</label>
+      <input type="text" id="login-input" placeholder="seu.usuario" autocomplete="username"/>
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <div class="pw-wrap">
+        <input type="password" id="senha-input" placeholder="••••••" autocomplete="current-password"/>
+        <span class="pw-eye" onclick="togglePw()">👁</span>
+      </div>
+    </div>
+    <button class="btn btn-primary login-btn" id="btn-login" onclick="fazerLogin()">Entrar →</button>
+  </div>
+</div>
+
+<div class="container" id="app">
+  <!-- Loading -->
+  <div class="card loading active" id="loading-screen">
+    <div class="spinner"></div>
+    <div style="font-size:14px;color:var(--text2)">Carregando...</div>
+  </div>
+
+  <!-- Trocar Senha -->
+  <div class="card" id="trocar-senha-screen" style="display:none">
+    <div class="logo">
+      <h1>Primeiro Acesso</h1>
+      <p>Defina uma nova senha para sua conta</p>
+    </div>
+    <div id="trocar-user-info" class="user-info"></div>
+    <div class="alert alert-error" id="trocar-erro" style="display:none"></div>
+    <div class="field">
+      <label>Nova Senha</label>
+      <input type="password" id="nova-senha-input" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
+    </div>
+    <div class="field">
+      <label>Confirmar Senha</label>
+      <input type="password" id="confirmar-senha-input" placeholder="Repita a nova senha" autocomplete="new-password"/>
+    </div>
+    <button class="btn btn-primary" id="btn-trocar" onclick="trocarSenha()">Salvar Nova Senha →</button>
+  </div>
+
+  <!-- Livros Disponíveis -->
+  <div class="card" id="livros-screen" style="display:none">
+    <div class="logo">
+      <h1>Livros Disponíveis</h1>
+      <p>Selecione o livro de ocorrência</p>
+    </div>
+    <div id="livros-user-info" class="user-info"></div>
+    <div id="livros-lista"></div>
+    <div style="margin-top:16px">
+      <button class="btn btn-outline" onclick="fazerLogout()">← Sair</button>
+    </div>
+  </div>
+
+  <!-- Formulário -->
+  <div class="card" id="form-screen" style="display:none">
+    <div class="user-bar" id="form-user-bar"></div>
+    <div id="form-posto-badge" class="posto-badge"></div>
+    <div class="field">
+      <label>Relato da Ocorrência</label>
+      <textarea id="relato-input" placeholder="Descreva a ocorrência detalhadamente..."></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="enviarOcorrencia()">Registrar Ocorrência →</button>
+    <div style="margin-top:10px">
+      <button class="btn btn-outline" onclick="voltarLivros()">← Voltar aos Livros</button>
+    </div>
+  </div>
+
+  <!-- Sucesso -->
+  <div class="card" id="sucesso-screen" style="display:none">
+    <div class="success-screen">
+      <div class="success-icon">✅</div>
+      <h2>Ocorrência Registrada!</h2>
+      <p>Sua ocorrência foi registrada com sucesso.<br/>Obrigado pelo relato!</p>
+      <button class="btn btn-primary" onclick="voltarLivros()" style="margin-bottom:10px">Registrar Nova Ocorrência</button>
+      <button class="btn btn-outline" onclick="fazerLogout()">Sair</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer">GSS Controle Gerencial — Livro de Ocorrências Eletrônico</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var SUPABASE_URL = 'https://xyfllrcdrcvjimzwbfsm.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5ZmxscmNkcmN2amltendiZnNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzQ4NzUsImV4cCI6MjA5Nzg1MDg3NX0.nHgqNJnfWQW5BTfEWQTK92LRPLqNadiC-xios5zN4_A';
+
+  var usuarioLogado = null;
+  var escalaAtual = null;
+
+  function showScreen(id) {
+    var loginOverlay = document.getElementById('login-overlay');
+    ['loading-screen','trocar-senha-screen','livros-screen','form-screen','sucesso-screen'].forEach(function(s) {
+      document.getElementById(s).style.display = 'none';
+    });
+    if (id === 'login-screen') {
+      loginOverlay.style.display = 'flex';
+    } else {
+      loginOverlay.style.display = 'none';
+      document.getElementById(id).style.display = 'block';
+    }
+  }
+
+  window.togglePw = function() {
+    var inp = document.getElementById('senha-input');
+    var eye = inp.parentNode.querySelector('.pw-eye');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      eye.textContent = '🙈';
+    } else {
+      inp.type = 'password';
+      eye.textContent = '👁';
+    }
+  };
+
+  function showErro(el, msg) {
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  async function hashSenha(senha) {
+    var enc = new TextEncoder().encode(senha);
+    var hash = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(hash)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+  }
+
+  function fmtData(iso) {
+    if (!iso) return '-';
+    var p = iso.split('-');
+    return p[2] + '/' + p[1] + '/' + p[0];
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+
+  function hojeIso() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  // ─── INIT ─────────────────────────────────────────────────────────────────
+  function init() {
+    showScreen('login-screen');
+    document.getElementById('login-input').focus();
+  }
+
+  // ─── LOGIN ────────────────────────────────────────────────────────────────
+  window.fazerLogin = async function() {
+    var login = (document.getElementById('login-input').value || '').trim();
+    var senha = (document.getElementById('senha-input').value || '').trim();
+    var erroEl = document.getElementById('login-erro');
+    erroEl.style.display = 'none';
+
+    if (!login) { showErro(erroEl, 'Informe o login.'); return; }
+    if (!senha) { showErro(erroEl, 'Informe a senha.'); return; }
+
+    showScreen('loading-screen');
+
+    try {
+      var senhaHash = await hashSenha(senha);
+
+      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_colaboradores_acesso?login=eq.' + encodeURIComponent(login) + '&select=*', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+      });
+
+      if (!resp.ok) throw new Error('Erro ao validar login');
+
+      var dados = await resp.json();
+      if (!dados || dados.length === 0) {
+        showScreen('login-screen');
+        showErro(erroEl, 'Login não encontrado.');
+        return;
+      }
+
+      var user = dados[0];
+
+      if (user.habilitado === false) {
+        showScreen('login-screen');
+        showErro(erroEl, 'Seu acesso foi desabilitado. Contacte o administrador.');
+        return;
+      }
+
+      if (user.senha_hash !== senhaHash) {
+        showScreen('login-screen');
+        showErro(erroEl, 'Senha incorreta.');
+        return;
+      }
+
+      usuarioLogado = user;
+
+      if (user.primeiro_acesso) {
+        showTrocarSenha(user);
+      } else {
+        await carregarLivros(user);
+      }
+    } catch (err) {
+      showScreen('login-screen');
+      showErro(erroEl, 'Erro ao conectar. Tente novamente.');
+    }
+  };
+
+  // ─── TROCAR SENHA ─────────────────────────────────────────────────────────
+  function showTrocarSenha(user) {
+    var infoEl = document.getElementById('trocar-user-info');
+    infoEl.innerHTML = 'Olá <strong>' + escapeHtml(user.nome) + '</strong>! Defina uma nova senha para sua conta.';
+    infoEl.style.display = 'block';
+    showScreen('trocar-senha-screen');
+    document.getElementById('nova-senha-input').focus();
+  }
+
+  window.trocarSenha = async function() {
+    var nova = document.getElementById('nova-senha-input').value || '';
+    var conf = document.getElementById('confirmar-senha-input').value || '';
+    var erroEl = document.getElementById('trocar-erro');
+    erroEl.style.display = 'none';
+
+    if (nova.length < 6) { showErro(erroEl, 'A senha deve ter pelo menos 6 caracteres.'); return; }
+    if (nova !== conf) { showErro(erroEl, 'As senhas não conferem.'); return; }
+
+    showScreen('loading-screen');
+
+    try {
+      var novaHash = await hashSenha(nova);
+
+      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_colaboradores_acesso?id=eq.' + usuarioLogado.id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ senha_hash: novaHash, primeiro_acesso: false })
+      });
+
+      if (!resp.ok) throw new Error('Erro ao salvar');
+
+      usuarioLogado.senha_hash = novaHash;
+      usuarioLogado.primeiro_acesso = false;
+
+      await carregarLivros(usuarioLogado);
+    } catch (err) {
+      showScreen('trocar-senha-screen');
+      showErro(erroEl, 'Erro ao salvar nova senha. Tente novamente.');
+    }
+  };
+
+  // ─── CARREGAR LIVROS DISPONÍVEIS ──────────────────────────────────────────
+  async function carregarLivros(user) {
+    showScreen('loading-screen');
+
+    try {
+      var hoje = hojeIso();
+
+      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_escalas?id_acesso=eq.' + user.id + '&data_inicio=lte.' + hoje + '&data_fim=gte.' + hoje + '&select=*', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+      });
+
+      if (!resp.ok) throw new Error('Erro ao buscar livros');
+
+      var escalas = await resp.json();
+
+      if (!escalas || escalas.length === 0) {
+        showNoLivros(user);
+        return;
+      }
+
+      showLivros(user, escalas);
+    } catch (err) {
+      showNoLivros(user);
+    }
+  }
+
+  function showNoLivros(user) {
+    var infoEl = document.getElementById('livros-user-info');
+    infoEl.innerHTML = 'Olá <strong>' + escapeHtml(user.nome) + '</strong>';
+    infoEl.style.display = 'block';
+
+    document.getElementById('livros-lista').innerHTML =
+      '<div class="no-livro">' +
+        '<div class="no-livro-icon">📭</div>' +
+        '<h3 style="font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text)">Nenhum Livro Disponível</h3>' +
+        '<p style="font-size:13px;color:var(--text2)">Você não possui livro de ocorrência cadastrado para hoje.<br/>Contacte o administrador.</p>' +
+      '</div>';
+
+    showScreen('livros-screen');
+  }
+
+  function showLivros(user, escalas) {
+    var infoEl = document.getElementById('livros-user-info');
+    infoEl.innerHTML = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ' + escalas.length + ' livro(s) disponível(is) hoje';
+    infoEl.style.display = 'block';
+
+    var html = escalas.map(function(esc, idx) {
+      var nomePosto = 'Posto ' + escapeHtml(esc.id_posto);
+      try {
+        var resp2 = new XMLHttpRequest();
+        resp2.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(esc.id_posto) + '&select=cc', false);
+        resp2.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+        resp2.send();
+      } catch(e) {}
+
+      return '<div class="livro-item" onclick="abrirLivro(' + idx + ')">' +
+        '<h3>📋 Livro — ' + escapeHtml(esc.id_posto) + '</h3>' +
+        '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' → ' + fmtData(esc.data_fim) + '</div>' +
+        '<div class="abrir">Abrir Livro →</div>' +
+      '</div>';
+    }).join('');
+
+    document.getElementById('livros-lista').innerHTML = html;
+    window._escalasDisponiveis = escalas;
+    showScreen('livros-screen');
+  }
+
+  window.abrirLivro = function(idx) {
+    var escala = window._escalasDisponiveis[idx];
+    if (!escala) return;
+    escalaAtual = escala;
+
+    var infoBar = document.getElementById('form-user-bar');
+    infoBar.innerHTML = '<span>👤 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span><span>Login: ' + escapeHtml(usuarioLogado.login) + '</span>';
+
+    document.getElementById('form-posto-badge').textContent = '📋 Livro — ' + escala.id_posto;
+    document.getElementById('relato-input').value = '';
+
+    showScreen('form-screen');
+    document.getElementById('relato-input').focus();
+  };
+
+  window.voltarLivros = function() {
+    escalaAtual = null;
+    carregarLivros(usuarioLogado);
+  };
+
+  // ─── ENVIAR OCORRÊNCIA ────────────────────────────────────────────────────
+  window.enviarOcorrencia = async function() {
+    var relato = (document.getElementById('relato-input').value || '').trim();
+    if (!relato) { alert('Descreva a ocorrência antes de registrar.'); return; }
+
+    if (!escalaAtual || !usuarioLogado) { alert('Sessão expirada. Faça login novamente.'); return; }
+
+    var body = {
+      id_posto: escalaAtual.id_posto,
+      id_acesso: usuarioLogado.id,
+      colaborador: usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')',
+      relato: relato
+    };
+
+    try {
+      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_ocorrencias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+        body: JSON.stringify(body)
+      });
+
+      if (!resp.ok) throw new Error('Erro ao registrar');
+
+      showScreen('sucesso-screen');
+    } catch (err) {
+      alert('Erro ao registrar ocorrência. Tente novamente.');
+    }
+  };
+
+  // ─── LOGOUT ───────────────────────────────────────────────────────────────
+  window.fazerLogout = function() {
+    usuarioLogado = null;
+    escalaAtual = null;
+    window._escalasDisponiveis = [];
+    document.getElementById('login-input').value = '';
+    document.getElementById('senha-input').value = '';
+    document.getElementById('senha-input').type = 'password';
+    document.getElementById('login-erro').style.display = 'none';
+    init();
+  };
+
+  // ─── ENTER KEY HANDLERS ───────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('senha-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') window.fazerLogin();
+    });
+    document.getElementById('login-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('senha-input').focus();
+    });
+    document.getElementById('confirmar-senha-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') window.trocarSenha();
+    });
+    document.getElementById('nova-senha-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('confirmar-senha-input').focus();
+    });
+
+    init();
+  });
+
+})();
+</script>
+</body>
+</html>
