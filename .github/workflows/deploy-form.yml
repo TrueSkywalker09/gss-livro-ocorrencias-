@@ -1,4 +1,4 @@
-name: Deploy Form to GitHub Pages
+name: Deploy Formulário Externo → Cloudflare Pages
 
 on:
   push:
@@ -6,35 +6,45 @@ on:
     paths:
       - 'dist/livro-remoto/**'
 
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout
+      - name: Checkout repositório principal
         uses: actions/checkout@v4
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
         with:
-          path: 'dist/livro-remoto'
+          fetch-depth: 0
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Checkout repositório do formulário (gss-livro-ocorrencias-)
+        uses: actions/checkout@v4
+        with:
+          repository: TrueSkywalker09/gss-livro-ocorrencias-
+          token: ${{ secrets.FORM_REPO_PAT }}
+          path: livro-remoto-repo
+          fetch-depth: 0
+
+      - name: Copiar arquivos do formulário
+        run: |
+          mkdir -p livro-remoto-repo/dist/livro-remoto
+          cp -r dist/livro-remoto/* livro-remoto-repo/dist/livro-remoto/
+
+      - name: Commit e Push no repositório do formulário
+        working-directory: livro-remoto-repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nenhuma mudança para deploy"
+            exit 0
+          fi
+          git commit -m "🚀 Deploy automático: atualização formulário Livro de Ocorrências ($(date -u +'%Y-%m-%d %H:%M:%S UTC'))"
+          git push origin main
+
+      - name: Aguardar deploy Cloudflare Pages
+        run: |
+          echo "Deploy iniciado no Cloudflare Pages."
+          echo "URL: https://livrodeocorrenciasgss.pages.dev"
+          echo "Tempo estimado: < 10 segundos"
