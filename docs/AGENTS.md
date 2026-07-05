@@ -1788,9 +1788,28 @@ O arquivo `docs/supabase-ocorrencias.sql` contém migrations seguras (pattern `D
 
 | Componente | Hospedagem | URL |
 |------------|------------|-----|
-| Formulário externo | Cloudflare Pages | `livrodeocorrenciasgss.pages.dev` |
+| Formulário externo | Cloudflare Pages | `https://gss-livro-ocorrencias.pages.dev/` |
 | Edge Functions | Supabase | `xyfllrcdrcvjimzwbfsm.supabase.co` |
 | Desktop | Local (Electron) | Build `.exe` portátil |
+
+---
+
+## Deploy do Livro de Ocorrências (Manual via Script)
+
+**Script local**: `C:\Sistema GSS\deploy-livro.ps1`
+
+```powershell
+cd C:\Sistema GSS
+powershell -ExecutionPolicy Bypass -File deploy-livro.ps1 "mensagem do commit"
+```
+
+**Fluxo**: Script copia `dist/livro-remoto/` → branch `deploy` (orphan) → `git push origin deploy --force` → Cloudflare Pages detecta push no branch `deploy` → deploy automático (< 10s).
+
+**Cloudflare Pages config**:
+- Framework: None (static)
+- Build command: *(vazio)*
+- Output directory: `dist/livro-remoto`
+- Branch: `deploy`
 
 ---
 
@@ -1807,7 +1826,8 @@ O arquivo `docs/supabase-ocorrencias.sql` contém migrations seguras (pattern `D
 
 | Data | Descrição |
 |------|------------|
-| 04/07/2026 | **Cloudflare Pages configurado e validado** — Deploy automático via GitHub Actions funcional. Build command vazio, Output directory `dist/livro-remito` aplicado. URL produção: `https://livrodeocorrenciasgss.pages.dev`. Login no formulário externo testado e aprovado. |
+| 05/07/2026 | **Deploy Livro de Ocorrências finalizado** — Branch `deploy` criada no repo `gss-livro-ocorrencias-` com apenas `dist/livro-remoto/`. Script `deploy-livro.ps1` implementado (PowerShell, via `Set-Location` no worktree). Cloudflare Pages configurado no branch `deploy` (Framework: None, Build vazio, Output: `dist/livro-remoto`). URL produção: `https://gss-livro-ocorrencias.pages.dev/`. Scripts `.cmd` removidos (problemáticos com paths longos no Windows). Repo público mantido (multi-usuário), sistema completo permanece local. |
+| 04/07/2026 | **Cloudflare Pages configurado e validado** — Deploy automático funcional. Build command vazio, Output directory `dist/livro-remoto` aplicado. URL produção: `https://gss-livro-ocorrencias.pages.dev/`. Login no formulário externo testado e aprovado. |
 | 04/07/2026 | Migração do formulário externo (Livro de Ocorr...
 | 01/07/2026 | **v2.18.1** — Correção generalizada: `GSS.empresa(re)` agora recebe o objeto do colaborador como 2º parâmetro em CNV e ASO (dashboard/cadastro/export), eliminando lookup二次 por RE que podia retornar empresa errada. `recTiposObrig` do CNV: comparação com normalização Unicode (acentos) para fixar match de funções como "VIGILANTE LIDER" vs "VIGILANTE LÍDER". `'VIGILANTE FEMININO'` adicionado às funções monitoradas. `filial` passa a ser a fonte primária de empresa em todos os módulos (EPI, PIX, Ferramentas, Pastas Postos, RH) com fallback para `empresa`. |
 | 01/07/2026 | **v2.18.0** — Módulo PIX extraído de Ferramentas para módulo independente (`modulo-pix.js`) sob Operacional (`oppix`). Dashboard com 4 cards + últimas 10 requisições. Cadastro com busca de funcionário, campos condicionais VT (escala + nº dias, auto-cálculo valorDiário × dias), botão "Voltar" sempre visível. Histórico com 4 filtros (nome, motivo/tipo, data início/fim), colunas ordenáveis, "Gerar TXT (filtro)" que exporta apenas a lista filtrada. PIX removido de Ferramentas (~350 linhas eliminadas). 13 pontos de persistência de `pixHistorico` adicionados em app.js. Ícones em SVG (em vez de nomes de texto) no modal de permissões de Usuários. Botão de edição em permissões agora fica âmbar quando habilitado por view (em vez de cinza). Tamanho de ícones padronizado para 18px via `GSS.renderIcon()`. |

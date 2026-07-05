@@ -170,21 +170,28 @@ O formulário do Livro de Ocorrências Eletrônico é hospedado via **Cloudflare
 
 > **NUNCA** enviar dados sensíveis ou código fonte do sistema desktop para o repositório do formulário externo. O repositório é público e qualquer dado enviado ficará exposto permanentemente (mesmo após delete, permanece no histórico do git).
 
-### Fluxo de Deploy (Automatizado via GitHub Actions)
+### Fluxo de Deploy (Branch `deploy` + Script Manual)
 
-O deploy é **totalmente automático** via GitHub Actions. Qualquer alteração nos arquivos do formulário externo no projeto principal dispara o pipeline:
+O deploy é feito **sob demanda** via script local. O repositório `gss-livro-ocorrencias-` contém apenas o branch `deploy` com os arquivos do formulário.
 
-1. **Editar** `dist/livro-remito/index.html` ou `dist/livro-remoto/logo-gss.png` no projeto principal (`C:\Sistema GSS\`)
-2. **Commit + Push** no repositório principal (`C:\Sistema GSS\`) — branch `main`
-3. **GitHub Action** (`deploy-form.yml`) detecta mudanças em `dist/livro-remoto/**`
-4. Action copia os arquivos para o repositório `gss-livro-ocorrencias-` e faz push
-5. **Cloudflare Pages** detecta push no repo do formulário → deploy automático (< 10s)
+**URL produção**: `https://gss-livro-ocorrencias.pages.dev/`
 
-> **URL final**: `https://livrodeocorrenciasgss.pages.dev`
+#### Como funciona:
+- Branch `main`: código completo do sistema (privado/local)
+- Branch `deploy`: **apenas** `dist/livro-remoto/` (público no GitHub, monitorado pelo Cloudflare Pages)
 
-### Configuração do Cloudflare Pages (✅ Concluída)
+#### Fluxo de uso:
+1. **Editar** `dist/livro-remoto/index.html` ou `logo-gss.png` no projeto principal (`C:\Sistema GSS\`)
+2. **Testar localmente** se necessário
+3. **Executar script de deploy** quando quiser publicar:
+   ```powershell
+   cd C:\Sistema GSS
+   powershell -ExecutionPolicy Bypass -File deploy-livro.ps1 "mensagem: ex: fix: corrigir validacao CPF"
+   ```
+4. Script copia `dist/livro-remoto/` → branch `deploy` → push forçado
+5. **Cloudflare Pages** detecta push no branch `deploy` → deploy automático (< 10s)
 
-Projeto criado e configurado corretamente:
+#### Configuração do Cloudflare Pages (✅ Concluída):
 
 | Configuração | Valor |
 |--------------|-------|
@@ -192,7 +199,7 @@ Projeto criado e configurado corretamente:
 | **Build command** | *(vazio)* |
 | **Build output directory** | `dist/livro-remoto` |
 | **Root directory** | `/` |
-| **Branch** | `main` |
+| **Branch** | `deploy` |
 
 Deploy testado e funcional — login no formulário externo validado.
 
