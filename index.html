@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- deploy teste -->
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8"/>
@@ -376,16 +375,25 @@
     infoEl.style.display = 'block';
 
     var html = escalas.map(function(esc, idx) {
-      var nomePosto = 'Posto ' + escapeHtml(esc.id_posto);
+      var nomePosto = esc.id_posto;
+      var cc = esc.id_posto;
       try {
         var resp2 = new XMLHttpRequest();
-        resp2.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(esc.id_posto) + '&select=cc', false);
+        resp2.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(esc.id_posto) + '&select=nome,cc', false);
         resp2.setRequestHeader('apikey', SUPABASE_ANON_KEY);
         resp2.send();
+        if (resp2.status === 200) {
+          var dados = JSON.parse(resp2.responseText);
+          if (dados && dados.length > 0) {
+            if (dados[0].nome) nomePosto = dados[0].nome;
+            if (dados[0].cc) cc = dados[0].cc;
+          }
+        }
       } catch(e) {}
+      var titulo = nomePosto !== cc ? nomePosto + ' (' + cc + ')' : cc;
 
       return '<div class="livro-item" onclick="abrirLivro(' + idx + ')">' +
-        '<h3>📋 Livro — ' + escapeHtml(esc.id_posto) + '</h3>' +
+        '<h3>📋 Livro — ' + escapeHtml(titulo) + '</h3>' +
         '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' → ' + fmtData(esc.data_fim) + '</div>' +
         '<div class="abrir">Abrir Livro →</div>' +
       '</div>';
@@ -404,7 +412,20 @@
     var infoBar = document.getElementById('form-user-bar');
     infoBar.innerHTML = '<span>👤 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span><span>Login: ' + escapeHtml(usuarioLogado.login) + '</span>';
 
-    document.getElementById('form-posto-badge').textContent = '📋 Livro — ' + escala.id_posto;
+    var tituloLivro = escala.id_posto;
+    try {
+      var resp3 = new XMLHttpRequest();
+      resp3.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(escala.id_posto) + '&select=nome,cc', false);
+      resp3.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      resp3.send();
+      if (resp3.status === 200) {
+        var dados3 = JSON.parse(resp3.responseText);
+        if (dados3 && dados3.length > 0 && dados3[0].nome) {
+          tituloLivro = dados3[0].nome + ' (' + (dados3[0].cc || escala.id_posto) + ')';
+        }
+      }
+    } catch(e) {}
+    document.getElementById('form-posto-badge').textContent = '📋 Livro — ' + tituloLivro;
     document.getElementById('relato-input').value = '';
 
     showScreen('form-screen');
