@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Livro de Ocorrências — GSS</title>
-  <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.bubble.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -71,10 +71,29 @@
     .no-livro-icon{font-size:48px;margin-bottom:12px}
     .user-bar{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:var(--primary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
     @media(max-width:480px){.card{padding:24px 18px}.field input,.field textarea{font-size:16px}}
-    #relato-editor{min-height:180px;border:1.5px solid var(--border);border-radius:8px}
+    #relato-editor{min-height:180px;border:none;border-radius:8px}
+    .ql-toolbar.ql-snow{border:1px solid var(--border);border-radius:8px 8px 0 0;padding:6px 8px;background:var(--surface)}
+    .ql-container.ql-snow{border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px}
     .ql-editor{min-height:180px;font-size:14px;line-height:1.6}
-    .ql-bubble .ql-tooltip{z-index:10}
-    @media(max-width:480px){.ql-editor{font-size:16px;min-height:200px}#relato-editor{min-height:200px}}
+    .ql-snow .ql-stroke{stroke:var(--text2)}
+    .ql-snow .ql-fill{fill:var(--text2)}
+    .ql-snow .ql-picker{color:var(--text2)}
+    .ql-snow .ql-active .ql-stroke{stroke:var(--primary) !important}
+    .ql-snow .ql-active .ql-fill{fill:var(--primary) !important}
+    .ql-snow .ql-active{color:var(--primary) !important}
+    .ql-snow .ql-picker-label{border-color:transparent}
+    .ql-snow .ql-picker-options{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:var(--shadow);padding:4px 0}
+    .ql-snow .ql-tooltip{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:var(--shadow)}
+    .ql-snow .ql-tooltip input{border:1px solid var(--border);border-radius:4px;padding:4px 8px}
+    .ql-snow .ql-tooltip a{color:var(--primary)}
+    @media(max-width:480px){
+      #relato-editor{min-height:200px}
+      .ql-toolbar.ql-snow{padding:4px 6px;flex-wrap:wrap;gap:2px}
+      .ql-snow.ql-toolbar button,.ql-snow .ql-toolbar button{width:28px;height:28px;padding:4px}
+      .ql-snow.ql-toolbar button svg,.ql-snow .ql-toolbar button svg{width:14px;height:14px}
+      .ql-snow.ql-toolbar .ql-formats{margin-right:4px}
+      .ql-editor{font-size:16px;min-height:200px;padding:12px}
+    }
   </style>
 </head>
 <body>
@@ -181,7 +200,7 @@
 
   function initQuill() {
     quillEditor = new Quill('#relato-editor', {
-      theme: 'bubble',
+      theme: 'snow',
       placeholder: 'Descreva a ocorrência detalhadamente...',
       modules: {
         toolbar: [
