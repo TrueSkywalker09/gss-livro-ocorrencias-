@@ -4,6 +4,8 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Livro de Ocorrências — GSS</title>
+  <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.bubble.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--primary:#0369a1;--primary-hover:#0284c7;--success:#15803d;--error:#b91c1c;--warning:#b45309;--bg:#f1f5f9;--surface:#fff;--text:#0f172a;--text2:#64748b;--border:#e2e8f0;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,.08)}
@@ -69,6 +71,10 @@
     .no-livro-icon{font-size:48px;margin-bottom:12px}
     .user-bar{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:var(--primary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
     @media(max-width:480px){.card{padding:24px 18px}.field input,.field textarea{font-size:16px}}
+    #relato-editor{min-height:180px;border:1.5px solid var(--border);border-radius:8px}
+    .ql-editor{min-height:180px;font-size:14px;line-height:1.6}
+    .ql-bubble .ql-tooltip{z-index:10}
+    @media(max-width:480px){.ql-editor{font-size:16px;min-height:200px}#relato-editor{min-height:200px}}
   </style>
 </head>
 <body>
@@ -140,7 +146,7 @@
     <div id="form-posto-badge" class="posto-badge"></div>
     <div class="field">
       <label>Relato da Ocorrência</label>
-      <textarea id="relato-input" placeholder="Descreva a ocorrência detalhadamente..."></textarea>
+      <div id="relato-editor"></div>
     </div>
     <button class="btn btn-primary" onclick="enviarOcorrencia()">Registrar Ocorrência →</button>
     <div style="margin-top:10px">
@@ -171,6 +177,21 @@
 
   var usuarioLogado = null;
   var escalaAtual = null;
+  var quillEditor = null;
+
+  function initQuill() {
+    quillEditor = new Quill('#relato-editor', {
+      theme: 'bubble',
+      placeholder: 'Descreva a ocorrência detalhadamente...',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          ['link']
+        ]
+      }
+    });
+  }
 
   function showScreen(id) {
     var loginOverlay = document.getElementById('login-overlay');
@@ -226,6 +247,7 @@
 
   // ─── INIT ─────────────────────────────────────────────────────────────────
   function init() {
+    initQuill();
     showScreen('login-screen');
     document.getElementById('login-input').focus();
   }
@@ -426,10 +448,10 @@
       }
     } catch(e) {}
     document.getElementById('form-posto-badge').textContent = '📋 Livro — ' + tituloLivro;
-    document.getElementById('relato-input').value = '';
+    quillEditor.setContents([]);
 
     showScreen('form-screen');
-    document.getElementById('relato-input').focus();
+    quillEditor.focus();
   };
 
   window.voltarLivros = function() {
@@ -439,8 +461,9 @@
 
   // ─── ENVIAR OCORRÊNCIA ────────────────────────────────────────────────────
   window.enviarOcorrencia = async function() {
-    var relato = (document.getElementById('relato-input').value || '').trim();
-    if (!relato) { alert('Descreva a ocorrência antes de registrar.'); return; }
+    var relatoText = quillEditor.getText().trim();
+    if (!relatoText) { alert('Descreva a ocorrência antes de registrar.'); return; }
+    var relato = quillEditor.root.innerHTML.trim();
 
     if (!escalaAtual || !usuarioLogado) { alert('Sessão expirada. Faça login novamente.'); return; }
 
