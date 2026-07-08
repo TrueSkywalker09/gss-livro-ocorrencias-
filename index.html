@@ -173,6 +173,32 @@
     </div>
   </div>
 
+  <!-- Assinatura -->
+  <div class="card" id="assinar-screen" style="display:none">
+    <div class="logo">
+      <h1>Sua Assinatura</h1>
+      <p>Assine abaixo para confirmar o registro</p>
+    </div>
+    <div id="assinar-resumo" class="user-info" style="display:block;font-size:12px"></div>
+    <div class="field">
+      <label>Assinatura do Colaborador *</label>
+      <div style="border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:#fff">
+        <canvas id="assinatura-canvas" width="920" height="400" style="width:100%;height:280px;touch-action:none;cursor:crosshair;display:block"></canvas>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">Assine com o mouse (desktop) ou dedo/caneta (mobile)</div>
+    </div>
+    <div id="assinar-erro" class="alert alert-error" style="display:none"></div>
+    <div style="margin-top:12px">
+      <button class="btn btn-outline" onclick="limparAssinatura()" style="width:auto;padding:8px 14px;font-size:12px">🗑️ Limpar</button>
+    </div>
+    <div style="margin-top:14px">
+      <button class="btn btn-primary" onclick="confirmarAssinatura()">✅ Confirmar Assinatura →</button>
+    </div>
+    <div style="margin-top:10px">
+      <button class="btn btn-outline" onclick="voltarFormulario()">← Voltar ao Formulário</button>
+    </div>
+  </div>
+
   <!-- Sucesso -->
   <div class="card" id="sucesso-screen" style="display:none">
     <div class="success-screen">
@@ -214,7 +240,7 @@
 
   function showScreen(id) {
     var loginOverlay = document.getElementById('login-overlay');
-    ['loading-screen','trocar-senha-screen','livros-screen','form-screen','sucesso-screen'].forEach(function(s) {
+    ['loading-screen','trocar-senha-screen','livros-screen','form-screen','assinar-screen','sucesso-screen'].forEach(function(s) {
       document.getElementById(s).style.display = 'none';
     });
     if (id === 'login-screen') {
@@ -478,19 +504,114 @@
     carregarLivros(usuarioLogado);
   };
 
-  // ─── ENVIAR OCORRÊNCIA ────────────────────────────────────────────────────
+  // ─── ENVIAR OCORRÊNCIA ────────────────────────────────────────────────
   window.enviarOcorrencia = async function() {
     var relatoText = quillEditor.getText().trim();
     if (!relatoText) { alert('Descreva a ocorrência antes de registrar.'); return; }
-    var relato = quillEditor.root.innerHTML.trim();
-
     if (!escalaAtual || !usuarioLogado) { alert('Sessão expirada. Faça login novamente.'); return; }
+    showAssinarScreen();
+  };
+
+  // ─── ASSINATURA ──────────────────────────────────────────────────────
+  var assinaturaCanvas = null;
+  var assinaturaCtx = null;
+  var assinaturaDesenhando = false;
+  var assinaturaTemPixels = false;
+  var assinaturaAtual = null;
+
+  function initAssinatura() {
+    assinaturaCanvas = document.getElementById('assinatura-canvas');
+    assinaturaCtx = assinaturaCanvas.getContext('2d');
+    assinaturaTemPixels = false;
+    assinaturaAtual = null;
+
+    assinaturaCtx.strokeStyle = '#000';
+    assinaturaCtx.lineWidth = 2;
+    assinaturaCtx.lineCap = 'round';
+    assinaturaCtx.lineJoin = 'round';
+    assinaturaCtx.fillStyle = '#fff';
+    assinaturaCtx.fillRect(0, 0, assinaturaCanvas.width, assinaturaCanvas.height);
+
+    assinaturaCanvas.addEventListener('pointerdown', onAssinaturaStart);
+    assinaturaCanvas.addEventListener('pointermove', onAssinaturaMove);
+    assinaturaCanvas.addEventListener('pointerup', onAssinaturaEnd);
+    assinaturaCanvas.addEventListener('pointerleave', onAssinaturaEnd);
+    assinaturaCanvas.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
+
+    document.getElementById('assinar-erro').style.display = 'none';
+  }
+
+  function getCanvasPos(e) {
+    var rect = assinaturaCanvas.getBoundingClientRect();
+    var scaleX = assinaturaCanvas.width / rect.width;
+    var scaleY = assinaturaCanvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  function onAssinaturaStart(e) {
+    assinaturaDesenhando = true;
+    var pos = getCanvasPos(e);
+    assinaturaCtx.beginPath();
+    assinaturaCtx.moveTo(pos.x, pos.y);
+  }
+
+  function onAssinaturaMove(e) {
+    if (!assinaturaDesenhando) return;
+    var pos = getCanvasPos(e);
+    assinaturaCtx.lineTo(pos.x, pos.y);
+    assinaturaCtx.stroke();
+    assinaturaTemPixels = true;
+  }
+
+  function onAssinaturaEnd(e) {
+    assinaturaDesenhando = false;
+  }
+
+  window.limparAssinatura = function() {
+    if (!assinaturaCtx) return;
+    assinaturaCtx.fillStyle = '#fff';
+    assinaturaCtx.fillRect(0, 0, assinaturaCanvas.width, assinaturaCanvas.height);
+    assinaturaTemPixels = false;
+    assinaturaAtual = null;
+    document.getElementById('assinar-erro').style.display = 'none';
+  };
+
+  window.confirmarAssinatura = function() {
+    if (!assinaturaTemPixels) {
+      var erroEl = document.getElementById('assinar-erro');
+      erroEl.textContent = 'Por favor, assine antes de confirmar.';
+      erroEl.style.display = 'block';
+      return;
+    }
+    assinaturaAtual = assinaturaCanvas.toDataURL('image/png');
+    enviarOcorrenciaComAssinatura();
+  };
+
+  window.voltarFormulario = function() {
+    showScreen('form-screen');
+  };
+
+  function showAssinarScreen() {
+    var resumo = document.getElementById('assinar-resumo');
+    var relatoText = quillEditor.getText().trim();
+    var truncado = relatoText.length > 200 ? relatoText.slice(0, 200) + '...' : relatoText;
+    resumo.innerHTML = '<strong>Relato:</strong> ' + escapeHtml(truncado);
+    initAssinatura();
+    showScreen('assinar-screen');
+  }
+
+  async function enviarOcorrenciaComAssinatura() {
+    var relato = quillEditor.root.innerHTML.trim();
 
     var body = {
       id_posto: escalaAtual.id_posto,
       id_acesso: usuarioLogado.id,
       colaborador: usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')',
-      relato: relato
+      relato: relato,
+      assinatura: assinaturaAtual
     };
 
     try {
@@ -506,7 +627,7 @@
     } catch (err) {
       alert('Erro ao registrar ocorrência. Tente novamente.');
     }
-  };
+  }
 
   // ─── LOGOUT ───────────────────────────────────────────────────────────────
   window.fazerLogout = function() {
