@@ -219,6 +219,7 @@
 
   var SUPABASE_URL = 'https://xyfllrcdrcvjimzwbfsm.supabase.co';
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5ZmxscmNkcmN2amltendiZnNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzQ4NzUsImV4cCI6MjA5Nzg1MDg3NX0.nHgqNJnfWQW5BTfEWQTK92LRPLqNadiC-xios5zN4_A';
+  var SUPABASE_EDGE = SUPABASE_URL + '/functions/v1';
 
   var usuarioLogado = null;
   var escalaAtual = null;
@@ -310,33 +311,25 @@
     showScreen('loading-screen');
 
     try {
-      var senhaHash = await hashSenha(senha);
-
-      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_colaboradores_acesso?login=eq.' + encodeURIComponent(login) + '&select=*', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+      var resp = await fetch(SUPABASE_EDGE + '/auth-form', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+        body: JSON.stringify({ action: 'login', login: login, senha: senha })
       });
 
-      if (!resp.ok) throw new Error('Erro ao validar login');
+      var body = await resp.json();
 
-      var dados = await resp.json();
-      if (!dados || dados.length === 0) {
+      if (!resp.ok || !body.ok) {
         showScreen('login-screen');
-        showErro(erroEl, 'Login não encontrado.');
+        showErro(erroEl, body.error || 'Erro ao validar login.');
         return;
       }
 
-      var user = dados[0];
+      var user = body.user;
 
       if (user.habilitado === false) {
         showScreen('login-screen');
         showErro(erroEl, 'Seu acesso foi desabilitado. Contacte o administrador.');
-        return;
-      }
-
-      if (user.senha_hash !== senhaHash) {
-        showScreen('login-screen');
-        showErro(erroEl, 'Senha incorreta.');
         return;
       }
 
@@ -374,17 +367,21 @@
     showScreen('loading-screen');
 
     try {
-      var novaHash = await hashSenha(nova);
-
-      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_colaboradores_acesso?id=eq.' + usuarioLogado.id, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ senha_hash: novaHash, primeiro_acesso: false })
+      var resp = await fetch(SUPABASE_EDGE + '/auth-form', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+        body: JSON.stringify({ action: 'trocar-senha', userId: usuarioLogado.id, novaSenha: nova })
       });
 
-      if (!resp.ok) throw new Error('Erro ao salvar');
+      var body = await resp.json();
 
-      usuarioLogado.senha_hash = novaHash;
+      if (!resp.ok || !body.ok) {
+        showScreen('trocar-senha-screen');
+        showErro(erroEl, body.error || 'Erro ao salvar nova senha. Tente novamente.');
+        return;
+      }
+
+      usuarioLogado.senha_hash = body.senha_hash;
       usuarioLogado.primeiro_acesso = false;
 
       await carregarLivros(usuarioLogado);
