@@ -159,6 +159,83 @@
     </div>
   </div>
 
+  <!-- Recebimento de Serviço -->
+  <div class="card" id="recebimento-screen" style="display:none">
+    <div class="logo">
+      <h1>Recebimento de Serviço</h1>
+      <p>Preencha os dados do recebimento do posto</p>
+    </div>
+    <div class="user-bar" id="rec-user-bar"></div>
+    <div id="rec-posto-badge" class="posto-badge"></div>
+    
+    <div class="field">
+      <label>Nome do Colaborador</label>
+      <input type="text" id="rec-nome" readonly style="background:#f8fafc"/>
+    </div>
+    
+    <div class="field">
+      <label>Função *</label>
+      <input type="text" id="rec-funcao" placeholder="Ex: Vigilante, Bombeiro, etc."/>
+    </div>
+    
+    <div class="field">
+      <label>Tipo *</label>
+      <select id="rec-tipo">
+        <option value="">Selecione...</option>
+        <option value="EFETIVO">EFETIVO</option>
+        <option value="COBERTURA">COBERTURA</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label>RE</label>
+      <input type="text" id="rec-re" readonly style="background:#f8fafc"/>
+    </div>
+    
+    <div class="field">
+      <label>Recebido de *</label>
+      <input type="text" id="rec-busca-recebeu" placeholder="Buscar funcionário por nome..." autocomplete="off"/>
+      <div id="rec-dropdown-recebeu" style="display:none;position:absolute;background:#fff;border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;width:calc(100% - 64px)"></div>
+      <input type="text" id="rec-recebeu-nome" placeholder="Ou digite manualmente" style="margin-top:8px"/>
+    </div>
+    
+    <div class="field">
+      <label>Cargo de quem recebeu *</label>
+      <input type="text" id="rec-cargo-recebeu" placeholder="Ex: Supervisor, Encarregado, etc."/>
+    </div>
+    
+    <div class="field">
+      <label>Tipo de quem recebeu *</label>
+      <select id="rec-tipo-recebeu">
+        <option value="">Selecione...</option>
+        <option value="EFETIVO">EFETIVO</option>
+        <option value="COBERTURA">COBERTURA</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label>Horário do Recebimento *</label>
+      <input type="time" id="rec-horario"/>
+    </div>
+    
+    <div class="field">
+      <label>Material Carga</label>
+      <div id="rec-material-status" style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px"></div>
+    </div>
+    
+    <div class="field">
+      <label>Texto de Recebimento</label>
+      <textarea id="rec-texto" rows="6" readonly style="background:#f8fafc;font-size:13px;line-height:1.6"></textarea>
+    </div>
+    
+    <div id="rec-erro" class="alert alert-error" style="display:none"></div>
+    
+    <button class="btn btn-primary" onclick="confirmarRecebimento()">Continuar para Ocorrência →</button>
+    <div style="margin-top:10px">
+      <button class="btn btn-outline" onclick="voltarLivros()">← Voltar aos Livros</button>
+    </div>
+  </div>
+
   <!-- Formulário -->
   <div class="card" id="form-screen" style="display:none">
     <div class="user-bar" id="form-user-bar"></div>
@@ -241,7 +318,7 @@
 
   function showScreen(id) {
     var loginOverlay = document.getElementById('login-overlay');
-    ['loading-screen','trocar-senha-screen','livros-screen','form-screen','assinar-screen','sucesso-screen'].forEach(function(s) {
+    ['loading-screen','trocar-senha-screen','livros-screen','recebimento-screen','form-screen','assinar-screen','sucesso-screen'].forEach(function(s) {
       document.getElementById(s).style.display = 'none';
     });
     if (id === 'login-screen') {
@@ -477,28 +554,231 @@
     infoBar.innerHTML = '<span>👤 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span><span>Login: ' + escapeHtml(usuarioLogado.login) + '</span>';
 
     var tituloLivro = escala.id_posto;
+    var recebimentoHabilitado = false;
     try {
       var resp3 = new XMLHttpRequest();
-      resp3.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(escala.id_posto) + '&select=nome,cc', false);
+      resp3.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(escala.id_posto) + '&select=nome,cc,recebimento_servico', false);
       resp3.setRequestHeader('apikey', SUPABASE_ANON_KEY);
       resp3.send();
       if (resp3.status === 200) {
         var dados3 = JSON.parse(resp3.responseText);
-        if (dados3 && dados3.length > 0 && dados3[0].nome) {
-          tituloLivro = dados3[0].nome + ' (' + (dados3[0].cc || escala.id_posto) + ')';
+        if (dados3 && dados3.length > 0) {
+          if (dados3[0].nome) tituloLivro = dados3[0].nome + ' (' + (dados3[0].cc || escala.id_posto) + ')';
+          recebimentoHabilitado = dados3[0].recebimento_servico === true;
         }
       }
     } catch(e) {}
     document.getElementById('form-posto-badge').textContent = '📋 Livro — ' + tituloLivro;
     quillEditor.setContents([]);
 
-    showScreen('form-screen');
-    quillEditor.focus();
+    if (recebimentoHabilitado) {
+      iniciarRecebimento();
+    } else {
+      showScreen('form-screen');
+      quillEditor.focus();
+    }
   };
 
   window.voltarLivros = function() {
     escalaAtual = null;
     carregarLivros(usuarioLogado);
+  };
+
+  // ─── RECEBIMENTO DE SERVIÇO ────────────────────────────────────────────
+  var recebimentoDados = {
+    materiais: [],
+    materialComProblema: []
+  };
+
+  window.iniciarRecebimento = function() {
+    var recBar = document.getElementById('rec-user-bar');
+    recBar.innerHTML = '<span>👤 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
+
+    document.getElementById('rec-nome').value = usuarioLogado.nome || '';
+    document.getElementById('rec-re').value = usuarioLogado.re || '';
+    document.getElementById('rec-funcao').value = '';
+    document.getElementById('rec-tipo').value = '';
+    document.getElementById('rec-recebeu-nome').value = '';
+    document.getElementById('rec-cargo-recebeu').value = '';
+    document.getElementById('rec-tipo-recebeu').value = '';
+    document.getElementById('rec-horario').value = '';
+    document.getElementById('rec-texto').value = '';
+    document.getElementById('rec-erro').style.display = 'none';
+
+    var postBadge = document.getElementById('rec-posto-badge');
+    postBadge.textContent = document.getElementById('form-posto-badge').textContent;
+
+    carregarMaterialCarga();
+    configurarBuscaRecebeu();
+    gerarTextoRecebimento();
+
+    showScreen('recebimento-screen');
+  };
+
+  function carregarMaterialCarga() {
+    var statusEl = document.getElementById('rec-material-status');
+    statusEl.innerHTML = '<div style="color:var(--text2)">Carregando material...</div>';
+    recebimentoDados.materiais = [];
+    recebimentoDados.materialComProblema = [];
+
+    if (!escalaAtual) return;
+
+    try {
+      var resp = new XMLHttpRequest();
+      resp.open('GET', SUPABASE_URL + '/rest/v1/gss_material_carga?id_posto=eq.' + encodeURIComponent(escalaAtual.id_posto) + '&select=nome,especificacao,quantidade,estado', false);
+      resp.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      resp.send();
+      if (resp.status === 200) {
+        var materiais = JSON.parse(resp.responseText);
+        if (materiais && materiais.length > 0) {
+          recebimentoDados.materiais = materiais;
+          recebimentoDados.materialComProblema = materiais.filter(function(m) {
+            return m.estado && m.estado !== 'Bom';
+          });
+        }
+      }
+    } catch(e) {}
+
+    if (recebimentoDados.materiais.length === 0) {
+      statusEl.innerHTML = '<div style="color:var(--text2)">Nenhum material cadastrado para este posto</div>';
+      return;
+    }
+
+    var html = '<div style="margin-bottom:8px;font-weight:600">Itens do Material Carga:</div>';
+    recebimentoDados.materiais.forEach(function(m) {
+      var cor = m.estado === 'Bom' ? '#15803d' : (m.estado === 'Regular' ? '#b45309' : '#b91c1c');
+      html += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">' +
+        '<span>' + escapeHtml(m.nome) + (m.especificacao ? ' (' + escapeHtml(m.especificacao) + ')' : '') + ' × ' + m.quantidade + '</span>' +
+        '<span style="color:' + cor + ';font-weight:600">' + escapeHtml(m.estado || 'Bom') + '</span>' +
+      '</div>';
+    });
+    statusEl.innerHTML = html;
+  }
+
+  function configurarBuscaRecebeu() {
+    var buscaInput = document.getElementById('rec-busca-recebeu');
+    var dropdown = document.getElementById('rec-dropdown-recebeu');
+    var nomeInput = document.getElementById('rec-recebeu-nome');
+    var debounceTimer = null;
+
+    buscaInput.value = '';
+    nomeInput.value = '';
+    dropdown.style.display = 'none';
+
+    buscaInput.oninput = function() {
+      clearTimeout(debounceTimer);
+      var val = buscaInput.value.trim().toLowerCase();
+      if (val.length < 2) {
+        dropdown.style.display = 'none';
+        return;
+      }
+      debounceTimer = setTimeout(function() {
+        var funcionarios = (GSS.employees || []).filter(function(e) {
+          if (e.status === 'desligado') return false;
+          return (e.nome || '').toLowerCase().includes(val) || (e.re || '').includes(val);
+        }).slice(0, 10);
+
+        if (funcionarios.length === 0) {
+          dropdown.style.display = 'none';
+          return;
+        }
+
+        var html = funcionarios.map(function(f) {
+          return '<div style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px" ' +
+            'onmouseover="this.style.background=\'#f0f9ff\'" onmouseout="this.style.background=\'transparent\'" ' +
+            'onclick="selecionarRecebeu(\'' + escapeHtml(f.nome).replace(/'/g, "\\'") + '\', \'' + escapeHtml(f.re || '').replace(/'/g, "\\'") + '\')">' +
+            '<div style="font-weight:600">' + escapeHtml(f.nome) + '</div>' +
+            '<div style="font-size:11px;color:var(--text2)">RE: ' + escapeHtml(f.re || '-') + ' · ' + escapeHtml(f.postoServico || f.centroCusto || '-') + '</div>' +
+          '</div>';
+        }).join('');
+        dropdown.innerHTML = html;
+        dropdown.style.display = 'block';
+      }, 180);
+    };
+
+    buscaInput.onfocus = function() {
+      if (buscaInput.value.trim().length >= 2) {
+        buscaInput.oninput();
+      }
+    };
+
+    document.addEventListener('click', function(e) {
+      if (!buscaInput.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    nomeInput.oninput = function() {
+      buscaInput.value = '';
+      dropdown.style.display = 'none';
+      gerarTextoRecebimento();
+    };
+  }
+
+  window.selecionarRecebeu = function(nome) {
+    document.getElementById('rec-recebeu-nome').value = nome;
+    document.getElementById('rec-busca-recebeu').value = '';
+    document.getElementById('rec-dropdown-recebeu').style.display = 'none';
+    gerarTextoRecebimento();
+  };
+
+  function gerarTextoRecebimento() {
+    var nome = document.getElementById('rec-nome').value || '';
+    var funcao = document.getElementById('rec-funcao').value || '';
+    var tipo = document.getElementById('rec-tipo').value || '';
+    var re = document.getElementById('rec-re').value || '';
+    var recebeu = document.getElementById('rec-recebeu-nome').value || '';
+    var cargoRecebeu = document.getElementById('rec-cargo-recebeu').value || '';
+    var tipoRecebeu = document.getElementById('rec-tipo-recebeu').value || '';
+    var horario = document.getElementById('rec-horario').value || '';
+
+    if (!nome || !funcao || !tipo || !re || !recebeu || !cargoRecebeu || !tipoRecebeu || !horario) {
+      document.getElementById('rec-texto').value = 'Preencha todos os campos para gerar o texto.';
+      return;
+    }
+
+    var condicao = 'em totais condições de uso';
+    if (recebimentoDados.materialComProblema.length > 0) {
+      var itens = recebimentoDados.materialComProblema.map(function(m) {
+        return m.nome + ' (' + m.estado + ')';
+      }).join(', ');
+      condicao = 'não estava de acordo — ' + itens;
+    }
+
+    var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', recebi o posto de ' + recebeu + ', ' + cargoRecebeu + ', ' + tipoRecebeu + ' às ' + horario + ' ciente das normas em vigor, das determinações e material carga ' + condicao + ', bem como estou ciente das ocorrências registradas no período anterior.';
+
+    document.getElementById('rec-texto').value = texto;
+  }
+
+  ['rec-funcao', 'rec-tipo', 'rec-cargo-recebeu', 'rec-tipo-recebeu', 'rec-horario'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', gerarTextoRecebimento);
+  });
+
+  window.confirmarRecebimento = function() {
+    var funcao = document.getElementById('rec-funcao').value.trim();
+    var tipo = document.getElementById('rec-tipo').value;
+    var recebeu = document.getElementById('rec-recebeu-nome').value.trim();
+    var cargoRecebeu = document.getElementById('rec-cargo-recebeu').value.trim();
+    var tipoRecebeu = document.getElementById('rec-tipo-recebeu').value;
+    var horario = document.getElementById('rec-horario').value;
+    var erroEl = document.getElementById('rec-erro');
+    erroEl.style.display = 'none';
+
+    if (!funcao) { showErro(erroEl, 'Informe a função do colaborador.'); return; }
+    if (!tipo) { showErro(erroEl, 'Selecione o tipo (EFETIVO/COBERTURA).'); return; }
+    if (!recebeu) { showErro(erroEl, 'Informe de quem recebeu o posto.'); return; }
+    if (!cargoRecebeu) { showErro(erroEl, 'Informe o cargo de quem recebeu.'); return; }
+    if (!tipoRecebeu) { showErro(erroEl, 'Selecione o tipo de quem recebeu.'); return; }
+    if (!horario) { showErro(erroEl, 'Informe o horário do recebimento.'); return; }
+
+    var textoRecebimento = document.getElementById('rec-texto').value;
+    quillEditor.setText(textoRecebimento + '\n\n---\n\n');
+    showScreen('form-screen');
+    quillEditor.focus();
+  };
+
+  window.voltarRecebimento = function() {
+    showScreen('recebimento-screen');
   };
 
   // ─── ENVIAR OCORRÊNCIA ────────────────────────────────────────────────
