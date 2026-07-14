@@ -552,6 +552,9 @@
     assinaturaDesenhando = true;
     var pos = getCanvasPos(e);
     assinaturaCtx.beginPath();
+    assinaturaCtx.arc(pos.x, pos.y, assinaturaCtx.lineWidth / 2, 0, Math.PI * 2);
+    assinaturaCtx.fill();
+    assinaturaCtx.beginPath();
     assinaturaCtx.moveTo(pos.x, pos.y);
   }
 
@@ -560,6 +563,8 @@
     var pos = getCanvasPos(e);
     assinaturaCtx.lineTo(pos.x, pos.y);
     assinaturaCtx.stroke();
+    assinaturaCtx.beginPath();
+    assinaturaCtx.moveTo(pos.x, pos.y);
     assinaturaTemPixels = true;
   }
 
