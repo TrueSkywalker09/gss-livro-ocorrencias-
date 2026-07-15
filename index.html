@@ -194,8 +194,10 @@
     
     <div class="field">
       <label>Recebido de *</label>
-      <input type="text" id="rec-busca-recebeu" placeholder="Buscar por nome ou RE..." autocomplete="off"/>
-      <div id="rec-dropdown-recebeu" style="display:none;position:absolute;background:#fff;border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;width:100%;left:0;box-sizing:border-box"></div>
+      <div style="position:relative">
+        <input type="text" id="rec-busca-recebeu" placeholder="Buscar por nome ou RE..." autocomplete="off" style="width:100%;box-sizing:border-box"/>
+        <div id="rec-dropdown-recebeu" style="display:none;position:absolute;background:#fff;border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;width:100%;left:0;top:100%;box-sizing:border-box"></div>
+      </div>
       <input type="text" id="rec-recebeu-nome" placeholder="Ou digite o nome manualmente" style="margin-top:8px"/>
     </div>
 
