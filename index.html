@@ -628,25 +628,14 @@
     if (!escalaAtual) return;
 
     try {
-      var hoje = new Date().toISOString().slice(0, 10);
-      var respEscalas = new XMLHttpRequest();
-      respEscalas.open('GET', SUPABASE_URL + '/rest/v1/gss_escalas?id_posto=eq.' + encodeURIComponent(escalaAtual.id_posto) + '&data_inicio=lte.' + hoje + '&data_fim=gte.' + hoje + '&select=id_acesso', false);
-      respEscalas.setRequestHeader('apikey', SUPABASE_ANON_KEY);
-      respEscalas.send();
+      var resp = new XMLHttpRequest();
+      resp.open('POST', SUPABASE_URL + '/functions/v1/auth-form', false);
+      resp.setRequestHeader('Content-Type', 'application/json');
+      resp.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_ANON_KEY);
+      resp.send(JSON.stringify({ action: 'listar-colaboradores-posto', id_posto: escalaAtual.id_posto }));
 
-      if (respEscalas.status === 200) {
-        var escalas = JSON.parse(respEscalas.responseText);
-        var ids = escalas.map(function(e) { return e.id_acesso; }).filter(Boolean);
-        if (ids.length === 0) return;
-
-        var respAcessos = new XMLHttpRequest();
-        respAcessos.open('GET', SUPABASE_URL + '/rest/v1/gss_colaboradores_acesso?id=in.(' + ids.join(',') + ')&habilitado=eq.true&select=id,nome,re,login', false);
-        respAcessos.setRequestHeader('apikey', SUPABASE_ANON_KEY);
-        respAcessos.send();
-
-        if (respAcessos.status === 200) {
-          window._colabPosto = JSON.parse(respAcessos.responseText) || [];
-        }
+      if (resp.status === 200) {
+        window._colabPosto = JSON.parse(resp.responseText) || [];
       }
     } catch(e) {}
   }
