@@ -207,16 +207,16 @@
         <input type="text" id="rec-recebeu-nome" placeholder="Ou digite o nome manualmente" style="margin-top:8px"/>
       </div>
       <div class="field" style="margin-bottom:10px">
-        <label>RE de quem recebeu</label>
+        <label>RE de quem passou</label>
         <input type="text" id="rec-recebeu-re" placeholder="RE (preenchido ao selecionar ou manual)" autocomplete="off"/>
       </div>
       <div style="display:flex;gap:12px">
         <div class="field" style="flex:2;margin-bottom:0">
-          <label>Cargo de quem recebeu *</label>
+          <label>Cargo de quem passou *</label>
           <input type="text" id="rec-cargo-recebeu" placeholder="Ex: Supervisor, Encarregado, etc."/>
         </div>
         <div class="field" style="flex:1;margin-bottom:0">
-          <label>Tipo de quem recebeu *</label>
+          <label>Tipo de quem passou *</label>
           <select id="rec-tipo-recebeu">
             <option value="">Selecione...</option>
             <option value="EFETIVO">EFETIVO</option>
@@ -226,7 +226,7 @@
       </div>
       <div style="display:flex;gap:12px;margin-top:10px">
         <div class="field" style="flex:1;margin-bottom:0">
-          <label>Horário do Recebimento *</label>
+          <label>Horário da Passagem *</label>
           <input type="time" id="rec-horario"/>
         </div>
       </div>
@@ -809,10 +809,10 @@
 
     if (!funcao) { showErro(erroEl, 'Informe a função do colaborador.'); return; }
     if (!tipo) { showErro(erroEl, 'Selecione o tipo (EFETIVO/COBERTURA).'); return; }
-    if (!recebeu) { showErro(erroEl, 'Informe de quem recebeu o posto.'); return; }
-    if (!cargoRecebeu) { showErro(erroEl, 'Informe o cargo de quem recebeu.'); return; }
-    if (!tipoRecebeu) { showErro(erroEl, 'Selecione o tipo de quem recebeu.'); return; }
-    if (!horario) { showErro(erroEl, 'Informe o horário do recebimento.'); return; }
+    if (!recebeu) { showErro(erroEl, 'Informe de quem passou o serviço.'); return; }
+    if (!cargoRecebeu) { showErro(erroEl, 'Informe o cargo de quem passou.'); return; }
+    if (!tipoRecebeu) { showErro(erroEl, 'Selecione o tipo de quem passou.'); return; }
+    if (!horario) { showErro(erroEl, 'Informe o horário da passagem.'); return; }
 
     var textoRecebimento = document.getElementById('rec-texto').value;
     document.getElementById('rec-texto-confirmado').textContent = textoRecebimento;
