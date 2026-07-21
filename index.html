@@ -68,6 +68,10 @@
     .livro-item .periodo{font-size:12px;color:var(--text2);margin-bottom:8px}
     .livro-item .abrir{font-size:13px;font-weight:700;color:var(--primary)}
     .livro-expirado{opacity:.65;border-style:dashed}
+    .livros-tabs{display:flex;gap:0;margin-bottom:16px;border-radius:8px;overflow:hidden;border:1.5px solid var(--border)}
+    .livros-tab{flex:1;padding:10px 16px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;background:var(--surface);color:var(--text2);transition:all .15s}
+    .livros-tab.active{background:var(--primary);color:#fff}
+    .livros-tab:hover:not(.active){background:var(--bg2)}
     .no-livro{text-align:center;padding:40px 20px;color:var(--text2)}
     .no-livro-icon{font-size:48px;margin-bottom:12px}
     .user-bar{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:var(--primary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
@@ -154,7 +158,12 @@
       <p>Selecione o livro de ocorrência</p>
     </div>
     <div id="livros-user-info" class="user-info"></div>
-    <div id="livros-lista"></div>
+    <div class="livros-tabs" id="livros-tabs">
+      <div class="livros-tab active" onclick="trocarAbaLivros('ativos')" id="tab-ativos">📋 Disponíveis</div>
+      <div class="livros-tab" onclick="trocarAbaLivros('anteriores')" id="tab-anteriores">📜 Anteriores</div>
+    </div>
+    <div id="livros-lista-ativos"></div>
+    <div id="livros-lista-anteriores" style="display:none"></div>
     <div style="margin-top:16px">
       <button class="btn btn-outline" onclick="fazerLogout()">← Sair</button>
     </div>
@@ -317,6 +326,7 @@
   var usuarioLogado = null;
   var escalaAtual = null;
   var quillEditor = null;
+  var abaLivrosAtiva = 'ativos';
 
   function initQuill() {
     quillEditor = new Quill('#relato-editor', {
@@ -511,6 +521,7 @@
 
       showLivros(user, escalas, hojeIsoStr);
     } catch (err) {
+      console.error('Erro ao carregar livros:', err);
       showNoLivros(user);
     }
   }
@@ -520,30 +531,33 @@
     infoEl.innerHTML = 'Olá <strong>' + escapeHtml(user.nome) + '</strong>';
     infoEl.style.display = 'block';
 
-    document.getElementById('livros-lista').innerHTML =
+    document.getElementById('livros-tabs').style.display = 'none';
+    document.getElementById('livros-lista-ativos').innerHTML =
       '<div class="no-livro">' +
         '<div class="no-livro-icon">📭</div>' +
         '<h3 style="font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text)">Nenhum Livro Disponível</h3>' +
-        '<p style="font-size:13px;color:var(--text2)">Você não possui livro de ocorrência cadastrado para hoje.<br/>Contacte o administrador.</p>' +
+        '<p style="font-size:13px;color:var(--text2)">Você não possui livro de ocorrência cadastrado.<br/>Contacte o administrador.</p>' +
       '</div>';
+    document.getElementById('livros-lista-anteriores').innerHTML = '';
 
     showScreen('livros-screen');
   }
 
   function showLivros(user, escalas, hojeIsoStr) {
     var infoEl = document.getElementById('livros-user-info');
-    var countAtivos = escalas.filter(function(e) { return e.data_fim >= hojeIsoStr; }).length;
+    var livrosAtivos = escalas.filter(function(e) { return e.data_fim >= hojeIsoStr; });
+    var livrosExpirados = escalas.filter(function(e) { return e.data_fim < hojeIsoStr; });
     var infoText = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ';
-    if (countAtivos > 0) {
-      infoText += countAtivos + ' livro(s) ativo(s)';
-      if (escalas.length > countAtivos) infoText += ', ' + (escalas.length - countAtivos) + ' expirado(s)';
+    if (livrosAtivos.length > 0) {
+      infoText += livrosAtivos.length + ' livro(s) ativo(s)';
+      if (livrosExpirados.length > 0) infoText += ', ' + livrosExpirados.length + ' expirado(s)';
     } else {
-      infoText += escalas.length + ' livro(s) nos últimos 30 dias (todos expirados)';
+      infoText += livrosExpirados.length + ' livro(s) nos últimos 30 dias (todos expirados)';
     }
     infoEl.innerHTML = infoText;
     infoEl.style.display = 'block';
 
-    var html = escalas.map(function(esc, idx) {
+    function renderLivro(esc) {
       var nomePosto = esc.id_posto;
       var cc = esc.id_posto;
       try {
@@ -563,20 +577,50 @@
       var expirado = esc.data_fim < hojeIsoStr;
       var badgeExpirado = expirado ? '<span style="display:inline-block;background:#b91c1c;color:#fff;font-size:9pt;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:normal">Expirado</span>' : '';
 
-      return '<div class="livro-item' + (expirado ? ' livro-expirado' : '') + '" onclick="abrirLivro(' + idx + ')">' +
+      return '<div class="livro-item' + (expirado ? ' livro-expirado' : '') + '" onclick="abrirLivro(\'' + esc.id + '\')">' +
         '<h3>📋 Livro — ' + escapeHtml(titulo) + badgeExpirado + '</h3>' +
         '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' → ' + fmtData(esc.data_fim) + '</div>' +
         '<div class="abrir">Abrir Livro →</div>' +
       '</div>';
-    }).join('');
+    }
 
-    document.getElementById('livros-lista').innerHTML = html;
-    window._escalasDisponiveis = escalas;
+    window._escalasAtivos = livrosAtivos;
+    window._escalasAnteriores = livrosExpirados;
+
+    document.getElementById('livros-lista-ativos').innerHTML = livrosAtivos.length > 0
+      ? livrosAtivos.map(renderLivro).join('')
+      : '<div class="no-livro"><div class="no-livro-icon">📋</div><p style="font-size:13px;color:var(--text2)">Nenhum livro ativo no momento.</p></div>';
+
+    document.getElementById('livros-lista-anteriores').innerHTML = livrosExpirados.length > 0
+      ? livrosExpirados.map(renderLivro).join('')
+      : '<div class="no-livro"><div class="no-livro-icon">📭</div><p style="font-size:13px;color:var(--text2)">Nenhum livro anterior encontrado.</p></div>';
+
+    document.getElementById('livros-tabs').style.display = 'flex';
+
+    if (livrosAtivos.length === 0 && livrosExpirados.length > 0) {
+      abaLivrosAtiva = 'anteriores';
+    } else {
+      abaLivrosAtiva = 'ativos';
+    }
+    trocarAbaLivros(abaLivrosAtiva);
+
     showScreen('livros-screen');
   }
 
-  window.abrirLivro = function(idx) {
-    var escala = window._escalasDisponiveis[idx];
+  window.trocarAbaLivros = function(aba) {
+    abaLivrosAtiva = aba;
+    document.getElementById('tab-ativos').className = 'livros-tab' + (aba === 'ativos' ? ' active' : '');
+    document.getElementById('tab-anteriores').className = 'livros-tab' + (aba === 'anteriores' ? ' active' : '');
+    document.getElementById('livros-lista-ativos').style.display = aba === 'ativos' ? 'block' : 'none';
+    document.getElementById('livros-lista-anteriores').style.display = aba === 'anteriores' ? 'block' : 'none';
+  };
+
+  window.abrirLivro = function(id) {
+    var lista = (window._escalasAtivos || []).concat(window._escalasAnteriores || []);
+    var escala = null;
+    for (var i = 0; i < lista.length; i++) {
+      if (String(lista[i].id) === String(id)) { escala = lista[i]; break; }
+    }
     if (!escala) return;
     escalaAtual = escala;
 
@@ -980,7 +1024,9 @@
   window.fazerLogout = function() {
     usuarioLogado = null;
     escalaAtual = null;
-    window._escalasDisponiveis = [];
+    window._escalasAtivos = [];
+    window._escalasAnteriores = [];
+    abaLivrosAtiva = 'ativos';
     document.getElementById('login-input').value = '';
     document.getElementById('senha-input').value = '';
     document.getElementById('senha-input').type = 'password';
