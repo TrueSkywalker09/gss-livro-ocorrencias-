@@ -67,6 +67,7 @@
     .livro-item h3{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
     .livro-item .periodo{font-size:12px;color:var(--text2);margin-bottom:8px}
     .livro-item .abrir{font-size:13px;font-weight:700;color:var(--primary)}
+    .livro-expirado{opacity:.65;border-style:dashed}
     .no-livro{text-align:center;padding:40px 20px;color:var(--text2)}
     .no-livro-icon{font-size:48px;margin-bottom:12px}
     .user-bar{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:var(--primary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
@@ -488,9 +489,13 @@
     showScreen('loading-screen');
 
     try {
-      var hoje = hojeIso();
+      var hoje = new Date();
+      var hojeIsoStr = hoje.toISOString().slice(0, 10);
+      var trintaDiasAtras = new Date(hoje);
+      trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
+      var trintaDiasAtrasIso = trintaDiasAtras.toISOString().slice(0, 10);
 
-      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_escalas?id_acesso=eq.' + user.id + '&data_inicio=lte.' + hoje + '&data_fim=gte.' + hoje + '&select=*', {
+      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_escalas?id_acesso=eq.' + user.id + '&data_fim=gte.' + trintaDiasAtrasIso + '&select=*&order=data_inicio.desc', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
       });
@@ -504,7 +509,7 @@
         return;
       }
 
-      showLivros(user, escalas);
+      showLivros(user, escalas, hojeIsoStr);
     } catch (err) {
       showNoLivros(user);
     }
@@ -525,9 +530,17 @@
     showScreen('livros-screen');
   }
 
-  function showLivros(user, escalas) {
+  function showLivros(user, escalas, hojeIsoStr) {
     var infoEl = document.getElementById('livros-user-info');
-    infoEl.innerHTML = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ' + escalas.length + ' livro(s) disponível(is) hoje';
+    var countAtivos = escalas.filter(function(e) { return e.data_fim >= hojeIsoStr; }).length;
+    var infoText = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ';
+    if (countAtivos > 0) {
+      infoText += countAtivos + ' livro(s) ativo(s)';
+      if (escalas.length > countAtivos) infoText += ', ' + (escalas.length - countAtivos) + ' expirado(s)';
+    } else {
+      infoText += escalas.length + ' livro(s) nos últimos 30 dias (todos expirados)';
+    }
+    infoEl.innerHTML = infoText;
     infoEl.style.display = 'block';
 
     var html = escalas.map(function(esc, idx) {
@@ -547,9 +560,11 @@
         }
       } catch(e) {}
       var titulo = nomePosto !== cc ? nomePosto + ' (' + cc + ')' : cc;
+      var expirado = esc.data_fim < hojeIsoStr;
+      var badgeExpirado = expirado ? '<span style="display:inline-block;background:#b91c1c;color:#fff;font-size:9pt;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:normal">Expirado</span>' : '';
 
-      return '<div class="livro-item" onclick="abrirLivro(' + idx + ')">' +
-        '<h3>📋 Livro — ' + escapeHtml(titulo) + '</h3>' +
+      return '<div class="livro-item' + (expirado ? ' livro-expirado' : '') + '" onclick="abrirLivro(' + idx + ')">' +
+        '<h3>📋 Livro — ' + escapeHtml(titulo) + badgeExpirado + '</h3>' +
         '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' → ' + fmtData(esc.data_fim) + '</div>' +
         '<div class="abrir">Abrir Livro →</div>' +
       '</div>';
@@ -936,13 +951,13 @@
   async function enviarOcorrenciaComAssinatura() {
     var textoRec = document.getElementById('rec-texto-confirmado').textContent || '';
     var relatoOcorrencia = quillEditor.root.innerHTML.trim();
-    var relato = textoRec ? textoRec + '\n\n---\n\n' + relatoOcorrencia : relatoOcorrencia;
 
     var body = {
       id_posto: escalaAtual.id_posto,
       id_acesso: usuarioLogado.id,
       colaborador: usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')',
-      relato: relato,
+      relato: relatoOcorrencia,
+      recebimento: textoRec || '',
       assinatura: assinaturaAtual
     };
 
