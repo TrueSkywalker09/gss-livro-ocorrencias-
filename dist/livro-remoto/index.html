@@ -4,6 +4,8 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Livro de Ocorrências — GSS</title>
+  <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--primary:#0369a1;--primary-hover:#0284c7;--success:#15803d;--error:#b91c1c;--warning:#b45309;--bg:#f1f5f9;--surface:#fff;--text:#0f172a;--text2:#64748b;--border:#e2e8f0;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,.08)}
@@ -65,10 +67,34 @@
     .livro-item h3{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
     .livro-item .periodo{font-size:12px;color:var(--text2);margin-bottom:8px}
     .livro-item .abrir{font-size:13px;font-weight:700;color:var(--primary)}
+    .livro-expirado{opacity:.65;border-style:dashed}
     .no-livro{text-align:center;padding:40px 20px;color:var(--text2)}
     .no-livro-icon{font-size:48px;margin-bottom:12px}
     .user-bar{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:var(--primary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
     @media(max-width:480px){.card{padding:24px 18px}.field input,.field textarea{font-size:16px}}
+    #relato-editor{min-height:180px;border:none;border-radius:8px}
+    .ql-toolbar.ql-snow{border:1px solid var(--border);border-radius:8px 8px 0 0;padding:6px 8px;background:var(--surface)}
+    .ql-container.ql-snow{border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px}
+    .ql-editor{min-height:180px;font-size:14px;line-height:1.6}
+    .ql-snow .ql-stroke{stroke:var(--text2)}
+    .ql-snow .ql-fill{fill:var(--text2)}
+    .ql-snow .ql-picker{color:var(--text2)}
+    .ql-snow .ql-active .ql-stroke{stroke:var(--primary) !important}
+    .ql-snow .ql-active .ql-fill{fill:var(--primary) !important}
+    .ql-snow .ql-active{color:var(--primary) !important}
+    .ql-snow .ql-picker-label{border-color:transparent}
+    .ql-snow .ql-picker-options{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:var(--shadow);padding:4px 0}
+    .ql-snow .ql-tooltip{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:var(--shadow)}
+    .ql-snow .ql-tooltip input{border:1px solid var(--border);border-radius:4px;padding:4px 8px}
+    .ql-snow .ql-tooltip a{color:var(--primary)}
+    @media(max-width:480px){
+      #relato-editor{min-height:200px}
+      .ql-toolbar.ql-snow{padding:4px 6px;flex-wrap:wrap;gap:2px}
+      .ql-snow.ql-toolbar button,.ql-snow .ql-toolbar button{width:28px;height:28px;padding:4px}
+      .ql-snow.ql-toolbar button svg,.ql-snow .ql-toolbar button svg{width:14px;height:14px}
+      .ql-snow.ql-toolbar .ql-formats{margin-right:4px}
+      .ql-editor{font-size:16px;min-height:200px;padding:12px}
+    }
   </style>
 </head>
 <body>
@@ -134,17 +160,135 @@
     </div>
   </div>
 
+  <!-- Recebimento de Serviço -->
+  <div class="card" id="recebimento-screen" style="display:none">
+    <div class="logo">
+      <h1>Recebimento de Serviço</h1>
+      <p>Preencha os dados do recebimento do posto</p>
+    </div>
+    <div class="user-bar" id="rec-user-bar"></div>
+    <div id="rec-posto-badge" class="posto-badge"></div>
+
+    <!-- Seção 1: Colaborador -->
+    <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+      <div style="font-size:14px;font-weight:600;color:var(--text1);margin-bottom:12px">Colaborador</div>
+      <div class="field" style="margin-bottom:10px">
+        <label>Nome do Colaborador</label>
+        <input type="text" id="rec-nome" readonly style="background:#f8fafc"/>
+      </div>
+      <div style="display:flex;gap:12px">
+        <div class="field" style="flex:2;margin-bottom:0">
+          <label>Função *</label>
+          <input type="text" id="rec-funcao" placeholder="Ex: Vigilante, Bombeiro, etc."/>
+        </div>
+        <div class="field" style="flex:1;margin-bottom:0">
+          <label>Tipo *</label>
+          <select id="rec-tipo">
+            <option value="">Selecione...</option>
+            <option value="EFETIVO">EFETIVO</option>
+            <option value="COBERTURA">COBERTURA</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0;margin-top:10px">
+        <label>RE</label>
+        <input type="text" id="rec-re" readonly style="background:#f8fafc"/>
+      </div>
+    </div>
+
+    <!-- Seção 2: Passagem de Serviço -->
+    <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+      <div style="font-size:14px;font-weight:600;color:var(--text1);margin-bottom:12px">Passagem de Serviço</div>
+      <div class="field" style="margin-bottom:10px">
+        <label>Recebido de *</label>
+        <div style="position:relative">
+          <input type="text" id="rec-busca-recebeu" placeholder="Buscar por nome ou RE..." autocomplete="off" style="width:100%;box-sizing:border-box"/>
+          <div id="rec-dropdown-recebeu" style="display:none;position:absolute;background:#fff;border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;width:100%;left:0;top:100%;box-sizing:border-box"></div>
+        </div>
+        <input type="text" id="rec-recebeu-nome" placeholder="Ou digite o nome manualmente" style="margin-top:8px"/>
+      </div>
+      <div class="field" style="margin-bottom:10px">
+        <label>RE de quem passou</label>
+        <input type="text" id="rec-recebeu-re" placeholder="RE (preenchido ao selecionar ou manual)" autocomplete="off"/>
+      </div>
+      <div style="display:flex;gap:12px">
+        <div class="field" style="flex:2;margin-bottom:0">
+          <label>Cargo de quem passou *</label>
+          <input type="text" id="rec-cargo-recebeu" placeholder="Ex: Supervisor, Encarregado, etc."/>
+        </div>
+        <div class="field" style="flex:1;margin-bottom:0">
+          <label>Tipo de quem passou *</label>
+          <select id="rec-tipo-recebeu">
+            <option value="">Selecione...</option>
+            <option value="EFETIVO">EFETIVO</option>
+            <option value="COBERTURA">COBERTURA</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:10px">
+        <div class="field" style="flex:1;margin-bottom:0">
+          <label>Horário da Passagem *</label>
+          <input type="time" id="rec-horario"/>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0;margin-top:10px">
+        <label>Material Carga</label>
+        <div id="rec-material-status" style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px"></div>
+      </div>
+    </div>
+
+    <!-- Seção 3: Texto de Recebimento -->
+    <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+      <div style="font-size:14px;font-weight:600;color:var(--text1);margin-bottom:12px">Texto de Recebimento</div>
+      <div class="field" style="margin-bottom:12px">
+        <textarea id="rec-texto" rows="5" readonly style="background:#f8fafc;font-size:13px;line-height:1.6;width:100%;box-sizing:border-box"></textarea>
+      </div>
+      <div id="rec-erro" class="alert alert-error" style="display:none"></div>
+      <button class="btn btn-primary" onclick="confirmarRecebimento()" style="width:100%">Continuar para Ocorrência →</button>
+      <div style="margin-top:10px">
+        <button class="btn btn-outline" onclick="voltarLivros()" style="width:100%">← Voltar aos Livros</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Formulário -->
   <div class="card" id="form-screen" style="display:none">
     <div class="user-bar" id="form-user-bar"></div>
     <div id="form-posto-badge" class="posto-badge"></div>
+    <div id="rec-texto-confirmado" style="display:none;background:#f1f5f9;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;line-height:1.6;margin-bottom:12px;color:#334155;white-space:pre-wrap"></div>
     <div class="field">
       <label>Relato da Ocorrência</label>
-      <textarea id="relato-input" placeholder="Descreva a ocorrência detalhadamente..."></textarea>
+      <div id="relato-editor"></div>
     </div>
     <button class="btn btn-primary" onclick="enviarOcorrencia()">Registrar Ocorrência →</button>
     <div style="margin-top:10px">
       <button class="btn btn-outline" onclick="voltarLivros()">← Voltar aos Livros</button>
+    </div>
+  </div>
+
+  <!-- Assinatura -->
+  <div class="card" id="assinar-screen" style="display:none">
+    <div class="logo">
+      <h1>Sua Assinatura</h1>
+      <p>Assine abaixo para confirmar o registro</p>
+    </div>
+    <div id="assinar-resumo" class="user-info" style="display:block;font-size:12px"></div>
+    <div class="field">
+      <label>Assinatura do Colaborador *</label>
+      <div style="border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:#fff">
+        <canvas id="assinatura-canvas" width="920" height="400" style="width:100%;height:280px;touch-action:none;cursor:crosshair;display:block"></canvas>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">Assine com o mouse (desktop) ou dedo/caneta (mobile)</div>
+    </div>
+    <div id="assinar-erro" class="alert alert-error" style="display:none"></div>
+    <div style="margin-top:12px">
+      <button class="btn btn-outline" onclick="limparAssinatura()" style="width:auto;padding:8px 14px;font-size:12px">🗑️ Limpar</button>
+    </div>
+    <div style="margin-top:14px">
+      <button class="btn btn-primary" onclick="confirmarAssinatura()">✅ Confirmar Assinatura →</button>
+    </div>
+    <div style="margin-top:10px">
+      <button class="btn btn-outline" onclick="voltarFormulario()">← Voltar ao Formulário</button>
     </div>
   </div>
 
@@ -162,19 +306,35 @@
 
 <div class="footer">GSS Controle Gerencial — Livro de Ocorrências Eletrônico</div>
 
-<script><!-- v2.18.1: cache-bust deploy -->
+<script>
 (function() {
   'use strict';
 
   var SUPABASE_URL = 'https://xyfllrcdrcvjimzwbfsm.supabase.co';
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5ZmxscmNkcmN2amltendiZnNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzQ4NzUsImV4cCI6MjA5Nzg1MDg3NX0.nHgqNJnfWQW5BTfEWQTK92LRPLqNadiC-xios5zN4_A';
+  var SUPABASE_EDGE = SUPABASE_URL + '/functions/v1';
 
   var usuarioLogado = null;
   var escalaAtual = null;
+  var quillEditor = null;
+
+  function initQuill() {
+    quillEditor = new Quill('#relato-editor', {
+      theme: 'snow',
+      placeholder: 'Descreva a ocorrência detalhadamente...',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          ['link']
+        ]
+      }
+    });
+  }
 
   function showScreen(id) {
     var loginOverlay = document.getElementById('login-overlay');
-    ['loading-screen','trocar-senha-screen','livros-screen','form-screen','sucesso-screen'].forEach(function(s) {
+    ['loading-screen','trocar-senha-screen','livros-screen','recebimento-screen','form-screen','assinar-screen','sucesso-screen'].forEach(function(s) {
       document.getElementById(s).style.display = 'none';
     });
     if (id === 'login-screen') {
@@ -226,6 +386,7 @@
 
   // ─── INIT ─────────────────────────────────────────────────────────────────
   function init() {
+    initQuill();
     showScreen('login-screen');
     document.getElementById('login-input').focus();
   }
@@ -243,33 +404,25 @@
     showScreen('loading-screen');
 
     try {
-      var senhaHash = await hashSenha(senha);
-
-      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_colaboradores_acesso?login=eq.' + encodeURIComponent(login) + '&select=*', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+      var resp = await fetch(SUPABASE_EDGE + '/auth-form', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+        body: JSON.stringify({ action: 'login', login: login, senha: senha })
       });
 
-      if (!resp.ok) throw new Error('Erro ao validar login');
+      var body = await resp.json();
 
-      var dados = await resp.json();
-      if (!dados || dados.length === 0) {
+      if (!resp.ok || !body.ok) {
         showScreen('login-screen');
-        showErro(erroEl, 'Login não encontrado.');
+        showErro(erroEl, body.error || 'Erro ao validar login.');
         return;
       }
 
-      var user = dados[0];
+      var user = body.user;
 
       if (user.habilitado === false) {
         showScreen('login-screen');
         showErro(erroEl, 'Seu acesso foi desabilitado. Contacte o administrador.');
-        return;
-      }
-
-      if (user.senha_hash !== senhaHash) {
-        showScreen('login-screen');
-        showErro(erroEl, 'Senha incorreta.');
         return;
       }
 
@@ -307,17 +460,21 @@
     showScreen('loading-screen');
 
     try {
-      var novaHash = await hashSenha(nova);
-
-      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_colaboradores_acesso?id=eq.' + usuarioLogado.id, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ senha_hash: novaHash, primeiro_acesso: false })
+      var resp = await fetch(SUPABASE_EDGE + '/auth-form', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+        body: JSON.stringify({ action: 'trocar-senha', userId: usuarioLogado.id, novaSenha: nova })
       });
 
-      if (!resp.ok) throw new Error('Erro ao salvar');
+      var body = await resp.json();
 
-      usuarioLogado.senha_hash = novaHash;
+      if (!resp.ok || !body.ok) {
+        showScreen('trocar-senha-screen');
+        showErro(erroEl, body.error || 'Erro ao salvar nova senha. Tente novamente.');
+        return;
+      }
+
+      usuarioLogado.senha_hash = body.senha_hash;
       usuarioLogado.primeiro_acesso = false;
 
       await carregarLivros(usuarioLogado);
@@ -332,9 +489,13 @@
     showScreen('loading-screen');
 
     try {
-      var hoje = hojeIso();
+      var hoje = new Date();
+      var hojeIsoStr = hoje.toISOString().slice(0, 10);
+      var trintaDiasAtras = new Date(hoje);
+      trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
+      var trintaDiasAtrasIso = trintaDiasAtras.toISOString().slice(0, 10);
 
-      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_escalas?id_acesso=eq.' + user.id + '&data_inicio=lte.' + hoje + '&data_fim=gte.' + hoje + '&select=*', {
+      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_escalas?id_acesso=eq.' + user.id + '&data_fim=gte.' + trintaDiasAtrasIso + '&select=*&order=data_inicio.desc', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
       });
@@ -348,7 +509,7 @@
         return;
       }
 
-      showLivros(user, escalas);
+      showLivros(user, escalas, hojeIsoStr);
     } catch (err) {
       showNoLivros(user);
     }
@@ -369,9 +530,17 @@
     showScreen('livros-screen');
   }
 
-  function showLivros(user, escalas) {
+  function showLivros(user, escalas, hojeIsoStr) {
     var infoEl = document.getElementById('livros-user-info');
-    infoEl.innerHTML = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ' + escalas.length + ' livro(s) disponível(is) hoje';
+    var countAtivos = escalas.filter(function(e) { return e.data_fim >= hojeIsoStr; }).length;
+    var infoText = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ';
+    if (countAtivos > 0) {
+      infoText += countAtivos + ' livro(s) ativo(s)';
+      if (escalas.length > countAtivos) infoText += ', ' + (escalas.length - countAtivos) + ' expirado(s)';
+    } else {
+      infoText += escalas.length + ' livro(s) nos últimos 30 dias (todos expirados)';
+    }
+    infoEl.innerHTML = infoText;
     infoEl.style.display = 'block';
 
     var html = escalas.map(function(esc, idx) {
@@ -391,9 +560,11 @@
         }
       } catch(e) {}
       var titulo = nomePosto !== cc ? nomePosto + ' (' + cc + ')' : cc;
+      var expirado = esc.data_fim < hojeIsoStr;
+      var badgeExpirado = expirado ? '<span style="display:inline-block;background:#b91c1c;color:#fff;font-size:9pt;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:normal">Expirado</span>' : '';
 
-      return '<div class="livro-item" onclick="abrirLivro(' + idx + ')">' +
-        '<h3>📋 Livro — ' + escapeHtml(titulo) + '</h3>' +
+      return '<div class="livro-item' + (expirado ? ' livro-expirado' : '') + '" onclick="abrirLivro(' + idx + ')">' +
+        '<h3>📋 Livro — ' + escapeHtml(titulo) + badgeExpirado + '</h3>' +
         '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' → ' + fmtData(esc.data_fim) + '</div>' +
         '<div class="abrir">Abrir Livro →</div>' +
       '</div>';
@@ -413,23 +584,29 @@
     infoBar.innerHTML = '<span>👤 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span><span>Login: ' + escapeHtml(usuarioLogado.login) + '</span>';
 
     var tituloLivro = escala.id_posto;
+    var recebimentoHabilitado = false;
     try {
       var resp3 = new XMLHttpRequest();
-      resp3.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(escala.id_posto) + '&select=nome,cc', false);
+      resp3.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(escala.id_posto) + '&select=nome,cc,recebimento_servico', false);
       resp3.setRequestHeader('apikey', SUPABASE_ANON_KEY);
       resp3.send();
       if (resp3.status === 200) {
         var dados3 = JSON.parse(resp3.responseText);
-        if (dados3 && dados3.length > 0 && dados3[0].nome) {
-          tituloLivro = dados3[0].nome + ' (' + (dados3[0].cc || escala.id_posto) + ')';
+        if (dados3 && dados3.length > 0) {
+          if (dados3[0].nome) tituloLivro = dados3[0].nome + ' (' + (dados3[0].cc || escala.id_posto) + ')';
+          recebimentoHabilitado = dados3[0].recebimento_servico === true;
         }
       }
     } catch(e) {}
     document.getElementById('form-posto-badge').textContent = '📋 Livro — ' + tituloLivro;
-    document.getElementById('relato-input').value = '';
+    quillEditor.setContents([]);
 
-    showScreen('form-screen');
-    document.getElementById('relato-input').focus();
+    if (recebimentoHabilitado) {
+      iniciarRecebimento();
+    } else {
+      showScreen('form-screen');
+      quillEditor.focus();
+    }
   };
 
   window.voltarLivros = function() {
@@ -437,18 +614,351 @@
     carregarLivros(usuarioLogado);
   };
 
-  // ─── ENVIAR OCORRÊNCIA ────────────────────────────────────────────────────
-  window.enviarOcorrencia = async function() {
-    var relato = (document.getElementById('relato-input').value || '').trim();
-    if (!relato) { alert('Descreva a ocorrência antes de registrar.'); return; }
+  // ─── RECEBIMENTO DE SERVIÇO ────────────────────────────────────────────
+  var recebimentoDados = {
+    materiais: [],
+    materialComProblema: []
+  };
+  window._colabPosto = [];
 
+  window.iniciarRecebimento = function() {
+    var recBar = document.getElementById('rec-user-bar');
+    recBar.innerHTML = '<span>👤 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
+
+    document.getElementById('rec-nome').value = usuarioLogado.nome || '';
+    document.getElementById('rec-re').value = usuarioLogado.re || '';
+    document.getElementById('rec-funcao').value = '';
+    document.getElementById('rec-tipo').value = '';
+    document.getElementById('rec-recebeu-nome').value = '';
+    document.getElementById('rec-recebeu-re').value = '';
+    document.getElementById('rec-cargo-recebeu').value = '';
+    document.getElementById('rec-tipo-recebeu').value = '';
+    document.getElementById('rec-horario').value = '';
+    document.getElementById('rec-texto').value = '';
+    document.getElementById('rec-erro').style.display = 'none';
+
+    var postBadge = document.getElementById('rec-posto-badge');
+    postBadge.textContent = document.getElementById('form-posto-badge').textContent;
+
+    carregarColaboradoresPosto();
+    carregarMaterialCarga();
+    configurarBuscaRecebeu();
+    gerarTextoRecebimento();
+
+    showScreen('recebimento-screen');
+  };
+
+  function carregarColaboradoresPosto() {
+    window._colabPosto = [];
+    if (!escalaAtual) return;
+
+    try {
+      var resp = new XMLHttpRequest();
+      resp.open('POST', SUPABASE_URL + '/functions/v1/auth-form', false);
+      resp.setRequestHeader('Content-Type', 'application/json');
+      resp.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_ANON_KEY);
+      resp.send(JSON.stringify({ action: 'listar-colaboradores-posto', id_posto: escalaAtual.id_posto }));
+
+      if (resp.status === 200) {
+        window._colabPosto = JSON.parse(resp.responseText) || [];
+      }
+    } catch(e) {}
+  }
+
+  function carregarMaterialCarga() {
+    var statusEl = document.getElementById('rec-material-status');
+    statusEl.innerHTML = '<div style="color:var(--text2)">Carregando material...</div>';
+    recebimentoDados.materiais = [];
+    recebimentoDados.materialComProblema = [];
+
+    if (!escalaAtual) return;
+
+    try {
+      var resp = new XMLHttpRequest();
+      resp.open('GET', SUPABASE_URL + '/rest/v1/gss_material_carga?id_posto=eq.' + encodeURIComponent(escalaAtual.id_posto) + '&select=nome,especificacao,quantidade,estado', false);
+      resp.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      resp.send();
+      if (resp.status === 200) {
+        var materiais = JSON.parse(resp.responseText);
+        if (materiais && materiais.length > 0) {
+          recebimentoDados.materiais = materiais;
+          recebimentoDados.materialComProblema = materiais.filter(function(m) {
+            return m.estado && m.estado !== 'Bom';
+          });
+        }
+      }
+    } catch(e) {}
+
+    if (recebimentoDados.materiais.length === 0) {
+      statusEl.innerHTML = '<div style="color:var(--text2)">Nenhum material cadastrado para este posto</div>';
+      return;
+    }
+
+    var html = '<div style="margin-bottom:8px;font-weight:600">Itens do Material Carga:</div>';
+    recebimentoDados.materiais.forEach(function(m) {
+      var cor = m.estado === 'Bom' ? '#15803d' : (m.estado === 'Regular' ? '#b45309' : '#b91c1c');
+      html += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">' +
+        '<span>' + escapeHtml(m.nome) + (m.especificacao ? ' (' + escapeHtml(m.especificacao) + ')' : '') + ' × ' + m.quantidade + '</span>' +
+        '<span style="color:' + cor + ';font-weight:600">' + escapeHtml(m.estado || 'Bom') + '</span>' +
+      '</div>';
+    });
+    statusEl.innerHTML = html;
+  }
+
+  function configurarBuscaRecebeu() {
+    var buscaInput = document.getElementById('rec-busca-recebeu');
+    var dropdown = document.getElementById('rec-dropdown-recebeu');
+    var nomeInput = document.getElementById('rec-recebeu-nome');
+    var reInput = document.getElementById('rec-recebeu-re');
+    var debounceTimer = null;
+
+    buscaInput.value = '';
+    nomeInput.value = '';
+    reInput.value = '';
+    dropdown.style.display = 'none';
+
+    buscaInput.oninput = function() {
+      clearTimeout(debounceTimer);
+      var val = buscaInput.value.trim().toLowerCase();
+      if (val.length < 2) {
+        dropdown.style.display = 'none';
+        return;
+      }
+      debounceTimer = setTimeout(function() {
+        var lista = window._colabPosto || [];
+        var funcionarios = lista.filter(function(e) {
+          return (e.nome || '').toLowerCase().includes(val) || (e.re || '').toLowerCase().includes(val);
+        }).slice(0, 10);
+
+        if (funcionarios.length === 0) {
+          dropdown.innerHTML = '<div style="padding:8px 12px;color:var(--text2);font-size:13px">Nenhum colaborador encontrado para este posto</div>';
+          dropdown.style.display = 'block';
+          return;
+        }
+
+        var html = funcionarios.map(function(f) {
+          return '<div style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px" ' +
+            'onmouseover="this.style.background=\'#f0f9ff\'" onmouseout="this.style.background=\'transparent\'" ' +
+            'onclick="selecionarRecebeu(\'' + escapeHtml(f.nome).replace(/'/g, "\\'") + '\', \'' + escapeHtml(f.re || '').replace(/'/g, "\\'") + '\')">' +
+            '<div style="font-weight:600">' + escapeHtml(f.nome) + '</div>' +
+            '<div style="font-size:11px;color:var(--text2)">RE: ' + escapeHtml(f.re || '-') + '</div>' +
+          '</div>';
+        }).join('');
+        dropdown.innerHTML = html;
+        dropdown.style.display = 'block';
+      }, 180);
+    };
+
+    buscaInput.onfocus = function() {
+      if (buscaInput.value.trim().length >= 2) {
+        buscaInput.oninput();
+      }
+    };
+
+    document.addEventListener('click', function(e) {
+      if (!buscaInput.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    nomeInput.oninput = function() {
+      buscaInput.value = '';
+      dropdown.style.display = 'none';
+      gerarTextoRecebimento();
+    };
+
+    reInput.oninput = function() {
+      gerarTextoRecebimento();
+    };
+  }
+
+  window.selecionarRecebeu = function(nome, re) {
+    document.getElementById('rec-recebeu-nome').value = nome;
+    document.getElementById('rec-recebeu-re').value = re || '';
+    document.getElementById('rec-busca-recebeu').value = '';
+    document.getElementById('rec-dropdown-recebeu').style.display = 'none';
+    gerarTextoRecebimento();
+  };
+
+  function gerarTextoRecebimento() {
+    var nome = document.getElementById('rec-nome').value || '';
+    var funcao = document.getElementById('rec-funcao').value || '';
+    var tipo = document.getElementById('rec-tipo').value || '';
+    var re = document.getElementById('rec-re').value || '';
+    var recebeu = document.getElementById('rec-recebeu-nome').value || '';
+    var cargoRecebeu = document.getElementById('rec-cargo-recebeu').value || '';
+    var tipoRecebeu = document.getElementById('rec-tipo-recebeu').value || '';
+    var horario = document.getElementById('rec-horario').value || '';
+
+    if (!nome || !funcao || !tipo || !re || !recebeu || !cargoRecebeu || !tipoRecebeu || !horario) {
+      document.getElementById('rec-texto').value = 'Preencha todos os campos para gerar o texto.';
+      return;
+    }
+
+    var condicao = 'em totais condições de uso';
+    if (recebimentoDados.materialComProblema.length > 0) {
+      var itens = recebimentoDados.materialComProblema.map(function(m) {
+        return m.nome + ' (' + m.estado + ')';
+      }).join(', ');
+      condicao = 'não estava de acordo — ' + itens;
+    }
+
+    var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', recebi o posto de ' + recebeu + ', ' + cargoRecebeu + ', ' + tipoRecebeu + ' às ' + horario + ' ciente das normas em vigor, das determinações e material carga ' + condicao + ', bem como estou ciente das ocorrências registradas no período anterior.';
+
+    document.getElementById('rec-texto').value = texto;
+  }
+
+  ['rec-funcao', 'rec-tipo', 'rec-cargo-recebeu', 'rec-tipo-recebeu', 'rec-horario', 'rec-recebeu-nome', 'rec-recebeu-re'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', gerarTextoRecebimento);
+  });
+
+  window.confirmarRecebimento = function() {
+    var funcao = document.getElementById('rec-funcao').value.trim();
+    var tipo = document.getElementById('rec-tipo').value;
+    var recebeu = document.getElementById('rec-recebeu-nome').value.trim();
+    var cargoRecebeu = document.getElementById('rec-cargo-recebeu').value.trim();
+    var tipoRecebeu = document.getElementById('rec-tipo-recebeu').value;
+    var horario = document.getElementById('rec-horario').value;
+    var erroEl = document.getElementById('rec-erro');
+    erroEl.style.display = 'none';
+
+    if (!funcao) { showErro(erroEl, 'Informe a função do colaborador.'); return; }
+    if (!tipo) { showErro(erroEl, 'Selecione o tipo (EFETIVO/COBERTURA).'); return; }
+    if (!recebeu) { showErro(erroEl, 'Informe de quem passou o serviço.'); return; }
+    if (!cargoRecebeu) { showErro(erroEl, 'Informe o cargo de quem passou.'); return; }
+    if (!tipoRecebeu) { showErro(erroEl, 'Selecione o tipo de quem passou.'); return; }
+    if (!horario) { showErro(erroEl, 'Informe o horário da passagem.'); return; }
+
+    var textoRecebimento = document.getElementById('rec-texto').value;
+    document.getElementById('rec-texto-confirmado').textContent = textoRecebimento;
+    document.getElementById('rec-texto-confirmado').style.display = 'block';
+    quillEditor.setText('');
+    quillEditor.enable(true);
+    showScreen('form-screen');
+    quillEditor.focus();
+  };
+
+  window.voltarRecebimento = function() {
+    showScreen('recebimento-screen');
+  };
+
+  // ─── ENVIAR OCORRÊNCIA ────────────────────────────────────────────────
+  window.enviarOcorrencia = async function() {
+    var relatoText = quillEditor.getText().trim();
+    if (!relatoText) { alert('Descreva a ocorrência antes de registrar.'); return; }
     if (!escalaAtual || !usuarioLogado) { alert('Sessão expirada. Faça login novamente.'); return; }
+    showAssinarScreen();
+  };
+
+  // ─── ASSINATURA ──────────────────────────────────────────────────────
+  var assinaturaCanvas = null;
+  var assinaturaCtx = null;
+  var assinaturaDesenhando = false;
+  var assinaturaTemPixels = false;
+  var assinaturaAtual = null;
+
+  function initAssinatura() {
+    assinaturaCanvas = document.getElementById('assinatura-canvas');
+    assinaturaCtx = assinaturaCanvas.getContext('2d');
+    assinaturaTemPixels = false;
+    assinaturaAtual = null;
+
+    assinaturaCtx.strokeStyle = '#000';
+    assinaturaCtx.lineWidth = 4;
+    assinaturaCtx.lineCap = 'round';
+    assinaturaCtx.lineJoin = 'round';
+    assinaturaCtx.fillStyle = '#fff';
+    assinaturaCtx.fillRect(0, 0, assinaturaCanvas.width, assinaturaCanvas.height);
+
+    assinaturaCanvas.addEventListener('pointerdown', onAssinaturaStart);
+    assinaturaCanvas.addEventListener('pointermove', onAssinaturaMove);
+    assinaturaCanvas.addEventListener('pointerup', onAssinaturaEnd);
+    assinaturaCanvas.addEventListener('pointerleave', onAssinaturaEnd);
+    assinaturaCanvas.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
+
+    document.getElementById('assinar-erro').style.display = 'none';
+  }
+
+  function getCanvasPos(e) {
+    var rect = assinaturaCanvas.getBoundingClientRect();
+    var scaleX = assinaturaCanvas.width / rect.width;
+    var scaleY = assinaturaCanvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  function onAssinaturaStart(e) {
+    assinaturaDesenhando = true;
+    var pos = getCanvasPos(e);
+    assinaturaCtx.beginPath();
+    assinaturaCtx.arc(pos.x, pos.y, assinaturaCtx.lineWidth / 2, 0, Math.PI * 2);
+    assinaturaCtx.fill();
+    assinaturaCtx.beginPath();
+    assinaturaCtx.moveTo(pos.x, pos.y);
+  }
+
+  function onAssinaturaMove(e) {
+    if (!assinaturaDesenhando) return;
+    var pos = getCanvasPos(e);
+    assinaturaCtx.lineTo(pos.x, pos.y);
+    assinaturaCtx.stroke();
+    assinaturaCtx.beginPath();
+    assinaturaCtx.moveTo(pos.x, pos.y);
+    assinaturaTemPixels = true;
+  }
+
+  function onAssinaturaEnd(e) {
+    assinaturaDesenhando = false;
+  }
+
+  window.limparAssinatura = function() {
+    if (!assinaturaCtx) return;
+    assinaturaCtx.fillStyle = '#fff';
+    assinaturaCtx.fillRect(0, 0, assinaturaCanvas.width, assinaturaCanvas.height);
+    assinaturaTemPixels = false;
+    assinaturaAtual = null;
+    document.getElementById('assinar-erro').style.display = 'none';
+  };
+
+  window.confirmarAssinatura = function() {
+    if (!assinaturaTemPixels) {
+      var erroEl = document.getElementById('assinar-erro');
+      erroEl.textContent = 'Por favor, assine antes de confirmar.';
+      erroEl.style.display = 'block';
+      return;
+    }
+    assinaturaAtual = assinaturaCanvas.toDataURL('image/png');
+    enviarOcorrenciaComAssinatura();
+  };
+
+  window.voltarFormulario = function() {
+    showScreen('form-screen');
+  };
+
+  function showAssinarScreen() {
+    var resumo = document.getElementById('assinar-resumo');
+    var textoRec = document.getElementById('rec-texto-confirmado').textContent || '';
+    var relatoText = quillEditor.getText().trim();
+    var fullText = textoRec ? textoRec + '\n\n---\n\n' + relatoText : relatoText;
+    var truncado = fullText.length > 200 ? fullText.slice(0, 200) + '...' : fullText;
+    resumo.innerHTML = '<strong>Relato:</strong> ' + escapeHtml(truncado);
+    initAssinatura();
+    showScreen('assinar-screen');
+  }
+
+  async function enviarOcorrenciaComAssinatura() {
+    var textoRec = document.getElementById('rec-texto-confirmado').textContent || '';
+    var relatoOcorrencia = quillEditor.root.innerHTML.trim();
 
     var body = {
       id_posto: escalaAtual.id_posto,
       id_acesso: usuarioLogado.id,
       colaborador: usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')',
-      relato: relato
+      relato: relatoOcorrencia,
+      recebimento: textoRec || '',
+      assinatura: assinaturaAtual
     };
 
     try {
@@ -464,7 +974,7 @@
     } catch (err) {
       alert('Erro ao registrar ocorrência. Tente novamente.');
     }
-  };
+  }
 
   // ─── LOGOUT ───────────────────────────────────────────────────────────────
   window.fazerLogout = function() {
