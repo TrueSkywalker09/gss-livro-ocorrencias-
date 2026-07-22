@@ -27,6 +27,7 @@
     .pw-eye:hover{color:#475569}
     .login-btn{width:100%;justify-content:center;padding:12px;font-size:14px}
     .container{width:100%;max-width:500px}
+    .container.livro-wide{max-width:900px}
     .card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px;margin-bottom:16px}
     .logo{text-align:center;margin-bottom:24px}
     .logo h1{font-size:18px;font-weight:800;color:var(--text);margin-top:8px}
@@ -122,7 +123,7 @@
       .ql-editor{font-size:16px;min-height:200px;padding:12px}
     }
     .anteriores-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:12px}
-    .anteriores-tabela{width:100%;border-collapse:collapse;font-size:13px;min-width:420px}
+    .anteriores-tabela{width:100%;border-collapse:collapse;font-size:13px;min-width:520px}
     .anteriores-tabela thead{position:sticky;top:0;z-index:1}
     .anteriores-tabela th{background:#f1f5f9;padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;border-bottom:1.5px solid #e2e8f0;white-space:nowrap}
     .anteriores-tabela td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
@@ -130,8 +131,8 @@
     .anteriores-tabela tbody tr:hover td{background:#f0f9ff}
     .anteriores-tabela .col-protocolo{font-family:'SF Mono',SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;font-weight:600;color:var(--primary);white-space:nowrap}
     .anteriores-tabela .col-data{white-space:nowrap;font-size:12px;color:var(--text)}
-    .anteriores-tabela .col-colaborador{font-size:13px;color:var(--text);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .anteriores-tabela .col-posto{font-size:12px;color:var(--text2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .anteriores-tabela .col-colaborador{font-size:13px;color:var(--text);white-space:nowrap}
+    .anteriores-tabela .col-posto{font-size:12px;color:var(--text2);white-space:nowrap}
     .anteriores-empty{text-align:center;padding:32px 16px;color:var(--text2)}
     .anteriores-empty-icon{font-size:40px;margin-bottom:8px}
   </style>
@@ -597,7 +598,7 @@
 
   function showLivros(user, livros, ocorrencias) {
     var infoEl = document.getElementById('livros-user-info');
-    var livrosDisponiveis = livros.filter(function(l) { return !l.tem_ocorrencia; });
+    var livrosDisponiveis = livros.filter(function(l) { return !l.tem_ocorrencia || l.eh_hoje; });
     var livrosAnteriores = livros.filter(function(l) { return l.tem_ocorrencia; });
     var infoText = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ';
     if (livrosDisponiveis.length > 0) {
@@ -729,6 +730,8 @@
 
   window.trocarAbaLivros = function(aba) {
     abaLivrosAtiva = aba;
+    var container = document.querySelector('.container');
+    if (container) container.classList.toggle('livro-wide', aba === 'anteriores');
     document.getElementById('tab-ativos').className = 'livros-tab' + (aba === 'ativos' ? ' active' : '');
     document.getElementById('tab-anteriores').className = 'livros-tab' + (aba === 'anteriores' ? ' active' : '');
     document.getElementById('livros-lista-ativos').style.display = aba === 'ativos' ? 'block' : 'none';
