@@ -543,27 +543,21 @@
     showScreen('loading-screen');
 
     try {
-      var hoje = new Date();
-      var hojeIsoStr = hoje.toISOString().slice(0, 10);
-      var trintaDiasAtras = new Date(hoje);
-      trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
-      var trintaDiasAtrasIso = trintaDiasAtras.toISOString().slice(0, 10);
-
-      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_escalas?id_acesso=eq.' + user.id + '&data_fim=gte.' + trintaDiasAtrasIso + '&select=*&order=data_inicio.desc', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+      var resp = await fetch(SUPABASE_EDGE + '/auth-form', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+        body: JSON.stringify({ action: 'listar-livros', id_acesso: user.id })
       });
 
-      if (!resp.ok) throw new Error('Erro ao buscar livros');
+      var body = await resp.json();
+      var livros = body.livros || [];
 
-      var escalas = await resp.json();
-
-      if (!escalas || escalas.length === 0) {
+      if (!livros || livros.length === 0) {
         showNoLivros(user);
         return;
       }
 
-      showLivros(user, escalas, hojeIsoStr);
+      showLivros(user, livros);
     } catch (err) {
       console.error('Erro ao carregar livros:', err);
       showNoLivros(user);
@@ -587,16 +581,16 @@
     showScreen('livros-screen');
   }
 
-  function showLivros(user, escalas, hojeIsoStr) {
+  function showLivros(user, livros) {
     var infoEl = document.getElementById('livros-user-info');
-    var livrosAtivos = escalas.filter(function(e) { return e.data_fim >= hojeIsoStr; });
-    var livrosExpirados = escalas.filter(function(e) { return e.data_fim < hojeIsoStr; });
+    var livrosDisponiveis = livros.filter(function(l) { return !l.tem_ocorrencia; });
+    var livrosAnteriores = livros.filter(function(l) { return l.tem_ocorrencia; });
     var infoText = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ';
-    if (livrosAtivos.length > 0) {
-      infoText += livrosAtivos.length + ' livro(s) disponível(is)';
-      if (livrosExpirados.length > 0) infoText += ', ' + livrosExpirados.length + ' anterior(es)';
+    if (livrosDisponiveis.length > 0) {
+      infoText += livrosDisponiveis.length + ' livro(s) disponível(is)';
+      if (livrosAnteriores.length > 0) infoText += ', ' + livrosAnteriores.length + ' anterior(es)';
     } else {
-      infoText += livrosExpirados.length + ' livro(s) anterior(es)';
+      infoText += livrosAnteriores.length + ' livro(s) anterior(es)';
     }
     infoEl.innerHTML = infoText;
     infoEl.style.display = 'block';
@@ -618,34 +612,35 @@
         }
       } catch(e) {}
       var titulo = nomePosto !== cc ? nomePosto + ' (' + cc + ')' : cc;
-      var expirado = esc.data_fim < hojeIsoStr;
-      var clickAction = expirado
+      var anterior = esc.tem_ocorrencia;
+      var clickAction = anterior
         ? 'abrirHistoricoLivro(\'' + escapeHtml(esc.id_posto).replace(/'/g, "\\'") + '\')'
         : 'abrirLivro(\'' + esc.id + '\')';
-      var acaoLabel = expirado ? 'Ver Histórico →' : 'Abrir Livro →';
-      var badgeAnterior = expirado ? '<span style="display:inline-block;background:#64748b;color:#fff;font-size:9pt;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:normal">Anterior</span>' : '';
+      var acaoLabel = anterior ? 'Ver Histórico →' : 'Abrir Livro →';
+      var badgeAnterior = anterior ? '<span style="display:inline-block;background:#64748b;color:#fff;font-size:9pt;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:normal">Anterior</span>' : '';
+      var countInfo = anterior && esc.total_ocorrencias ? ' — ' + esc.total_ocorrencias + ' ocorrência(s)' : '';
 
-      return '<div class="livro-item' + (expirado ? ' livro-expirado' : '') + '" onclick="' + clickAction + '">' +
+      return '<div class="livro-item' + (anterior ? ' livro-expirado' : '') + '" onclick="' + clickAction + '">' +
         '<h3>📋 Livro — ' + escapeHtml(titulo) + badgeAnterior + '</h3>' +
-        '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' → ' + fmtData(esc.data_fim) + '</div>' +
+        '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' → ' + fmtData(esc.data_fim) + countInfo + '</div>' +
         '<div class="abrir">' + acaoLabel + '</div>' +
       '</div>';
     }
 
-    window._escalasAtivos = livrosAtivos;
-    window._escalasAnteriores = livrosExpirados;
+    window._escalasAtivos = livrosDisponiveis;
+    window._escalasAnteriores = livrosAnteriores;
 
-    document.getElementById('livros-lista-ativos').innerHTML = livrosAtivos.length > 0
-      ? livrosAtivos.map(renderLivro).join('')
-      : '<div class="no-livro"><div class="no-livro-icon">📋</div><p style="font-size:13px;color:var(--text2)">Nenhum livro ativo no momento.</p></div>';
+    document.getElementById('livros-lista-ativos').innerHTML = livrosDisponiveis.length > 0
+      ? livrosDisponiveis.map(renderLivro).join('')
+      : '<div class="no-livro"><div class="no-livro-icon">📋</div><p style="font-size:13px;color:var(--text2)">Nenhum livro disponível no momento.</p></div>';
 
-    document.getElementById('livros-lista-anteriores').innerHTML = livrosExpirados.length > 0
-      ? livrosExpirados.map(renderLivro).join('')
+    document.getElementById('livros-lista-anteriores').innerHTML = livrosAnteriores.length > 0
+      ? livrosAnteriores.map(renderLivro).join('')
       : '<div class="no-livro"><div class="no-livro-icon">📭</div><p style="font-size:13px;color:var(--text2)">Nenhum livro anterior encontrado.</p></div>';
 
     document.getElementById('livros-tabs').style.display = 'flex';
 
-    if (livrosAtivos.length === 0 && livrosExpirados.length > 0) {
+    if (livrosDisponiveis.length === 0 && livrosAnteriores.length > 0) {
       abaLivrosAtiva = 'anteriores';
     } else {
       abaLivrosAtiva = 'ativos';
