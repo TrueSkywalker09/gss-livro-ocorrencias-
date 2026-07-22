@@ -598,7 +598,12 @@
 
   function showLivros(user, livros, ocorrencias) {
     var infoEl = document.getElementById('livros-user-info');
-    var livrosDisponiveis = livros.filter(function(l) { return !l.tem_ocorrencia || l.eh_hoje; });
+    var todosDisponiveis = livros.filter(function(l) { return !l.tem_ocorrencia || l.eh_hoje; });
+    var seen = {};
+    var livrosDisponiveis = [];
+    todosDisponiveis.forEach(function(l) {
+      if (!seen[l.id_posto]) { seen[l.id_posto] = true; livrosDisponiveis.push(l); }
+    });
     var livrosAnteriores = livros.filter(function(l) { return l.tem_ocorrencia && !l.eh_hoje; });
     var infoText = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ';
     if (livrosDisponiveis.length > 0) {
@@ -851,12 +856,28 @@
     var horaFmt = String(dbr.getUTCHours()).padStart(2,'0') + ':' + String(dbr.getUTCMinutes()).padStart(2,'0');
     var protocolo = '#' + dbr.getUTCFullYear() + String(dbr.getUTCMonth()+1).padStart(2,'0') + String(dbr.getUTCDate()).padStart(2,'0') + '/' + (occ.id_posto || '-');
 
+    var nomePostoDet = occ.id_posto;
+    try {
+      var respP = new XMLHttpRequest();
+      respP.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(occ.id_posto) + '&select=nome,cc', false);
+      respP.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      respP.send();
+      if (respP.status === 200) {
+        var dadosP = JSON.parse(respP.responseText);
+        if (dadosP && dadosP.length > 0) {
+          var n = dadosP[0].nome || occ.id_posto;
+          var cc = dadosP[0].cc || occ.id_posto;
+          nomePostoDet = n !== cc ? n + ' (' + cc + ')' : cc;
+        }
+      }
+    } catch(e) {}
+
     var assinaturaHtml = occ.assinatura
       ? '<div class="sp-section"><div class="sp-section-title">Assinatura</div><div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px;display:inline-block"><img src="' + occ.assinatura + '" alt="Assinatura" style="max-width:300px;max-height:150px;display:block"/></div></div>'
       : '';
 
     var recebimentoHtml = occ.recebimento
-      ? '<div class="sp-section"><div class="sp-section-title">Recebimento</div><div class="sp-obs">' + escapeHtml(occ.recebimento) + '</div></div>'
+      ? '<div class="sp-section"><div class="sp-section-title">Recebimento de Serviço</div><div class="sp-obs">' + occ.recebimento + '</div></div>'
       : '';
 
     document.getElementById('sp-detail-body').innerHTML =
@@ -866,9 +887,10 @@
         '<div class="sp-row"><div class="sp-label">Data</div><div class="sp-value">' + dataFmt + '</div></div>' +
         '<div class="sp-row"><div class="sp-label">Hora</div><div class="sp-value">' + horaFmt + '</div></div>' +
         '<div class="sp-row"><div class="sp-label">Colaborador</div><div class="sp-value">' + escapeHtml(occ.colaborador || '-') + '</div></div>' +
+        '<div class="sp-row"><div class="sp-label">Posto</div><div class="sp-value">' + escapeHtml(nomePostoDet) + '</div></div>' +
       '</div>' +
       recebimentoHtml +
-      '<div class="sp-section"><div class="sp-section-title">Relato</div><div class="sp-obs">' + (occ.relato || '<em>Sem relato</em>') + '</div></div>' +
+      '<div class="sp-section"><div class="sp-section-title">Ocorrências</div><div class="sp-obs">' + (occ.relato || '<em>Sem relato</em>') + '</div></div>' +
       assinaturaHtml;
 
     document.getElementById('sp-detail-overlay').classList.add('show');
