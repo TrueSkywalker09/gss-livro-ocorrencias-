@@ -121,6 +121,19 @@
       .ql-snow.ql-toolbar .ql-formats{margin-right:4px}
       .ql-editor{font-size:16px;min-height:200px;padding:12px}
     }
+    .anteriores-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:12px}
+    .anteriores-tabela{width:100%;border-collapse:collapse;font-size:13px;min-width:420px}
+    .anteriores-tabela thead{position:sticky;top:0;z-index:1}
+    .anteriores-tabela th{background:#f1f5f9;padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;border-bottom:1.5px solid #e2e8f0;white-space:nowrap}
+    .anteriores-tabela td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+    .anteriores-tabela tbody tr{cursor:pointer;transition:background .12s}
+    .anteriores-tabela tbody tr:hover td{background:#f0f9ff}
+    .anteriores-tabela .col-protocolo{font-family:'SF Mono',SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;font-weight:600;color:var(--primary);white-space:nowrap}
+    .anteriores-tabela .col-data{white-space:nowrap;font-size:12px;color:var(--text)}
+    .anteriores-tabela .col-colaborador{font-size:13px;color:var(--text);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .anteriores-tabela .col-posto{font-size:12px;color:var(--text2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .anteriores-empty{text-align:center;padding:32px 16px;color:var(--text2)}
+    .anteriores-empty-icon{font-size:40px;margin-bottom:8px}
   </style>
 </head>
 <body>
@@ -551,13 +564,14 @@
 
       var body = await resp.json();
       var livros = body.livros || [];
+      var ocorrencias = body.ocorrencias || [];
 
       if (!livros || livros.length === 0) {
         showNoLivros(user);
         return;
       }
 
-      showLivros(user, livros);
+      showLivros(user, livros, ocorrencias);
     } catch (err) {
       console.error('Erro ao carregar livros:', err);
       showNoLivros(user);
@@ -581,16 +595,16 @@
     showScreen('livros-screen');
   }
 
-  function showLivros(user, livros) {
+  function showLivros(user, livros, ocorrencias) {
     var infoEl = document.getElementById('livros-user-info');
     var livrosDisponiveis = livros.filter(function(l) { return !l.tem_ocorrencia; });
     var livrosAnteriores = livros.filter(function(l) { return l.tem_ocorrencia; });
     var infoText = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ';
     if (livrosDisponiveis.length > 0) {
       infoText += livrosDisponiveis.length + ' livro(s) disponível(is)';
-      if (livrosAnteriores.length > 0) infoText += ', ' + livrosAnteriores.length + ' anterior(es)';
+      if (ocorrencias.length > 0) infoText += ', ' + ocorrencias.length + ' ocorrência(s) anterior(es)';
     } else {
-      infoText += livrosAnteriores.length + ' livro(s) anterior(es)';
+      infoText += ocorrencias.length + ' ocorrência(s) anterior(es)';
     }
     infoEl.innerHTML = infoText;
     infoEl.style.display = 'block';
@@ -634,13 +648,76 @@
       ? livrosDisponiveis.map(renderLivro).join('')
       : '<div class="no-livro"><div class="no-livro-icon">📋</div><p style="font-size:13px;color:var(--text2)">Nenhum livro disponível no momento.</p></div>';
 
-    document.getElementById('livros-lista-anteriores').innerHTML = livrosAnteriores.length > 0
-      ? livrosAnteriores.map(renderLivro).join('')
-      : '<div class="no-livro"><div class="no-livro-icon">📭</div><p style="font-size:13px;color:var(--text2)">Nenhum livro anterior encontrado.</p></div>';
+    // ─── RENDERIZAR TABELA DE OCORRÊNCIAS (ANTERIORES) ──────────────────
+    window._ocorrenciasAnteriores = ocorrencias;
+
+    if (ocorrencias.length > 0) {
+      // Cache de nomes dos postos (usar dados já buscados nas escalas)
+      var postosCache = {};
+      livros.forEach(function(l) {
+        postosCache[l.id_posto] = l.id_posto;
+      });
+      // Enriquecer cache com nomes via XHR síncrono
+      var postosUnicos = Object.keys(postosCache);
+      postosUnicos.forEach(function(cc) {
+        try {
+          var respP = new XMLHttpRequest();
+          respP.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(cc) + '&select=nome,cc', false);
+          respP.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+          respP.send();
+          if (respP.status === 200) {
+            var dadosP = JSON.parse(respP.responseText);
+            if (dadosP && dadosP.length > 0) {
+              var nome = dadosP[0].nome || cc;
+              postosCache[cc] = nome !== cc ? nome + ' (' + cc + ')' : cc;
+            }
+          }
+        } catch(e) {}
+      });
+
+      var tabelaHtml = '<div class="anteriores-wrap"><table class="anteriores-tabela">' +
+        '<thead><tr>' +
+          '<th>Protocolo</th>' +
+          '<th>Data</th>' +
+          '<th>Colaborador</th>' +
+          '<th>Posto</th>' +
+        '</tr></thead><tbody>';
+
+      ocorrencias.forEach(function(occ) {
+        var d = new Date(occ.criado_em);
+        var dbr = new Date(d.getTime() - 3*60*60*1000);
+        var protocolo = '#' + dbr.getUTCFullYear() +
+          String(dbr.getUTCMonth()+1).padStart(2,'0') +
+          String(dbr.getUTCDate()).padStart(2,'0') + '/' +
+          (occ.id_posto || '-');
+        var dataFmt = String(dbr.getUTCDate()).padStart(2,'0') + '/' +
+          String(dbr.getUTCMonth()+1).padStart(2,'0') + '/' + dbr.getUTCFullYear();
+        var horaFmt = String(dbr.getUTCHours()).padStart(2,'0') + ':' +
+          String(dbr.getUTCMinutes()).padStart(2,'0');
+        var nomePosto = postosCache[occ.id_posto] || occ.id_posto;
+        var colaborador = escapeHtml(occ.colaborador || '-');
+
+        tabelaHtml += '<tr onclick="abrirDetalheOcorrenciaFromAnteriores(\'' + occ.id + '\')">' +
+          '<td class="col-protocolo">' + escapeHtml(protocolo) + '</td>' +
+          '<td class="col-data">' + dataFmt + '<br><span style="color:var(--text2);font-size:11px">' + horaFmt + '</span></td>' +
+          '<td class="col-colaborador">' + colaborador + '</td>' +
+          '<td class="col-posto">' + escapeHtml(nomePosto) + '</td>' +
+        '</tr>';
+      });
+
+      tabelaHtml += '</tbody></table></div>';
+      document.getElementById('livros-lista-anteriores').innerHTML = tabelaHtml;
+    } else {
+      document.getElementById('livros-lista-anteriores').innerHTML =
+        '<div class="anteriores-empty">' +
+          '<div class="anteriores-empty-icon">📭</div>' +
+          '<p style="font-size:13px">Nenhuma ocorrência encontrada.</p>' +
+        '</div>';
+    }
 
     document.getElementById('livros-tabs').style.display = 'flex';
 
-    if (livrosDisponiveis.length === 0 && livrosAnteriores.length > 0) {
+    if (livrosDisponiveis.length === 0 && ocorrencias.length > 0) {
       abaLivrosAtiva = 'anteriores';
     } else {
       abaLivrosAtiva = 'ativos';
@@ -803,6 +880,19 @@
   window.fecharDetalhe = function() {
     document.getElementById('sp-detail').classList.remove('open');
     document.getElementById('sp-detail-overlay').classList.remove('show');
+  };
+
+  // ─── CLICK NA TABELA DE ANTERIORES → ABRIR DETALHE ──────────────────────
+  window.abrirDetalheOcorrenciaFromAnteriores = function(id) {
+    var lista = window._ocorrenciasAnteriores || [];
+    for (var i = 0; i < lista.length; i++) {
+      if (String(lista[i].id) === String(id)) {
+        // Alimentar o array que o abrirDetalheOcorrencia usa para lookup
+        window._ocorrenciasHistorico = lista;
+        window.abrirDetalheOcorrencia(id);
+        return;
+      }
+    }
   };
 
   // ─── RECEBIMENTO DE SERVIÇO ────────────────────────────────────────────
