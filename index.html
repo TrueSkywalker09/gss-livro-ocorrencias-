@@ -72,6 +72,28 @@
     .livros-tab{flex:1;padding:10px 16px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;background:var(--surface);color:var(--text2);transition:all .15s}
     .livros-tab.active{background:var(--primary);color:#fff}
     .livros-tab:hover:not(.active){background:var(--bg2)}
+    .side-panel{position:fixed;top:0;right:0;width:100%;max-width:500px;height:100vh;background:#fff;z-index:600;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s cubic-bezier(.4,0,.2,1);box-shadow:-4px 0 24px rgba(0,0,0,.15)}
+    .side-panel.open{transform:translateX(0)}
+    .sp-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1.5px solid #e2e8f0;background:linear-gradient(135deg,#0c4a6e,#0369a1);color:#fff;flex-shrink:0}
+    .sp-header span{font-weight:700;font-size:15px}
+    .sp-header button{background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+    .sp-body{flex:1;overflow-y:auto;padding:20px}
+    .sp-actions{padding:14px 20px;border-top:1.5px solid #e2e8f0;flex-shrink:0;display:flex;gap:10px}
+    .sp-actions .btn{flex:1;justify-content:center}
+    .sp-row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9}
+    .sp-label{font-size:11px;font-weight:700;text-transform:uppercase;color:#0369a1;min-width:110px}
+    .sp-value{font-size:13px;color:#0f172a;flex:1}
+    .sp-section{margin-bottom:16px}
+    .sp-section-title{font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1.5px solid #e2e8f0}
+    .sp-obs{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:13px;color:#475569;line-height:1.6}
+    .sp-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.25);z-index:599;display:none}
+    .sp-overlay.show{display:block}
+    .sp-tabela{width:100%;border-collapse:collapse;font-size:13px}
+    .sp-tabela th{background:#f1f5f9;padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;border-bottom:1.5px solid #e2e8f0}
+    .sp-tabela td{padding:10px 12px;border-bottom:1px solid #f1f5f9;cursor:pointer}
+    .sp-tabela tr:hover td{background:#f0f9ff}
+    .sp-tabela .sp-relato{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2)}
+    @media(max-width:550px){.side-panel{max-width:100%}}
     .no-livro{text-align:center;padding:40px 20px;color:var(--text2)}
     .no-livro-icon{font-size:48px;margin-bottom:12px}
     .user-bar{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:var(--primary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
@@ -313,6 +335,28 @@
   </div>
 </div>
 
+<!-- Side Panel: Ocorrências do Livro -->
+<div class="sp-overlay" id="sp-hist-overlay" onclick="fecharHistorico()"></div>
+<div class="side-panel" id="sp-hist">
+  <div class="sp-header">
+    <span id="sp-hist-titulo">Ocorrências do Livro</span>
+    <button onclick="fecharHistorico()">&#10005;</button>
+  </div>
+  <div class="sp-body" id="sp-hist-body"></div>
+  <div class="sp-actions"><button class="btn btn-outline" onclick="fecharHistorico()">Fechar</button></div>
+</div>
+
+<!-- Side Panel: Detalhe da Ocorrência -->
+<div class="sp-overlay" id="sp-detail-overlay" onclick="fecharDetalhe()"></div>
+<div class="side-panel" id="sp-detail">
+  <div class="sp-header">
+    <span>Detalhes da Ocorrência</span>
+    <button onclick="fecharDetalhe()">&#10005;</button>
+  </div>
+  <div class="sp-body" id="sp-detail-body"></div>
+  <div class="sp-actions"><button class="btn btn-outline" onclick="fecharDetalhe()">Fechar</button></div>
+</div>
+
 <div class="footer">GSS Controle Gerencial — Livro de Ocorrências Eletrônico</div>
 
 <script>
@@ -549,10 +593,10 @@
     var livrosExpirados = escalas.filter(function(e) { return e.data_fim < hojeIsoStr; });
     var infoText = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ';
     if (livrosAtivos.length > 0) {
-      infoText += livrosAtivos.length + ' livro(s) ativo(s)';
-      if (livrosExpirados.length > 0) infoText += ', ' + livrosExpirados.length + ' expirado(s)';
+      infoText += livrosAtivos.length + ' livro(s) disponível(is)';
+      if (livrosExpirados.length > 0) infoText += ', ' + livrosExpirados.length + ' anterior(es)';
     } else {
-      infoText += livrosExpirados.length + ' livro(s) nos últimos 30 dias (todos expirados)';
+      infoText += livrosExpirados.length + ' livro(s) anterior(es)';
     }
     infoEl.innerHTML = infoText;
     infoEl.style.display = 'block';
@@ -575,12 +619,16 @@
       } catch(e) {}
       var titulo = nomePosto !== cc ? nomePosto + ' (' + cc + ')' : cc;
       var expirado = esc.data_fim < hojeIsoStr;
-      var badgeExpirado = expirado ? '<span style="display:inline-block;background:#b91c1c;color:#fff;font-size:9pt;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:normal">Expirado</span>' : '';
+      var clickAction = expirado
+        ? 'abrirHistoricoLivro(\'' + escapeHtml(esc.id_posto).replace(/'/g, "\\'") + '\')'
+        : 'abrirLivro(\'' + esc.id + '\')';
+      var acaoLabel = expirado ? 'Ver Histórico →' : 'Abrir Livro →';
+      var badgeAnterior = expirado ? '<span style="display:inline-block;background:#64748b;color:#fff;font-size:9pt;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:normal">Anterior</span>' : '';
 
-      return '<div class="livro-item' + (expirado ? ' livro-expirado' : '') + '" onclick="abrirLivro(\'' + esc.id + '\')">' +
-        '<h3>📋 Livro — ' + escapeHtml(titulo) + badgeExpirado + '</h3>' +
+      return '<div class="livro-item' + (expirado ? ' livro-expirado' : '') + '" onclick="' + clickAction + '">' +
+        '<h3>📋 Livro — ' + escapeHtml(titulo) + badgeAnterior + '</h3>' +
         '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' → ' + fmtData(esc.data_fim) + '</div>' +
-        '<div class="abrir">Abrir Livro →</div>' +
+        '<div class="abrir">' + acaoLabel + '</div>' +
       '</div>';
     }
 
@@ -656,6 +704,110 @@
   window.voltarLivros = function() {
     escalaAtual = null;
     carregarLivros(usuarioLogado);
+  };
+
+  // ─── HISTÓRICO DE OCORRÊNCIAS (SIDE PANEL) ──────────────────────────────
+  window.abrirHistoricoLivro = async function(id_posto) {
+    var nomePosto = id_posto;
+    try {
+      var resp = new XMLHttpRequest();
+      resp.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(id_posto) + '&select=nome,cc', false);
+      resp.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      resp.send();
+      if (resp.status === 200) {
+        var dados = JSON.parse(resp.responseText);
+        if (dados && dados.length > 0 && dados[0].nome) nomePosto = dados[0].nome + ' (' + (dados[0].cc || id_posto) + ')';
+      }
+    } catch(e) {}
+
+    document.getElementById('sp-hist-titulo').textContent = nomePosto;
+    document.getElementById('sp-hist-body').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)">Carregando...</div>';
+    document.getElementById('sp-hist-overlay').classList.add('show');
+    document.getElementById('sp-hist').classList.add('open');
+
+    try {
+      var resp2 = await fetch(SUPABASE_EDGE + '/auth-form', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+        body: JSON.stringify({ action: 'listar-ocorrencias-posto', id_posto: id_posto, id_acesso: usuarioLogado.id })
+      });
+      var body = await resp2.json();
+      var ocorrencias = body.ocorrencias || [];
+
+      if (ocorrencias.length === 0) {
+        document.getElementById('sp-hist-body').innerHTML = '<div class="no-livro"><div class="no-livro-icon">📭</div><p>Nenhuma ocorrência registrada neste livro.</p></div>';
+        return;
+      }
+
+      var html = '<table class="sp-tabela"><thead><tr><th>Data</th><th>Colaborador</th><th>Relato</th><th>Assin.</th></tr></thead><tbody>';
+      ocorrencias.forEach(function(occ) {
+        var d = new Date(occ.criado_em);
+        var dbr = new Date(d.getTime() - 3*60*60*1000);
+        var dataFmt = String(dbr.getUTCDate()).padStart(2,'0') + '/' + String(dbr.getUTCMonth()+1).padStart(2,'0') + '/' + dbr.getUTCFullYear();
+        var horaFmt = String(dbr.getUTCHours()).padStart(2,'0') + ':' + String(dbr.getUTCMinutes()).padStart(2,'0');
+        var relatoTxt = (occ.relato || '').replace(/<[^>]*>/g, '').slice(0, 50);
+        var assBadge = occ.assinatura ? '<span style="color:#15803d">✅</span>' : '<span style="color:#b91c1c">❌</span>';
+
+        html += '<tr onclick="abrirDetalheOcorrencia(\'' + occ.id + '\')">' +
+          '<td style="white-space:nowrap;font-size:12px">' + dataFmt + '<br><span style="color:var(--text2);font-size:11px">' + horaFmt + '</span></td>' +
+          '<td style="font-size:12px">' + escapeHtml(occ.colaborador || '-') + '</td>' +
+          '<td class="sp-relato">' + escapeHtml(relatoTxt) + (relatoTxt.length >= 50 ? '...' : '') + '</td>' +
+          '<td style="text-align:center">' + assBadge + '</td></tr>';
+      });
+      html += '</tbody></table>';
+      document.getElementById('sp-hist-body').innerHTML = html;
+      window._ocorrenciasHistorico = ocorrencias;
+    } catch(err) {
+      document.getElementById('sp-hist-body').innerHTML = '<div class="no-livro"><p>Erro ao carregar ocorrências.</p></div>';
+    }
+  };
+
+  window.abrirDetalheOcorrencia = function(id) {
+    var occ = null;
+    var lista = window._ocorrenciasHistorico || [];
+    for (var i = 0; i < lista.length; i++) {
+      if (String(lista[i].id) === String(id)) { occ = lista[i]; break; }
+    }
+    if (!occ) return;
+
+    var d = new Date(occ.criado_em);
+    var dbr = new Date(d.getTime() - 3*60*60*1000);
+    var dataFmt = String(dbr.getUTCDate()).padStart(2,'0') + '/' + String(dbr.getUTCMonth()+1).padStart(2,'0') + '/' + dbr.getUTCFullYear();
+    var horaFmt = String(dbr.getUTCHours()).padStart(2,'0') + ':' + String(dbr.getUTCMinutes()).padStart(2,'0');
+    var protocolo = '#' + dbr.getUTCFullYear() + String(dbr.getUTCMonth()+1).padStart(2,'0') + String(dbr.getUTCDate()).padStart(2,'0') + '/' + (occ.id_posto || '-');
+
+    var assinaturaHtml = occ.assinatura
+      ? '<div class="sp-section"><div class="sp-section-title">Assinatura</div><div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px;display:inline-block"><img src="' + occ.assinatura + '" alt="Assinatura" style="max-width:300px;max-height:150px;display:block"/></div></div>'
+      : '';
+
+    var recebimentoHtml = occ.recebimento
+      ? '<div class="sp-section"><div class="sp-section-title">Recebimento</div><div class="sp-obs">' + escapeHtml(occ.recebimento) + '</div></div>'
+      : '';
+
+    document.getElementById('sp-detail-body').innerHTML =
+      '<div class="sp-section">' +
+        '<div class="sp-section-title">Informações</div>' +
+        '<div class="sp-row"><div class="sp-label">Protocolo</div><div class="sp-value" style="font-family:monospace;font-weight:600">' + protocolo + '</div></div>' +
+        '<div class="sp-row"><div class="sp-label">Data</div><div class="sp-value">' + dataFmt + '</div></div>' +
+        '<div class="sp-row"><div class="sp-label">Hora</div><div class="sp-value">' + horaFmt + '</div></div>' +
+        '<div class="sp-row"><div class="sp-label">Colaborador</div><div class="sp-value">' + escapeHtml(occ.colaborador || '-') + '</div></div>' +
+      '</div>' +
+      recebimentoHtml +
+      '<div class="sp-section"><div class="sp-section-title">Relato</div><div class="sp-obs">' + (occ.relato || '<em>Sem relato</em>') + '</div></div>' +
+      assinaturaHtml;
+
+    document.getElementById('sp-detail-overlay').classList.add('show');
+    document.getElementById('sp-detail').classList.add('open');
+  };
+
+  window.fecharHistorico = function() {
+    document.getElementById('sp-hist').classList.remove('open');
+    document.getElementById('sp-hist-overlay').classList.remove('show');
+  };
+
+  window.fecharDetalhe = function() {
+    document.getElementById('sp-detail').classList.remove('open');
+    document.getElementById('sp-detail-overlay').classList.remove('show');
   };
 
   // ─── RECEBIMENTO DE SERVIÇO ────────────────────────────────────────────
