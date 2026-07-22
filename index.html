@@ -599,7 +599,7 @@
   function showLivros(user, livros, ocorrencias) {
     var infoEl = document.getElementById('livros-user-info');
     var livrosDisponiveis = livros.filter(function(l) { return !l.tem_ocorrencia || l.eh_hoje; });
-    var livrosAnteriores = livros.filter(function(l) { return l.tem_ocorrencia; });
+    var livrosAnteriores = livros.filter(function(l) { return l.tem_ocorrencia && !l.eh_hoje; });
     var infoText = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ';
     if (livrosDisponiveis.length > 0) {
       infoText += livrosDisponiveis.length + ' livro(s) disponível(is)';
@@ -627,7 +627,7 @@
         }
       } catch(e) {}
       var titulo = nomePosto !== cc ? nomePosto + ' (' + cc + ')' : cc;
-      var anterior = esc.tem_ocorrencia;
+      var anterior = esc.tem_ocorrencia && !esc.eh_hoje;
       var clickAction = anterior
         ? 'abrirHistoricoLivro(\'' + escapeHtml(esc.id_posto).replace(/'/g, "\\'") + '\')'
         : 'abrirLivro(\'' + esc.id + '\')';
