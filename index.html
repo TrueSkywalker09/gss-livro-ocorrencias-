@@ -301,6 +301,7 @@
     <div class="user-bar" id="form-user-bar"></div>
     <div id="form-posto-badge" class="posto-badge"></div>
     <div id="rec-texto-confirmado" style="display:none;background:#f1f5f9;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;line-height:1.6;margin-bottom:12px;color:#334155;white-space:pre-wrap"></div>
+    <div id="psg-texto-confirmado" style="display:none;background:#f1f5f9;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;line-height:1.6;margin-bottom:12px;color:#334155;white-space:pre-wrap"></div>
     <div class="field">
       <label>Relato da Ocorrência</label>
       <div id="relato-editor"></div>
@@ -308,6 +309,93 @@
     <button class="btn btn-primary" onclick="enviarOcorrencia()">Registrar Ocorrência →</button>
     <div style="margin-top:10px">
       <button class="btn btn-outline" onclick="voltarLivros()">← Voltar aos Livros</button>
+    </div>
+  </div>
+
+  <!-- Passagem de Serviço -->
+  <div class="card" id="passagem-screen" style="display:none">
+    <div class="logo">
+      <h1>Passagem de Serviço</h1>
+      <p>Preencha os dados da passagem do posto</p>
+    </div>
+    <div class="user-bar" id="psg-user-bar"></div>
+    <div id="psg-posto-badge" class="posto-badge"></div>
+
+    <!-- Seção 1: Colaborador -->
+    <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+      <div style="font-size:14px;font-weight:600;color:var(--text1);margin-bottom:12px">Colaborador</div>
+      <div class="field" style="margin-bottom:10px">
+        <label>Nome do Colaborador</label>
+        <input type="text" id="psg-nome" readonly style="background:#f8fafc"/>
+      </div>
+      <div style="display:flex;gap:12px">
+        <div class="field" style="flex:2;margin-bottom:0">
+          <label>Função *</label>
+          <input type="text" id="psg-funcao" placeholder="Ex: Vigilante, Bombeiro, etc."/>
+        </div>
+        <div class="field" style="flex:1;margin-bottom:0">
+          <label>Tipo *</label>
+          <select id="psg-tipo">
+            <option value="">Selecione...</option>
+            <option value="EFETIVO">EFETIVO</option>
+            <option value="COBERTURA">COBERTURA</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0;margin-top:10px">
+        <label>RE</label>
+        <input type="text" id="psg-re" readonly style="background:#f8fafc"/>
+      </div>
+    </div>
+
+    <!-- Seção 2: Para Quem Passa -->
+    <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+      <div style="font-size:14px;font-weight:600;color:var(--text1);margin-bottom:12px">Passagem de Serviço</div>
+      <div class="field" style="margin-bottom:10px">
+        <label>Passar para *</label>
+        <div style="position:relative">
+          <input type="text" id="psg-busca-receptor" placeholder="Buscar por nome ou RE..." autocomplete="off" style="width:100%;box-sizing:border-box"/>
+          <div id="psg-dropdown-receptor" style="display:none;position:absolute;background:#fff;border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;width:100%;left:0;top:100%;box-sizing:border-box"></div>
+        </div>
+        <input type="text" id="psg-receptor-nome" placeholder="Ou digite o nome manualmente" style="margin-top:8px"/>
+      </div>
+      <div class="field" style="margin-bottom:10px">
+        <label>RE de quem vai receber</label>
+        <input type="text" id="psg-receptor-re" placeholder="RE (preenchido ao selecionar ou manual)" autocomplete="off"/>
+      </div>
+      <div style="display:flex;gap:12px">
+        <div class="field" style="flex:2;margin-bottom:0">
+          <label>Cargo de quem vai receber *</label>
+          <input type="text" id="psg-cargo-receptor" placeholder="Ex: Vigilante, Bombeiro, etc."/>
+        </div>
+        <div class="field" style="flex:1;margin-bottom:0">
+          <label>Tipo de quem vai receber *</label>
+          <select id="psg-tipo-receptor">
+            <option value="">Selecione...</option>
+            <option value="EFETIVO">EFETIVO</option>
+            <option value="COBERTURA">COBERTURA</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:10px">
+        <div class="field" style="flex:1;margin-bottom:0">
+          <label>Horário da Passagem *</label>
+          <input type="time" id="psg-horario"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seção 3: Texto de Passagem -->
+    <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+      <div style="font-size:14px;font-weight:600;color:var(--text1);margin-bottom:12px">Texto de Passagem</div>
+      <div class="field" style="margin-bottom:12px">
+        <textarea id="psg-texto" rows="5" readonly style="background:#f8fafc;font-size:13px;line-height:1.6;width:100%;box-sizing:border-box"></textarea>
+      </div>
+      <div id="psg-erro" class="alert alert-error" style="display:none"></div>
+      <button class="btn btn-primary" onclick="confirmarPassagem()" style="width:100%">Continuar para Assinatura →</button>
+      <div style="margin-top:10px">
+        <button class="btn btn-outline" onclick="voltarFormularioPassagem()" style="width:100%">← Voltar ao Formulário</button>
+      </div>
     </div>
   </div>
 
@@ -383,6 +471,7 @@
 
   var usuarioLogado = null;
   var escalaAtual = null;
+  var recebimentoHabilitadoAtual = false;
   var quillEditor = null;
   var abaLivrosAtiva = 'ativos';
 
@@ -402,7 +491,7 @@
 
   function showScreen(id) {
     var loginOverlay = document.getElementById('login-overlay');
-    ['loading-screen','trocar-senha-screen','livros-screen','recebimento-screen','form-screen','assinar-screen','sucesso-screen'].forEach(function(s) {
+    ['loading-screen','trocar-senha-screen','livros-screen','recebimento-screen','form-screen','passagem-screen','assinar-screen','sucesso-screen'].forEach(function(s) {
       document.getElementById(s).style.display = 'none';
     });
     if (id === 'login-screen') {
@@ -774,8 +863,10 @@
     quillEditor.setContents([]);
 
     if (recebimentoHabilitado) {
+      recebimentoHabilitadoAtual = true;
       iniciarRecebimento();
     } else {
+      recebimentoHabilitadoAtual = false;
       showScreen('form-screen');
       quillEditor.focus();
     }
@@ -880,6 +971,10 @@
       ? '<div class="sp-section"><div class="sp-section-title">Recebimento de Serviço</div><div class="sp-obs">' + occ.recebimento + '</div></div>'
       : '';
 
+    var passagemHtml = occ.passagem
+      ? '<div class="sp-section"><div class="sp-section-title">Passagem de Serviço</div><div class="sp-obs">' + occ.passagem + '</div></div>'
+      : '';
+
     document.getElementById('sp-detail-body').innerHTML =
       '<div class="sp-section">' +
         '<div class="sp-section-title">Informações</div>' +
@@ -890,6 +985,7 @@
         '<div class="sp-row"><div class="sp-label">Posto</div><div class="sp-value">' + escapeHtml(nomePostoDet) + '</div></div>' +
       '</div>' +
       recebimentoHtml +
+      passagemHtml +
       '<div class="sp-section"><div class="sp-section-title">Ocorrências</div><div class="sp-obs">' + (occ.relato || '<em>Sem relato</em>') + '</div></div>' +
       assinaturaHtml;
 
@@ -1148,12 +1244,147 @@
     showScreen('recebimento-screen');
   };
 
+  // ─── PASSAGEM DE SERVIÇO ───────────────────────────────────────────────
+  var passagemDados = { materiais: [] };
+
+  window.iniciarPassagem = function() {
+    var psgBar = document.getElementById('psg-user-bar');
+    psgBar.innerHTML = '<span>👤 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
+
+    document.getElementById('psg-nome').value = usuarioLogado.nome || '';
+    document.getElementById('psg-re').value = usuarioLogado.re || '';
+    document.getElementById('psg-funcao').value = '';
+    document.getElementById('psg-tipo').value = '';
+    document.getElementById('psg-receptor-nome').value = '';
+    document.getElementById('psg-receptor-re').value = '';
+    document.getElementById('psg-cargo-receptor').value = '';
+    document.getElementById('psg-tipo-receptor').value = '';
+    document.getElementById('psg-horario').value = '';
+    document.getElementById('psg-texto').value = '';
+    document.getElementById('psg-erro').style.display = 'none';
+
+    var postBadge = document.getElementById('psg-posto-badge');
+    postBadge.textContent = document.getElementById('form-posto-badge').textContent;
+
+    configurarBuscaReceptor();
+    gerarTextoPassagem();
+
+    showScreen('passagem-screen');
+  };
+
+  function configurarBuscaReceptor() {
+    var input = document.getElementById('psg-busca-receptor');
+    var dropdown = document.getElementById('psg-dropdown-receptor');
+
+    input.oninput = function() {
+      var termo = input.value.trim().toLowerCase();
+      if (termo.length < 2) { dropdown.style.display = 'none'; return; }
+
+      var colaboradores = window._colabPosto || [];
+      var filtrados = colaboradores.filter(function(c) {
+        if (!c.nome && !c.re) return false;
+        var nomeMatch = c.nome && c.nome.toLowerCase().indexOf(termo) !== -1;
+        var reMatch = c.re && c.re.toLowerCase().indexOf(termo) !== -1;
+        return nomeMatch || reMatch;
+      }).slice(0, 10);
+
+      if (filtrados.length === 0) { dropdown.style.display = 'none'; return; }
+
+      var html = filtrados.map(function(c) {
+        var nome = escapeHtml(c.nome || '');
+        var re = escapeHtml(c.re || '');
+        var login = escapeHtml(c.login || '');
+        return '<div style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:13px" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'#fff\'" onclick="selecionarReceptor(\'' + nome.replace(/'/g, "\\'") + '\', \'' + re.replace(/'/g, "\\'") + '\')">' +
+          '<div style="font-weight:500">' + nome + '</div>' +
+          '<div style="font-size:11px;color:#64748b">RE: ' + re + ' | Login: ' + login + '</div>' +
+        '</div>';
+      }).join('');
+
+      dropdown.innerHTML = html;
+      dropdown.style.display = 'block';
+    };
+
+    input.onfocus = function() {
+      if (input.value.trim().length >= 2) input.oninput();
+    };
+
+    document.addEventListener('click', function(e) {
+      if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+  }
+
+  window.selecionarReceptor = function(nome, re) {
+    document.getElementById('psg-receptor-nome').value = nome;
+    document.getElementById('psg-receptor-re').value = re || '';
+    document.getElementById('psg-busca-receptor').value = '';
+    document.getElementById('psg-dropdown-receptor').style.display = 'none';
+    gerarTextoPassagem();
+  };
+
+  function gerarTextoPassagem() {
+    var nome = document.getElementById('psg-nome').value || '';
+    var funcao = document.getElementById('psg-funcao').value || '';
+    var tipo = document.getElementById('psg-tipo').value || '';
+    var re = document.getElementById('psg-re').value || '';
+    var receptor = document.getElementById('psg-receptor-nome').value || '';
+    var cargoReceptor = document.getElementById('psg-cargo-receptor').value || '';
+    var tipoReceptor = document.getElementById('psg-tipo-receptor').value || '';
+    var horario = document.getElementById('psg-horario').value || '';
+
+    if (!nome || !funcao || !tipo || !re || !receptor || !cargoReceptor || !tipoReceptor || !horario) {
+      document.getElementById('psg-texto').value = 'Preencha todos os campos para gerar o texto.';
+      return;
+    }
+
+    var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', passo o posto para ' + receptor + ', ' + cargoReceptor + ', ' + tipoReceptor + ' às ' + horario + ' juntamente com as normas em vigor, determinações e material carga em Total Condições de Uso, bem como as ocorrências registradas no meu período de trabalho.';
+
+    document.getElementById('psg-texto').value = texto;
+  }
+
+  ['psg-funcao', 'psg-tipo', 'psg-cargo-receptor', 'psg-tipo-receptor', 'psg-horario', 'psg-receptor-nome', 'psg-receptor-re'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', gerarTextoPassagem);
+  });
+
+  window.confirmarPassagem = function() {
+    var funcao = document.getElementById('psg-funcao').value.trim();
+    var tipo = document.getElementById('psg-tipo').value;
+    var receptor = document.getElementById('psg-receptor-nome').value.trim();
+    var cargoReceptor = document.getElementById('psg-cargo-receptor').value.trim();
+    var tipoReceptor = document.getElementById('psg-tipo-receptor').value;
+    var horario = document.getElementById('psg-horario').value;
+    var erroEl = document.getElementById('psg-erro');
+    erroEl.style.display = 'none';
+
+    if (!funcao) { showErro(erroEl, 'Informe a função do colaborador.'); return; }
+    if (!tipo) { showErro(erroEl, 'Selecione o tipo (EFETIVO/COBERTURA).'); return; }
+    if (!receptor) { showErro(erroEl, 'Informe para quem vai passar o serviço.'); return; }
+    if (!cargoReceptor) { showErro(erroEl, 'Informe o cargo de quem vai receber.'); return; }
+    if (!tipoReceptor) { showErro(erroEl, 'Selecione o tipo de quem vai receber.'); return; }
+    if (!horario) { showErro(erroEl, 'Informe o horário da passagem.'); return; }
+
+    var textoPassagem = document.getElementById('psg-texto').value;
+    document.getElementById('psg-texto-confirmado').textContent = textoPassagem;
+    document.getElementById('psg-texto-confirmado').style.display = 'block';
+    showAssinarScreen();
+  };
+
+  window.voltarFormularioPassagem = function() {
+    document.getElementById('psg-texto-confirmado').style.display = 'none';
+    showScreen('form-screen');
+  };
+
   // ─── ENVIAR OCORRÊNCIA ────────────────────────────────────────────────
   window.enviarOcorrencia = async function() {
     var relatoText = quillEditor.getText().trim();
     if (!relatoText) { alert('Descreva a ocorrência antes de registrar.'); return; }
     if (!escalaAtual || !usuarioLogado) { alert('Sessão expirada. Faça login novamente.'); return; }
-    showAssinarScreen();
+    if (recebimentoHabilitadoAtual) {
+      iniciarPassagem();
+    } else {
+      showAssinarScreen();
+    }
   };
 
   // ─── ASSINATURA ──────────────────────────────────────────────────────
@@ -1246,9 +1477,13 @@
   function showAssinarScreen() {
     var resumo = document.getElementById('assinar-resumo');
     var textoRec = document.getElementById('rec-texto-confirmado').textContent || '';
+    var textoPsg = document.getElementById('psg-texto-confirmado').textContent || '';
     var relatoText = quillEditor.getText().trim();
-    var fullText = textoRec ? textoRec + '\n\n---\n\n' + relatoText : relatoText;
-    var truncado = fullText.length > 200 ? fullText.slice(0, 200) + '...' : fullText;
+    var fullText = '';
+    if (textoRec) fullText += textoRec;
+    if (textoPsg) fullText += (fullText ? '\n\n---\n\n' : '') + textoPsg;
+    if (relatoText) fullText += (fullText ? '\n\n---\n\n' : '') + relatoText;
+    var truncado = fullText.length > 300 ? fullText.slice(0, 300) + '...' : fullText;
     resumo.innerHTML = '<strong>Relato:</strong> ' + escapeHtml(truncado);
     initAssinatura();
     showScreen('assinar-screen');
@@ -1256,6 +1491,7 @@
 
   async function enviarOcorrenciaComAssinatura() {
     var textoRec = document.getElementById('rec-texto-confirmado').textContent || '';
+    var textoPsg = document.getElementById('psg-texto-confirmado').textContent || '';
     var relatoOcorrencia = quillEditor.root.innerHTML.trim();
 
     var body = {
@@ -1264,6 +1500,7 @@
       colaborador: usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')',
       relato: relatoOcorrencia,
       recebimento: textoRec || '',
+      passagem: textoPsg || '',
       assinatura: assinaturaAtual
     };
 
@@ -1286,6 +1523,7 @@
   window.fazerLogout = function() {
     usuarioLogado = null;
     escalaAtual = null;
+    recebimentoHabilitadoAtual = false;
     window._escalasAtivos = [];
     window._escalasAnteriores = [];
     abaLivrosAtiva = 'ativos';
@@ -1293,6 +1531,8 @@
     document.getElementById('senha-input').value = '';
     document.getElementById('senha-input').type = 'password';
     document.getElementById('login-erro').style.display = 'none';
+    document.getElementById('rec-texto-confirmado').style.display = 'none';
+    document.getElementById('psg-texto-confirmado').style.display = 'none';
     init();
   };
 
