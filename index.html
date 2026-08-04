@@ -1550,7 +1550,7 @@
     document.getElementById('assinar-erro').style.display = 'none';
   };
 
-  window.confirmarAssinatura = function() {
+  window.confirmarAssinatura = async function() {
     if (!assinaturaTemPixels) {
       var erroEl = document.getElementById('assinar-erro');
       erroEl.textContent = 'Por favor, assine antes de confirmar.';
@@ -1558,13 +1558,27 @@
       return;
     }
     assinaturaAtual = assinaturaCanvas.toDataURL('image/png');
-    // Check if this is a passagem (closing book) or regular occurrence
     if (window._passagemTexto) {
-      // Passagem: logout after signature
+      // Passagem: save signature + passagem text to all ABERTA occurrences, then finalize + logout
+      var abertas = ocorrenciasDashboard.filter(function(o) { return o.status === 'ABERTA'; });
+      for (var i = 0; i < abertas.length; i++) {
+        try {
+          await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+            body: JSON.stringify({
+              action: 'atualizar-assinatura',
+              id: abertas[i].id,
+              assinatura: assinaturaAtual,
+              passagem: window._passagemTexto,
+              status: 'FINALIZADA'
+            })
+          });
+        } catch (e) { /* continue even if one fails */ }
+      }
       limparSessao();
       fazerLogout();
     } else {
-      // Regular occurrence: update signature and show success
       atualizarOcorrenciaAssinatura();
     }
   };
