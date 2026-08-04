@@ -84,7 +84,7 @@
     .trocar-senha-screen{align-items:center;justify-content:center;min-height:100vh;width:100%;padding:20px}
 
     /* ─── LIVROS ─── */
-    .livros-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:500px;margin:0 auto}
+    .livros-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:600px;margin:0 auto}
     .livros-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:24px;margin-bottom:16px}
     .livro-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all .15s}
     .livro-item:hover{border-color:var(--primary);box-shadow:0 2px 12px rgba(30,94,255,.15)}
@@ -95,7 +95,7 @@
     .no-livro-icon{font-size:48px;margin-bottom:12px}
 
     /* ─── RECEBIMENTO ─── */
-    .recebimento-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:600px;margin:0 auto}
+    .recebimento-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:700px;margin:0 auto}
     .section-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
     .section-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px}
     .field-row{display:flex;gap:12px}
@@ -474,13 +474,7 @@
         <div class="form-field">
           <label>Categoria <span class="required">*</span></label>
           <select id="cad-categoria-id">
-            <option value="">Selecione...</option>
-            <option value="PATRIMONIAL">PATRIMONIAL</option>
-            <option value="OPERACIONAL">OPERACIONAL</option>
-            <option value="CONTROLE_DE_ACESSO">CONTROLE DE ACESSO</option>
-            <option value="BOMBEIRO_CIVIL">BOMBEIRO CIVIL</option>
-            <option value="SISTEMAS_E_TECNICOS">SISTEMAS E TÉCNICOS</option>
-            <option value="TESTES_E_CHECKLISTS">TESTES E CHECKLISTS</option>
+            <option value="">Carregando...</option>
           </select>
         </div>
         <div class="form-field">
@@ -660,15 +654,7 @@
   var categoriasCache = [];
   var _colabPosto = [];
   var recebimentoDados = { materiais: [], materialComProblema: [] };
-
-  var CATEGORIAS_FIXAS = {
-    'PATRIMONIAL': 'PATRIMONIAL',
-    'OPERACIONAL': 'OPERACIONAL',
-    'CONTROLE_DE_ACESSO': 'CONTROLE DE ACESSO',
-    'BOMBEIRO_CIVIL': 'BOMBEIRO CIVIL',
-    'SISTEMAS_E_TECNICOS': 'SISTEMAS E TÉCNICOS',
-    'TESTES_E_CHECKLISTS': 'TESTES E CHECKLISTS'
-  };
+  var recebimentoTexto = null;
 
   // ─── SESSION PERSISTENCE ────────────────────────────────────────────────
   var SESSION_KEY = 'gss_session';
@@ -680,6 +666,7 @@
       localStorage.setItem(SESSION_KEY, JSON.stringify({
         usuario: usuarioLogado,
         recebimentoHabilitado: recebimentoHabilitadoAtual,
+        recebimentoTexto: recebimentoTexto,
         timestamp: Date.now()
       }));
       if (escalaAtual) {
@@ -695,6 +682,7 @@
       if (session && book && (Date.now() - session.timestamp) < SESSION_MAX_AGE) {
         usuarioLogado = session.usuario;
         recebimentoHabilitadoAtual = session.recebimentoHabilitado;
+        recebimentoTexto = session.recebimentoTexto || null;
         escalaAtual = book;
         return true;
       }
@@ -708,6 +696,7 @@
       localStorage.removeItem(SESSION_KEY);
       localStorage.removeItem(BOOK_KEY);
     } catch(e) {}
+    recebimentoTexto = null;
   }
 
   // ─── UTILS ──────────────────────────────────────────────────────────────
@@ -1168,6 +1157,7 @@
     if (!cargoRecebeu) { showErro(erroEl, 'Informe o cargo.'); return; }
     if (!tipoRecebeu) { showErro(erroEl, 'Selecione o tipo de quem passou.'); return; }
     if (!horario) { showErro(erroEl, 'Informe o horário.'); return; }
+    recebimentoTexto = document.getElementById('rec-texto').value;
     salvarSessao();
     carregarDashboard();
   };
@@ -1401,7 +1391,27 @@
   };
 
   // ─── CADASTRO ───────────────────────────────────────────────────────────
-  window.abrirCadastro = function() {
+  async function carregarCategorias() {
+    try {
+      var resp = await fetch(SUPABASE_EDGE + '/ocorrencias-categorias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+        body: JSON.stringify({ action: 'listar' })
+      });
+      var body = await resp.json();
+      categoriasCache = body.categorias || [];
+      var select = document.getElementById('cad-categoria-id');
+      select.innerHTML = '<option value="">Selecione...</option>';
+      categoriasCache.forEach(function(c) {
+        select.innerHTML += '<option value="' + c.id + '">' + escapeHtml(c.nome) + '</option>';
+      });
+    } catch (err) {
+      categoriasCache = [];
+      document.getElementById('cad-categoria-id').innerHTML = '<option value="">Erro ao carregar</option>';
+    }
+  }
+
+  window.abrirCadastro = async function() {
     document.getElementById('cad-inicio').value = new Date().toISOString().slice(0, 16);
     document.getElementById('cad-urgencia').value = 'NAO_URGENTE';
     document.getElementById('cad-categoria-id').value = '';
@@ -1413,6 +1423,7 @@
     document.getElementById('cad-danos-section').classList.add('hidden');
     document.getElementById('cad-desc-dano').value = '';
     document.getElementById('cad-erro').style.display = 'none';
+    await carregarCategorias();
     showScreen('cadastro-screen');
   };
 
@@ -1429,7 +1440,8 @@
     var inicio = document.getElementById('cad-inicio').value;
     var urgencia = document.getElementById('cad-urgencia').value;
     var catId = document.getElementById('cad-categoria-id').value;
-    var catNome = CATEGORIAS_FIXAS[catId] || catId;
+    var catOption = document.getElementById('cad-categoria-id').options[document.getElementById('cad-categoria-id').selectedIndex];
+    var catNome = catOption ? catOption.textContent : '';
     var local = document.getElementById('cad-local').value.trim();
     var localDesc = document.getElementById('cad-local-desc').value.trim();
     var descritivo = document.getElementById('cad-descritivo').value.trim();
@@ -1559,23 +1571,22 @@
     }
     assinaturaAtual = assinaturaCanvas.toDataURL('image/png');
     if (window._passagemTexto) {
-      // Passagem: save signature + passagem text to all ABERTA occurrences, then finalize + logout
-      var abertas = ocorrenciasDashboard.filter(function(o) { return o.status === 'ABERTA'; });
-      for (var i = 0; i < abertas.length; i++) {
-        try {
-          await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-            body: JSON.stringify({
-              action: 'atualizar-assinatura',
-              id: abertas[i].id,
-              assinatura: assinaturaAtual,
-              passagem: window._passagemTexto,
-              status: 'FINALIZADA'
-            })
-          });
-        } catch (e) { /* continue even if one fails */ }
-      }
+      // Passagem: save to gss_passagens_servico, then logout
+      try {
+        await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+          body: JSON.stringify({
+            action: 'salvar-passagem',
+            id_posto: escalaAtual ? escalaAtual.id_posto : null,
+            id_acesso: usuarioLogado ? usuarioLogado.id : null,
+            colaborador: usuarioLogado ? usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')' : '',
+            recebimento: recebimentoTexto || null,
+            texto: window._passagemTexto,
+            assinatura: assinaturaAtual
+          })
+        });
+      } catch (e) { /* continue even if save fails */ }
       limparSessao();
       fazerLogout();
     } else {
