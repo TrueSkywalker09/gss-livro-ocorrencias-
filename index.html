@@ -108,15 +108,13 @@
     .user-bar{background:var(--primary-light);border:1px solid #c7d2fe;border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:16px;font-size:12px;color:var(--primary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
 
     /* ─── DASHBOARD ─── */
-    .dashboard-screen{width:100%;min-height:calc(100vh - 56px)}
-    .dashboard-layout{display:flex;min-height:calc(100vh - 56px)}
-    .dashboard-sidebar{width:var(--sidebar-w);background:var(--card);border-right:1px solid var(--border);padding:20px;flex-shrink:0;overflow-y:auto;position:sticky;top:56px;height:calc(100vh - 56px)}
-    .dashboard-content{flex:1;padding:20px;overflow-y:auto}
-    .stats-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
-    .stats-card .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-    .stats-card .card-title{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);letter-spacing:.5px}
-    .stats-card .card-badge{background:var(--primary-light);color:var(--primary);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
-    .stats-number{font-size:36px;font-weight:800;color:var(--text);line-height:1;margin-bottom:16px}
+    .dashboard-screen{width:100%;min-height:calc(100vh - 56px);padding:20px}
+    .dashboard-badge{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;max-width:400px;margin:0 auto 24px;box-shadow:var(--shadow)}
+    .dashboard-badge .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .dashboard-badge .card-title{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);letter-spacing:.5px}
+    .dashboard-badge .card-badge{background:var(--primary-light);color:var(--primary);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .dashboard-badge .stats-number{font-size:36px;font-weight:800;color:var(--text);line-height:1;margin-bottom:16px}
+    .dashboard-content{max-width:900px;margin:0 auto}
     .donut-container{display:flex;flex-direction:column;align-items:center;margin-bottom:16px}
     .donut-legend{display:flex;flex-direction:column;gap:8px;width:100%}
     .legend-item{display:flex;align-items:center;gap:8px;font-size:13px}
@@ -141,8 +139,11 @@
 
     /* ─── OCCURRENCE CARDS ─── */
     .occ-list{display:flex;flex-direction:column;gap:12px}
-    .occ-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;transition:all .15s;cursor:pointer}
+    .occ-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;transition:all .15s;cursor:pointer;border-left:4px solid transparent}
     .occ-card:hover{box-shadow:var(--shadow-md)}
+    .occ-card.card-urgente{border-left-color:#f59e0b}
+    .occ-card.card-muito-urgente{border-left-color:#e11d48}
+    .occ-card.card-emergencia{border-left-color:#b91c1c}
     .occ-card-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px}
     .occ-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
     .occ-icon.normal{background:var(--primary-light);color:var(--primary)}
@@ -211,8 +212,6 @@
     @media(max-width:768px){
       .app-header .hamburger{display:block}
       .app-header .btn-back{display:block}
-      .dashboard-layout{flex-direction:column}
-      .dashboard-sidebar{width:100%;height:auto;position:static;border-right:none;border-bottom:1px solid var(--border);padding:16px}
       .form-grid{grid-template-columns:1fr}
       .filter-bar{flex-direction:column}
       .search-input{min-width:100%}
@@ -387,61 +386,56 @@
 
 <!-- ══════════ DASHBOARD ══════════ -->
 <div class="screen dashboard-screen" id="dashboard-screen">
-  <div class="dashboard-layout">
-    <!-- Sidebar -->
-    <aside class="dashboard-sidebar" id="dashboard-sidebar">
-      <div class="stats-card">
-        <div class="card-header">
-          <span class="card-title">Total Ocorrências</span>
-          <span class="card-badge" id="dash-filtro-badge">Todos</span>
-        </div>
-        <div class="stats-number" id="dash-total">0</div>
-        <div class="donut-container">
-          <svg id="dash-donut" width="120" height="120" viewBox="0 0 120 120"></svg>
-          <div class="donut-legend" id="dash-legend"></div>
-        </div>
+  <!-- Badge flutuante -->
+  <div class="dashboard-badge" id="dashboard-badge">
+    <div class="card-header">
+      <span class="card-title">Total Ocorrências</span>
+      <span class="card-badge" id="dash-filtro-badge">Todos</span>
+    </div>
+    <div class="stats-number" id="dash-total">0</div>
+    <div class="donut-container">
+      <svg id="dash-donut" width="120" height="120" viewBox="0 0 120 120"></svg>
+      <div class="donut-legend" id="dash-legend"></div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px">
+      <div id="dash-status"></div>
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn btn-outline" onclick="fecharLivro()" style="width:100%;font-size:13px;padding:10px">🚪 Fechar Livro</button>
+    </div>
+  </div>
+  <!-- Conteúdo -->
+  <div class="dashboard-content">
+    <div class="filter-bar">
+      <div class="search-input">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="dash-busca" placeholder="Buscar Ocorrências..." oninput="filtrarDashboard()"/>
       </div>
-      <div class="stats-card">
-        <div class="card-header"><span class="card-title">Status</span></div>
-        <div id="dash-status"></div>
-      </div>
-      <div style="margin-top:16px">
-        <button class="btn btn-outline" onclick="fecharLivro()" style="font-size:13px;padding:10px">🚪 Fechar Livro</button>
-      </div>
-    </aside>
-    <!-- Conteúdo -->
-    <main class="dashboard-content">
-      <div class="filter-bar">
-        <div class="search-input">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="dash-busca" placeholder="Buscar Ocorrências..." oninput="filtrarDashboard()"/>
-        </div>
-        <select class="filter-select" id="dash-filtro-status" onchange="filtrarDashboard()">
-          <option value="">Status</option>
-          <option value="ABERTA">Aberta</option>
-          <option value="FINALIZADA">Finalizada</option>
-        </select>
-        <select class="filter-select" id="dash-filtro-urgencia" onchange="filtrarDashboard()">
-          <option value="">Urgência</option>
-          <option value="NAO_URGENTE">Não Urgente</option>
-          <option value="POUCO_URGENTE">Pouco Urgente</option>
-          <option value="URGENTE">Urgente</option>
-          <option value="MUITO_URGENTE">Muito Urgente</option>
-          <option value="EMERGENCIA">Emergência</option>
-        </select>
-        <select class="filter-select" id="dash-filtro-categoria" onchange="filtrarDashboard()">
-          <option value="">Categoria</option>
-          <option value="PATRIMONIAL">Patrimonial</option>
-          <option value="OPERACIONAL">Operacional</option>
-          <option value="CONTROLE_DE_ACESSO">Controle de Acesso</option>
-          <option value="BOMBEIRO_CIVIL">Bombeiro Civil</option>
-          <option value="SISTEMAS_E_TECNICOS">Sistemas e Técnicos</option>
-          <option value="TESTES_E_CHECKLISTS">Testes e Checklists</option>
-        </select>
-        <button class="btn btn-primary btn-nova" onclick="abrirCadastro()">+ Nova Ocorrência</button>
-      </div>
-      <div class="occ-list" id="dash-occ-list"></div>
-    </main>
+      <select class="filter-select" id="dash-filtro-status" onchange="filtrarDashboard()">
+        <option value="">Status</option>
+        <option value="ABERTA">Aberta</option>
+        <option value="FINALIZADA">Finalizada</option>
+      </select>
+      <select class="filter-select" id="dash-filtro-urgencia" onchange="filtrarDashboard()">
+        <option value="">Urgência</option>
+        <option value="NAO_URGENTE">Não Urgente</option>
+        <option value="POUCO_URGENTE">Pouco Urgente</option>
+        <option value="URGENTE">Urgente</option>
+        <option value="MUITO_URGENTE">Muito Urgente</option>
+        <option value="EMERGENCIA">Emergência</option>
+      </select>
+      <select class="filter-select" id="dash-filtro-categoria" onchange="filtrarDashboard()">
+        <option value="">Categoria</option>
+        <option value="PATRIMONIAL">Patrimonial</option>
+        <option value="OPERACIONAL">Operacional</option>
+        <option value="CONTROLE DE ACESSO">Controle de Acesso</option>
+        <option value="BOMBEIRO CIVIL">Bombeiro Civil</option>
+        <option value="SISTEMAS E TÉCNICOS">Sistemas e Técnicos</option>
+        <option value="TESTES E CHECKLISTS">Testes e Checklists</option>
+      </select>
+      <button class="btn btn-primary btn-nova" onclick="abrirCadastro()">+ Nova Ocorrência</button>
+    </div>
+    <div class="occ-list" id="dash-occ-list"></div>
   </div>
 </div>
 
@@ -474,7 +468,13 @@
         <div class="form-field">
           <label>Categoria <span class="required">*</span></label>
           <select id="cad-categoria-id">
-            <option value="">Carregando...</option>
+            <option value="">Selecione...</option>
+            <option value="PATRIMONIAL">PATRIMONIAL</option>
+            <option value="OPERACIONAL">OPERACIONAL</option>
+            <option value="CONTROLE DE ACESSO">CONTROLE DE ACESSO</option>
+            <option value="BOMBEIRO CIVIL">BOMBEIRO CIVIL</option>
+            <option value="SISTEMAS E TÉCNICOS">SISTEMAS E TÉCNICOS</option>
+            <option value="TESTES E CHECKLISTS">TESTES E CHECKLISTS</option>
           </select>
         </div>
         <div class="form-field">
@@ -625,6 +625,17 @@
   </div>
 </div>
 
+<!-- ══════════ LIVRO FECHADO ══════════ -->
+<div class="screen fechado-screen" id="fechado-screen">
+  <div class="sucesso-card">
+    <div class="sucesso-icon">✅</div>
+    <h2>Livro Fechado!</h2>
+    <p>Sua passagem de serviço foi registrada com sucesso.</p>
+    <button class="btn btn-primary" onclick="abrirNovoLivro()">📋 Abrir Novo Livro</button>
+    <button class="btn btn-outline" onclick="fazerLogout()" style="margin-top:8px">🚪 Sair (Logout)</button>
+  </div>
+</div>
+
 <!-- ══════════ DETALHE ══════════ -->
 <div class="screen detalhe-screen" id="detalhe-screen">
   <div class="form-card">
@@ -651,7 +662,6 @@
   var recebimentoHabilitadoAtual = false;
   var abaLivrosAtiva = 'ativos';
   var ocorrenciasDashboard = [];
-  var categoriasCache = [];
   var _colabPosto = [];
   var recebimentoDados = { materiais: [], materialComProblema: [] };
   var recebimentoTexto = null;
@@ -721,7 +731,7 @@
     if (el) el.classList.add('active');
 
     // Show header for logged-in screens
-    if (['trocar-senha-screen','livros-screen','recebimento-screen','dashboard-screen','cadastro-screen','passagem-screen','assinar-screen','sucesso-screen','detalhe-screen'].indexOf(id) !== -1) {
+    if (['trocar-senha-screen','livros-screen','recebimento-screen','dashboard-screen','cadastro-screen','passagem-screen','assinar-screen','sucesso-screen','detalhe-screen','fechado-screen'].indexOf(id) !== -1) {
       document.getElementById('app-header').style.display = 'flex';
       updateHeaderUser();
       // Show back button on non-main screens
@@ -791,11 +801,6 @@
   };
 
   // ─── TOGGLE SIDEBAR (MOBILE) ───────────────────────────────────────────
-  window.toggleSidebar = function() {
-    var sb = document.getElementById('dashboard-sidebar');
-    sb.style.display = sb.style.display === 'none' ? 'block' : 'none';
-  };
-
   // ─── LOGIN ──────────────────────────────────────────────────────────────
   window.fazerLogin = async function() {
     var login = (document.getElementById('login-input').value || '').trim();
@@ -1191,26 +1196,22 @@
     var filtered = getFilteredOcorrencias();
     // Stats
     var total = filtered.length;
-    var normais = filtered.filter(function(o) { return o.urgencia === 'NAO_URGENTE'; }).length;
-    var poucoUrgentes = filtered.filter(function(o) { return o.urgencia === 'POUCO_URGENTE'; }).length;
-    var urgentes = filtered.filter(function(o) { return o.urgencia === 'URGENTE'; }).length;
-    var muitoUrgentes = filtered.filter(function(o) { return o.urgencia === 'MUITO_URGENTE'; }).length;
-    var emergencias = filtered.filter(function(o) { return o.urgencia === 'EMERGENCIA'; }).length;
+    var normais = filtered.filter(function(o) { return o.urgencia === 'NAO_URGENTE' || o.urgencia === 'POUCO_URGENTE'; }).length;
+    var urgentes = filtered.filter(function(o) { return o.urgencia === 'URGENTE' || o.urgencia === 'MUITO_URGENTE'; }).length;
+    var criticas = filtered.filter(function(o) { return o.urgencia === 'EMERGENCIA'; }).length;
     var abertas = filtered.filter(function(o) { return o.status === 'ABERTA'; }).length;
     var finalizadas = filtered.filter(function(o) { return o.status === 'FINALIZADA'; }).length;
 
     document.getElementById('dash-total').textContent = total;
 
     // Donut chart
-    renderDonut(normais, poucoUrgentes, urgentes, muitoUrgentes, emergencias);
+    renderDonut(normais, urgentes, criticas);
 
     // Legend
     document.getElementById('dash-legend').innerHTML =
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div><span class="legend-label">Não Urgente</span><span class="legend-count">' + normais + '</span></div>' +
-      '<div class="legend-item"><div class="legend-dot" style="background:#0ea5e9"></div><span class="legend-label">Pouco Urgente</span><span class="legend-count">' + poucoUrgentes + '</span></div>' +
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div><span class="legend-label">Urgente</span><span class="legend-count">' + urgentes + '</span></div>' +
-      '<div class="legend-item"><div class="legend-dot" style="background:#e11d48"></div><span class="legend-label">Muito Urgente</span><span class="legend-count">' + muitoUrgentes + '</span></div>' +
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div><span class="legend-label">Emergência</span><span class="legend-count">' + emergencias + '</span></div>';
+      '<div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div><span class="legend-label">Normais</span><span class="legend-count">' + normais + '</span></div>' +
+      '<div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div><span class="legend-label">Urgentes</span><span class="legend-count">' + urgentes + '</span></div>' +
+      '<div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div><span class="legend-label">Críticas</span><span class="legend-count">' + criticas + '</span></div>';
 
     // Status
     document.getElementById('dash-status').innerHTML =
@@ -1228,6 +1229,7 @@
 
   function renderOccCard(occ) {
     var urgClass = occ.urgencia === 'EMERGENCIA' ? 'emergencia' : (occ.urgencia === 'MUITO_URGENTE' ? 'muito-urgente' : (occ.urgencia === 'URGENTE' ? 'urgente' : (occ.urgencia === 'POUCO_URGENTE' ? 'pouco-urgente' : 'normal')));
+    var cardUrgClass = occ.urgencia === 'EMERGENCIA' ? 'card-emergencia' : (occ.urgencia === 'MUITO_URGENTE' ? 'card-muito-urgente' : (occ.urgencia === 'URGENTE' ? 'card-urgente' : ''));
     var urgLabel = ({'NAO_URGENTE':'NÃO URGENTE','POUCO_URGENTE':'POUCO URGENTE','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO URGENTE','EMERGENCIA':'EMERGÊNCIA'})[occ.urgencia] || occ.urgencia;
     var urgBadge = ({'NAO_URGENTE':'nao-urgente','POUCO_URGENTE':'pouco-urgente','URGENTE':'urgente','MUITO_URGENTE':'muito-urgente','EMERGENCIA':'emergencia'})[occ.urgencia] || 'nao-urgente';
     var statusClass = occ.status === 'ABERTA' ? 'aberta' : 'finalizada';
@@ -1247,7 +1249,7 @@
 
     var danoStr = occ.danos ? '<div class="occ-dano">⚠️ Com Dano</div>' : '<div class="occ-dano" style="color:var(--success)">✅ Sem Dano</div>';
 
-    return '<div class="occ-card" onclick="verDetalhe(\'' + occ.id + '\')">' +
+    return '<div class="occ-card ' + cardUrgClass + '" onclick="verDetalhe(\'' + occ.id + '\')">' +
       '<div class="occ-card-header">' +
         '<div class="occ-icon ' + urgClass + '">⚠️</div>' +
         '<div><div class="occ-title">' + escapeHtml(occ.categoria_nome || 'Ocorrência') + '</div>' +
@@ -1265,21 +1267,26 @@
     '</div>';
   }
 
-  function renderDonut(n, pu, u, mu, e) {
-    var total = n + pu + u + mu + e;
+  function renderDonut(normais, urgentes, criticas) {
+    var total = normais + urgentes + criticas;
     var svg = document.getElementById('dash-donut');
     if (total === 0) {
       svg.innerHTML = '<circle cx="60" cy="60" r="50" fill="none" stroke="#e5e7eb" stroke-width="16"/>';
       return;
     }
-    var colors = ['#1E5EFF', '#0ea5e9', '#f59e0b', '#e11d48', '#b91c1c'];
-    var vals = [n, pu, u, mu, e];
-    var cumul = 0;
-    var paths = '';
+    var colors = ['#1E5EFF', '#f59e0b', '#b91c1c'];
+    var vals = [normais, urgentes, criticas];
     var cx = 60, cy = 60, r = 50, sw = 16;
-    for (var i = 0; i < 5; i++) {
+    var paths = '';
+    var cumul = 0;
+    for (var i = 0; i < 3; i++) {
       if (vals[i] === 0) continue;
       var pct = vals[i] / total;
+      if (pct >= 1) {
+        paths += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + colors[i] + '" stroke-width="' + sw + '"/>';
+        cumul = 1;
+        break;
+      }
       var startAngle = cumul * 2 * Math.PI - Math.PI / 2;
       cumul += pct;
       var endAngle = cumul * 2 * Math.PI - Math.PI / 2;
@@ -1311,7 +1318,7 @@
     return ocorrenciasDashboard.filter(function(o) {
       if (filtroStatus && o.status !== filtroStatus) return false;
       if (filtroUrg && o.urgencia !== filtroUrg) return false;
-      if (filtroCat && o.categoria_id !== filtroCat) return false;
+      if (filtroCat && o.categoria_nome !== filtroCat) return false;
       if (busca) {
         var txt = (o.protocolo + ' ' + o.colaborador + ' ' + o.descritivo + ' ' + o.local + ' ' + o.categoria_nome).toLowerCase();
         if (txt.indexOf(busca) === -1) return false;
@@ -1391,27 +1398,7 @@
   };
 
   // ─── CADASTRO ───────────────────────────────────────────────────────────
-  async function carregarCategorias() {
-    try {
-      var resp = await fetch(SUPABASE_EDGE + '/ocorrencias-categorias', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-        body: JSON.stringify({ action: 'listar' })
-      });
-      var body = await resp.json();
-      categoriasCache = body.categorias || [];
-      var select = document.getElementById('cad-categoria-id');
-      select.innerHTML = '<option value="">Selecione...</option>';
-      categoriasCache.forEach(function(c) {
-        select.innerHTML += '<option value="' + c.id + '">' + escapeHtml(c.nome) + '</option>';
-      });
-    } catch (err) {
-      categoriasCache = [];
-      document.getElementById('cad-categoria-id').innerHTML = '<option value="">Erro ao carregar</option>';
-    }
-  }
-
-  window.abrirCadastro = async function() {
+  window.abrirCadastro = function() {
     document.getElementById('cad-inicio').value = new Date().toISOString().slice(0, 16);
     document.getElementById('cad-urgencia').value = 'NAO_URGENTE';
     document.getElementById('cad-categoria-id').value = '';
@@ -1423,7 +1410,6 @@
     document.getElementById('cad-danos-section').classList.add('hidden');
     document.getElementById('cad-desc-dano').value = '';
     document.getElementById('cad-erro').style.display = 'none';
-    await carregarCategorias();
     showScreen('cadastro-screen');
   };
 
@@ -1461,8 +1447,8 @@
       colaborador: usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')',
       inicio: new Date(inicio).toISOString(),
       urgencia: urgencia,
-      categoria_id: catId,
-      categoria_nome: catNome,
+      categoria_id: null,
+      categoria_nome: catId,
       local: local.toUpperCase(),
       local_descricao: localDesc ? localDesc.toUpperCase() : null,
       descritivo: descritivo.toUpperCase(),
@@ -1494,6 +1480,11 @@
 
   window.voltarCadastro = function() { window._passagemTexto = null; showScreen('cadastro-screen'); };
   window.voltarDashboard = function() { window._passagemTexto = null; carregarDashboard(); };
+
+  window.abrirNovoLivro = function() {
+    limparSessao();
+    carregarLivros();
+  };
 
   // ─── ASSINATURA ─────────────────────────────────────────────────────────
   var assinaturaCanvas = null;
@@ -1587,8 +1578,7 @@
           })
         });
       } catch (e) { /* continue even if save fails */ }
-      limparSessao();
-      fazerLogout();
+      showScreen('fechado-screen');
     } else {
       atualizarOcorrenciaAssinatura();
     }
