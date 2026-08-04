@@ -139,34 +139,42 @@
 
     /* ─── OCCURRENCE CARDS ─── */
     .occ-list{display:flex;flex-direction:column;gap:12px}
-    .occ-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;transition:all .15s;cursor:pointer;border-left:4px solid transparent}
+    .occ-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);transition:all .15s;cursor:pointer;display:flex;overflow:hidden}
     .occ-card:hover{box-shadow:var(--shadow-md)}
-    .occ-card.card-urgente{border-left-color:#f59e0b}
-    .occ-card.card-muito-urgente{border-left-color:#e11d48}
-    .occ-card.card-emergencia{border-left-color:#b91c1c}
-    .occ-card-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px}
-    .occ-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-    .occ-icon.normal{background:var(--primary-light);color:var(--primary)}
-    .occ-icon.urgente{background:var(--warning-bg);color:var(--warning)}
-    .occ-icon.critico{background:var(--danger-bg);color:var(--danger)}
-    .occ-title{font-size:14px;font-weight:700;color:var(--text);line-height:1.3}
-    .occ-protocolo{font-size:11px;color:var(--text3);font-family:'SF Mono',monospace;margin-top:2px}
-    .occ-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;justify-content:center}
-    .occ-badge{padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600}
-    .occ-badge.nao-urgente{background:#f3f4f6;color:#6b7280}
-    .occ-badge.pouco-urgente{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd}
-    .occ-badge.urgente{background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning-border)}
-    .occ-badge.muito-urgente{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
-    .occ-badge.emergencia{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
-    .occ-badge.aberta{background:#dbeafe;color:#1d4ed8}
-    .occ-badge.finalizada{background:#d1fae5;color:#065f46}
-    .occ-meta-item{font-size:12px;color:var(--text2)}
-    .occ-desc{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .occ-footer{display:flex;justify-content:space-between;align-items:center}
-    .occ-footer .occ-local{font-size:12px;color:var(--text3)}
-    .occ-footer .occ-dano{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--success)}
+    .occ-card-stripe{width:6px;flex-shrink:0;margin:-16px 0 -16px -16px;margin-right:12px;border-radius:var(--radius) 0 0 var(--radius)}
+    .occ-card-stripe.normal{background:#e5e7eb}
+    .occ-card-stripe.pouco-urgente{background:#38bdf8}
+    .occ-card-stripe.urgente{background:#f59e0b}
+    .occ-card-stripe.muito-urgente{background:#e11d48}
+    .occ-card-stripe.emergencia{background:#b91c1c}
+    .occ-card-main{flex:1;min-width:0;padding:16px}
+    .occ-card-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+    .occ-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#f1f5f9;color:#64748b}
+    .occ-card-title{font-size:15px;font-weight:700;color:#1e293b}
+    .occ-card-protocolo{font-size:11px;color:#94a3b8;font-family:'SF Mono',monospace;margin-top:1px}
+    .occ-card-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+    .occ-card-field-label{font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;margin-bottom:2px}
+    .occ-card-field-value{font-size:12px;color:#334155;font-weight:500}
+    .occ-card-badge{display:inline-flex;padding:3px 8px;border-radius:9999px;font-size:10px;font-weight:600}
+    .occ-card-badge.nao-urgente{background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0}
+    .occ-card-badge.pouco-urgente{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd}
+    .occ-card-badge.urgente{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+    .occ-card-badge.muito-urgente{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
+    .occ-card-badge.emergencia{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+    .occ-card-footer{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid #f1f5f9}
+    .occ-card-desc{font-size:12px;color:#64748b;line-height:1.5;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:12px}
+    .occ-card-dano{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;flex-shrink:0}
+    .occ-card-dano.sim{color:#b45309}
+    .occ-card-dano.nao{color:#16a34a}
+    .occ-card-status{font-size:11px;font-weight:600;color:#64748b;flex-shrink:0}
+    .occ-card-mobile{display:none}
     .occ-empty{text-align:center;padding:40px 20px;color:var(--text2)}
     .occ-empty-icon{font-size:40px;margin-bottom:8px}
+    @media(max-width:1023px){
+      .occ-card-desktop{display:none!important}
+      .occ-card-mobile{display:block}
+      .occ-card-meta{grid-template-columns:repeat(3,1fr)}
+    }
 
     /* ─── CADASTRO ─── */
     .cadastro-screen{flex-direction:column;min-height:100vh;width:100%;max-width:700px;margin:0 auto;padding:20px}
@@ -1228,42 +1236,64 @@
   }
 
   function renderOccCard(occ) {
-    var urgClass = occ.urgencia === 'EMERGENCIA' ? 'emergencia' : (occ.urgencia === 'MUITO_URGENTE' ? 'muito-urgente' : (occ.urgencia === 'URGENTE' ? 'urgente' : (occ.urgencia === 'POUCO_URGENTE' ? 'pouco-urgente' : 'normal')));
-    var cardUrgClass = occ.urgencia === 'EMERGENCIA' ? 'card-emergencia' : (occ.urgencia === 'MUITO_URGENTE' ? 'card-muito-urgente' : (occ.urgencia === 'URGENTE' ? 'card-urgente' : ''));
+    var urgClass = ({'NAO_URGENTE':'normal','POUCO_URGENTE':'pouco-urgente','URGENTE':'urgente','MUITO_URGENTE':'muito-urgente','EMERGENCIA':'emergencia'})[occ.urgencia] || 'normal';
     var urgLabel = ({'NAO_URGENTE':'NÃO URGENTE','POUCO_URGENTE':'POUCO URGENTE','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO URGENTE','EMERGENCIA':'EMERGÊNCIA'})[occ.urgencia] || occ.urgencia;
-    var urgBadge = ({'NAO_URGENTE':'nao-urgente','POUCO_URGENTE':'pouco-urgente','URGENTE':'urgente','MUITO_URGENTE':'muito-urgente','EMERGENCIA':'emergencia'})[occ.urgencia] || 'nao-urgente';
-    var statusClass = occ.status === 'ABERTA' ? 'aberta' : 'finalizada';
-    var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Finalizada';
+    var urgLabelShort = ({'NAO_URGENTE':'NÃO','POUCO_URGENTE':'POUCO','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO','EMERGENCIA':'EMERGÊNCIA'})[occ.urgencia] || occ.urgencia;
+    var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Encerrada';
 
     var d = new Date(occ.inicio);
     var dataInicio = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 
-    var termStr = '';
+    var termStr = '-';
     if (occ.termino) {
       var dt = new Date(occ.termino);
-      termStr = '<span class="occ-meta-item">TÉRMINO: ' + String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + ' ' + String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0') + '</span>';
+      termStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + ' ' + String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
     }
 
     var desc = escapeHtml(occ.descritivo || '');
-    if (desc.length > 120) desc = desc.substring(0, 120) + '...';
+    var descTrunc = desc.length > 60 ? desc.substring(0, 60) + '...' : desc;
 
-    var danoStr = occ.danos ? '<div class="occ-dano">⚠️ Com Dano</div>' : '<div class="occ-dano" style="color:var(--success)">✅ Sem Dano</div>';
+    var danoHtml = occ.danos
+      ? '<div class="occ-card-dano sim"><svg viewBox="0 0 512 512" width="12" height="12" fill="currentColor"><path d="M504 256c0 137-111 248-248 248S8 393 8 256 119 8 256 8s248 111 248 248zm-248 50c-25 0-46 21-46 46s21 46 46 46 46-21 46-46-21-46-46-46zm-44-165l7 136c0 6 5 11 12 11h49c7 0 12-5 11-11l7-136c0-7-6-12-12-12h-63c-7 0-12 5-12 12z"/></svg>SIM</div>'
+      : '<div class="occ-card-dano nao"><svg viewBox="0 0 512 512" width="12" height="12" fill="currentColor"><path d="M504 256c0 137-111 248-248 248S8 393 8 256 119 8 256 8s248 111 248 248zm-248 50c-25 0-46 21-46 46s21 46 46 46 46-21 46-46-21-46-46-46zm-44-165l7 136c0 6 5 11 12 11h49c7 0 12-5 11-11l7-136c0-7-6-12-12-12h-63c-7 0-12 5-12 12z"/></svg>NÃO</div>';
 
-    return '<div class="occ-card ' + cardUrgClass + '" onclick="verDetalhe(\'' + occ.id + '\')">' +
-      '<div class="occ-card-header">' +
-        '<div class="occ-icon ' + urgClass + '">⚠️</div>' +
-        '<div><div class="occ-title">' + escapeHtml(occ.categoria_nome || 'Ocorrência') + '</div>' +
-        '<div class="occ-protocolo">' + escapeHtml(occ.protocolo) + '</div></div>' +
+    return '<div class="occ-card" onclick="verDetalhe(\'' + occ.id + '\')">' +
+      '<div class="occ-card-stripe ' + urgClass + '"></div>' +
+      '<div class="occ-card-main">' +
+
+        '<div class="occ-card-header">' +
+          '<div class="occ-card-icon"><svg viewBox="0 0 512 512" width="20" height="20" fill="currentColor"><path d="M256 8a248 248 0 1 0 0 496 248 248 0 0 0 0-496zm0 90c21 0 38 17 38 38s-17 38-38 38-38-17-38-38 17-38 38-38zm44 137l-17 136c0 6-5 11-11 11h-32c-7 0-12-5-11-11l-17-136c-1-6 4-11 11-11h56c7 0 12 5 11 11z"/></svg></div>' +
+          '<div>' +
+            '<div class="occ-card-title">' + escapeHtml(occ.categoria_nome || 'Ocorrência') + '</div>' +
+            '<div class="occ-card-protocolo">' + escapeHtml(occ.protocolo) + '</div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="occ-card-meta occ-card-desktop">' +
+          '<div><div class="occ-card-field-label">Urgência</div><div class="occ-card-field-value"><span class="occ-card-badge ' + urgClass + '">' + urgLabel + '</span></div></div>' +
+          '<div><div class="occ-card-field-label">Início</div><div class="occ-card-field-value">' + dataInicio + '</div></div>' +
+          '<div><div class="occ-card-field-label">Término</div><div class="occ-card-field-value">' + termStr + '</div></div>' +
+          '<div><div class="occ-card-field-label">Local</div><div class="occ-card-field-value">' + escapeHtml(occ.local || '-') + '</div></div>' +
+        '</div>' +
+
+        '<div class="occ-card-meta occ-card-mobile">' +
+          '<div><div class="occ-card-field-label">Urgência</div><div class="occ-card-field-value"><span class="occ-card-badge ' + urgClass + '">' + urgLabelShort + '</span></div></div>' +
+          '<div><div class="occ-card-field-label">Início</div><div class="occ-card-field-value">' + dataInicio + '</div></div>' +
+          '<div><div class="occ-card-field-label">Progresso</div><div class="occ-card-field-value">1/1</div></div>' +
+        '</div>' +
+        '<div class="occ-card-meta occ-card-mobile">' +
+          '<div><div class="occ-card-field-label">Local</div><div class="occ-card-field-value">' + escapeHtml(occ.local || '-') + '</div></div>' +
+          '<div><div class="occ-card-field-label">Término</div><div class="occ-card-field-value">' + termStr + '</div></div>' +
+          '<div><div class="occ-card-field-label">Dano</div><div class="occ-card-field-value">' + danoHtml + '</div></div>' +
+        '</div>' +
+
+        '<div class="occ-card-footer">' +
+          '<div class="occ-card-desc"><strong>Descrição:</strong> ' + descTrunc + '</div>' +
+          danoHtml +
+          '<div class="occ-card-status">' + statusLabel + '</div>' +
+        '</div>' +
+
       '</div>' +
-      '<div class="occ-meta">' +
-        '<span class="occ-badge ' + urgBadge + '">' + urgLabel + '</span>' +
-        '<span class="occ-meta-item">INÍCIO: ' + dataInicio + '</span>' +
-        termStr +
-        '<span class="occ-meta-item">LOCAL: ' + escapeHtml(occ.local || '-') + '</span>' +
-        '<span class="occ-badge ' + statusClass + '">' + statusLabel + '</span>' +
-      '</div>' +
-      '<div class="occ-desc">' + desc + '</div>' +
-      '<div class="occ-footer"><span class="occ-local">' + escapeHtml(occ.local_descricao || '') + '</span>' + danoStr + '</div>' +
     '</div>';
   }
 
@@ -1341,7 +1371,7 @@
     var horaFmt = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Finalizada';
     var urgLabel = ({'NAO_URGENTE':'Não Urgente','POUCO_URGENTE':'Pouco Urgente','URGENTE':'Urgente','MUITO_URGENTE':'Muito Urgente','EMERGENCIA':'Emergência'})[occ.urgencia] || occ.urgencia;
-    var catLabel = CATEGORIAS_FIXAS[occ.categoria_nome] || occ.categoria_nome || '-';
+    var catLabel = occ.categoria_nome || '-';
 
     var html = '<div class="detalhe-section">' +
       '<div class="detalhe-section-title">Informações</div>' +
