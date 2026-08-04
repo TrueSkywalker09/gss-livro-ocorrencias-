@@ -21,7 +21,7 @@
     .hidden{display:none !important}
 
     /* ─── HEADER ─── */
-    .app-header{position:fixed;top:0;left:0;right:0;height:56px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;align-items:center;padding:0 16px;z-index:100;gap:12px}
+    .app-header{position:sticky;top:0;left:0;right:0;height:56px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;align-items:center;padding:0 16px;z-index:100;gap:12px}
     .app-header .logo{display:flex;align-items:center;gap:8px;text-decoration:none}
     .app-header .logo-icon{width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800}
     .app-header .logo-text{font-size:14px;font-weight:700;color:var(--text);line-height:1.2}
@@ -65,6 +65,7 @@
     .form-field label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
     .form-field label .required{color:var(--danger)}
     .form-field input,.form-field textarea,.form-field select{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);background:var(--card);transition:border-color .15s}
+    .form-field input.uppercase,.form-field textarea.uppercase{text-transform:uppercase}
     .form-field input:focus,.form-field textarea:focus,.form-field select:focus{outline:none;border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(30,94,255,.12)}
     .form-field textarea{min-height:120px;resize:vertical;line-height:1.6}
     .form-field .error-msg{color:var(--danger);font-size:12px;margin-top:4px;display:none}
@@ -149,14 +150,15 @@
     .occ-icon.critico{background:var(--danger-bg);color:var(--danger)}
     .occ-title{font-size:14px;font-weight:700;color:var(--text);line-height:1.3}
     .occ-protocolo{font-size:11px;color:var(--text3);font-family:'SF Mono',monospace;margin-top:2px}
-    .occ-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+    .occ-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;justify-content:center}
     .occ-badge{padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600}
     .occ-badge.nao-urgente{background:#f3f4f6;color:#6b7280}
+    .occ-badge.pouco-urgente{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd}
     .occ-badge.urgente{background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning-border)}
-    .occ-badge.critico{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
+    .occ-badge.muito-urgente{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
+    .occ-badge.emergencia{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
     .occ-badge.aberta{background:#dbeafe;color:#1d4ed8}
-    .occ-badge.em-andamento{background:#fef3c7;color:#92400e}
-    .occ-badge.encerrada{background:#d1fae5;color:#065f46}
+    .occ-badge.finalizada{background:#d1fae5;color:#065f46}
     .occ-meta-item{font-size:12px;color:var(--text2)}
     .occ-desc{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
     .occ-footer{display:flex;justify-content:space-between;align-items:center}
@@ -164,11 +166,6 @@
     .occ-footer .occ-dano{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--success)}
     .occ-empty{text-align:center;padding:40px 20px;color:var(--text2)}
     .occ-empty-icon{font-size:40px;margin-bottom:8px}
-
-    /* ─── FAB ─── */
-    .fab{position:fixed;bottom:24px;left:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#1E5EFF);color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(30,94,255,.4);z-index:50;display:none;align-items:center;justify-content:center;transition:transform .15s}
-    .fab:hover{transform:scale(1.05)}
-    .dashboard-screen.active .fab{display:flex}
 
     /* ─── CADASTRO ─── */
     .cadastro-screen{flex-direction:column;min-height:100vh;width:100%;max-width:700px;margin:0 auto;padding:20px}
@@ -192,6 +189,16 @@
     .assinatura-canvas-wrap{border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
     .assinatura-canvas-wrap canvas{width:100%;height:280px;touch-action:none;cursor:crosshair;display:block}
 
+    /* ─── DETALHE ─── */
+    .detalhe-screen{flex-direction:column;min-height:100vh;width:100%;max-width:700px;margin:0 auto;padding:20px}
+    .detalhe-field{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9}
+    .detalhe-label{font-size:11px;font-weight:700;color:var(--primary);min-width:120px;text-transform:uppercase;letter-spacing:.3px}
+    .detalhe-value{font-size:13px;color:var(--text);flex:1}
+    .detalhe-section{margin-bottom:20px}
+    .detalhe-section-title{font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1.5px solid var(--border);letter-spacing:.5px}
+    .detalhe-box{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;color:#475569;line-height:1.6}
+    .detalhe-box.danger{background:var(--danger-bg);border:1px solid var(--danger-border);color:var(--danger)}
+
     /* ─── SUCESSO ─── */
     .sucesso-screen{align-items:center;justify-content:center;min-height:100vh;width:100%;padding:20px}
     .sucesso-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:40px 32px;text-align:center;max-width:400px;width:100%}
@@ -211,8 +218,7 @@
       .search-input{min-width:100%}
       .filter-select{width:100%}
       .btn-nova{width:100%}
-      .fab{bottom:16px;left:16px}
-      .livros-screen,.recebimento-screen,.cadastro-screen,.passagem-screen,.assinar-screen{padding:16px}
+      .livros-screen,.recebimento-screen,.cadastro-screen,.passagem-screen,.assinar-screen,.detalhe-screen{padding:16px}
     }
     @media(max-width:480px){
       .form-card-body{padding:16px}
@@ -413,24 +419,30 @@
         <select class="filter-select" id="dash-filtro-status" onchange="filtrarDashboard()">
           <option value="">Status</option>
           <option value="ABERTA">Aberta</option>
-          <option value="EM_ANDAMENTO">Em Andamento</option>
-          <option value="ENCERRADA">Encerrada</option>
+          <option value="FINALIZADA">Finalizada</option>
         </select>
         <select class="filter-select" id="dash-filtro-urgencia" onchange="filtrarDashboard()">
           <option value="">Urgência</option>
           <option value="NAO_URGENTE">Não Urgente</option>
+          <option value="POUCO_URGENTE">Pouco Urgente</option>
           <option value="URGENTE">Urgente</option>
-          <option value="CRITICA">Crítica</option>
+          <option value="MUITO_URGENTE">Muito Urgente</option>
+          <option value="EMERGENCIA">Emergência</option>
         </select>
         <select class="filter-select" id="dash-filtro-categoria" onchange="filtrarDashboard()">
           <option value="">Categoria</option>
+          <option value="PATRIMONIAL">Patrimonial</option>
+          <option value="OPERACIONAL">Operacional</option>
+          <option value="CONTROLE_DE_ACESSO">Controle de Acesso</option>
+          <option value="BOMBEIRO_CIVIL">Bombeiro Civil</option>
+          <option value="SISTEMAS_E_TECNICOS">Sistemas e Técnicos</option>
+          <option value="TESTES_E_CHECKLISTS">Testes e Checklists</option>
         </select>
         <button class="btn btn-primary btn-nova" onclick="abrirCadastro()">+ Nova Ocorrência</button>
       </div>
       <div class="occ-list" id="dash-occ-list"></div>
     </main>
   </div>
-  <button class="fab" onclick="abrirCadastro()" title="Nova Ocorrência">+</button>
 </div>
 
 <!-- ══════════ CADASTRO ══════════ -->
@@ -451,37 +463,42 @@
           <label>Urgência <span class="required">*</span></label>
           <select id="cad-urgencia">
             <option value="NAO_URGENTE">NÃO URGENTE</option>
+            <option value="POUCO_URGENTE">POUCO URGENTE</option>
             <option value="URGENTE">URGENTE</option>
-            <option value="CRITICA">CRÍTICA</option>
+            <option value="MUITO_URGENTE">MUITO URGENTE</option>
+            <option value="EMERGENCIA">EMERGÊNCIA</option>
           </select>
         </div>
       </div>
       <div class="form-grid">
         <div class="form-field">
           <label>Categoria <span class="required">*</span></label>
-          <div style="position:relative">
-            <input type="text" id="cad-categoria-busca" placeholder="Digite para filtrar..." autocomplete="off" oninput="filtrarCategorias()"/>
-            <div id="cad-categoria-dropdown" style="display:none;position:absolute;background:#fff;border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;width:100%;left:0;top:100%"></div>
-          </div>
-          <input type="hidden" id="cad-categoria-id"/>
-          <input type="hidden" id="cad-categoria-nome"/>
+          <select id="cad-categoria-id">
+            <option value="">Selecione...</option>
+            <option value="PATRIMONIAL">PATRIMONIAL</option>
+            <option value="OPERACIONAL">OPERACIONAL</option>
+            <option value="CONTROLE_DE_ACESSO">CONTROLE DE ACESSO</option>
+            <option value="BOMBEIRO_CIVIL">BOMBEIRO CIVIL</option>
+            <option value="SISTEMAS_E_TECNICOS">SISTEMAS E TÉCNICOS</option>
+            <option value="TESTES_E_CHECKLISTS">TESTES E CHECKLISTS</option>
+          </select>
         </div>
         <div class="form-field">
           <label>Local <span class="required">*</span></label>
-          <input type="text" id="cad-local" placeholder="Ex: Portaria Principal"/>
+          <input type="text" id="cad-local" placeholder="Ex: PORTARIA PRINCIPAL" class="uppercase"/>
         </div>
       </div>
       <div class="form-field">
         <label>Local - Descrição Adicional</label>
-        <input type="text" id="cad-local-desc" placeholder="Ex: Torre A - Elevador 02"/>
+        <input type="text" id="cad-local-desc" placeholder="Ex: TORRE A - ELEVADOR 02" class="uppercase"/>
       </div>
       <div class="form-field">
         <label>Descritivo da Ocorrência <span class="required">*</span></label>
-        <textarea id="cad-descritivo" placeholder="Detalhe o que ocorreu..."></textarea>
+        <textarea id="cad-descritivo" placeholder="Detalhe o que ocorreu..." class="uppercase"></textarea>
       </div>
       <div class="form-field">
         <label>Outros Envolvidos</label>
-        <input type="text" id="cad-envolvidos" placeholder="Ex: João Silva (Síndico), Maria Santos (Moradora)"/>
+        <input type="text" id="cad-envolvidos" placeholder="Ex: JOÃO SILVA (SÍNDICO), MARIA SANTOS (MORADORA)" class="uppercase"/>
       </div>
       <div class="checkbox-field">
         <input type="checkbox" id="cad-danos" onchange="toggleDanos()"/>
@@ -490,7 +507,7 @@
       <div class="conditional-section hidden" id="cad-danos-section">
         <div class="form-field" style="margin-bottom:0">
           <label>Descrição do Dano / Prejuízo <span class="required">*</span></label>
-          <textarea id="cad-desc-dano" placeholder="Descreva os danos causados..." style="min-height:80px"></textarea>
+          <textarea id="cad-desc-dano" placeholder="Descreva os danos causados..." style="min-height:80px" class="uppercase"></textarea>
         </div>
       </div>
     </div>
@@ -614,16 +631,15 @@
   </div>
 </div>
 
-<!-- ══════════ SIDE PANEL: DETALHE ══════════ -->
-<div id="sp-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:200;display:none" onclick="fecharDetalhe()"></div>
-<div id="sp-panel" style="position:fixed;top:0;right:0;width:100%;max-width:500px;height:100vh;background:#fff;z-index:201;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s cubic-bezier(.4,0,.2,1);box-shadow:-4px 0 24px rgba(0,0,0,.15)">
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1.5px solid var(--border);background:linear-gradient(135deg,#1E5EFF,#1a4fe0);color:#fff;flex-shrink:0">
-    <span style="font-weight:700;font-size:15px">Detalhes da Ocorrência</span>
-    <button onclick="fecharDetalhe()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>
-  </div>
-  <div style="flex:1;overflow-y:auto;padding:20px" id="sp-body"></div>
-  <div style="padding:14px 20px;border-top:1.5px solid var(--border);flex-shrink:0;display:flex;gap:10px">
-    <button class="btn btn-outline" onclick="fecharDetalhe()" style="flex:1">Fechar</button>
+<!-- ══════════ DETALHE ══════════ -->
+<div class="screen detalhe-screen" id="detalhe-screen">
+  <div class="form-card">
+    <div class="form-card-header">
+      <span class="icon">📋</span>
+      <span class="title">Detalhes da Ocorrência</span>
+    </div>
+    <div class="form-card-body" id="detalhe-body"></div>
+    <div class="form-card-footer" id="detalhe-footer"></div>
   </div>
 </div>
 
@@ -644,6 +660,15 @@
   var categoriasCache = [];
   var _colabPosto = [];
   var recebimentoDados = { materiais: [], materialComProblema: [] };
+
+  var CATEGORIAS_FIXAS = {
+    'PATRIMONIAL': 'PATRIMONIAL',
+    'OPERACIONAL': 'OPERACIONAL',
+    'CONTROLE_DE_ACESSO': 'CONTROLE DE ACESSO',
+    'BOMBEIRO_CIVIL': 'BOMBEIRO CIVIL',
+    'SISTEMAS_E_TECNICOS': 'SISTEMAS E TÉCNICOS',
+    'TESTES_E_CHECKLISTS': 'TESTES E CHECKLISTS'
+  };
 
   // ─── SESSION PERSISTENCE ────────────────────────────────────────────────
   var SESSION_KEY = 'gss_session';
@@ -707,11 +732,11 @@
     if (el) el.classList.add('active');
 
     // Show header for logged-in screens
-    if (['trocar-senha-screen','livros-screen','recebimento-screen','dashboard-screen','cadastro-screen','passagem-screen','assinar-screen','sucesso-screen'].indexOf(id) !== -1) {
+    if (['trocar-senha-screen','livros-screen','recebimento-screen','dashboard-screen','cadastro-screen','passagem-screen','assinar-screen','sucesso-screen','detalhe-screen'].indexOf(id) !== -1) {
       document.getElementById('app-header').style.display = 'flex';
       updateHeaderUser();
       // Show back button on non-main screens
-      if (['cadastro-screen','passagem-screen','assinar-screen'].indexOf(id) !== -1) {
+      if (['cadastro-screen','passagem-screen','assinar-screen','detalhe-screen'].indexOf(id) !== -1) {
         document.getElementById('btn-header-back').style.display = 'block';
       }
     }
@@ -773,6 +798,7 @@
     if (id === 'cadastro-screen') voltarDashboard();
     else if (id === 'assinar-screen') voltarCadastro();
     else if (id === 'passagem-screen') voltarDashboard();
+    else if (id === 'detalhe-screen') voltarDashboard();
   };
 
   // ─── TOGGLE SIDEBAR (MOBILE) ───────────────────────────────────────────
@@ -1152,16 +1178,6 @@
     document.getElementById('app-header').style.display = 'flex';
     updateHeaderUser();
     try {
-      // Carregar categorias para o filtro
-      var respCat = await fetch(SUPABASE_EDGE + '/ocorrencias-categorias', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-        body: JSON.stringify({ action: 'listar' })
-      });
-      var bodyCat = await respCat.json();
-      categoriasCache = bodyCat.categorias || [];
-      renderFiltroCategorias();
-
       // Carregar ocorrências do posto
       if (escalaAtual) {
         var resp = await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
@@ -1181,41 +1197,35 @@
     }
   }
 
-  function renderFiltroCategorias() {
-    var select = document.getElementById('dash-filtro-categoria');
-    select.innerHTML = '<option value="">Categoria</option>';
-    categoriasCache.forEach(function(c) {
-      select.innerHTML += '<option value="' + c.id + '">' + escapeHtml(c.nome) + '</option>';
-    });
-  }
-
   function renderDashboard() {
     var filtered = getFilteredOcorrencias();
     // Stats
     var total = filtered.length;
     var normais = filtered.filter(function(o) { return o.urgencia === 'NAO_URGENTE'; }).length;
+    var poucoUrgentes = filtered.filter(function(o) { return o.urgencia === 'POUCO_URGENTE'; }).length;
     var urgentes = filtered.filter(function(o) { return o.urgencia === 'URGENTE'; }).length;
-    var criticas = filtered.filter(function(o) { return o.urgencia === 'CRITICA'; }).length;
+    var muitoUrgentes = filtered.filter(function(o) { return o.urgencia === 'MUITO_URGENTE'; }).length;
+    var emergencias = filtered.filter(function(o) { return o.urgencia === 'EMERGENCIA'; }).length;
     var abertas = filtered.filter(function(o) { return o.status === 'ABERTA'; }).length;
-    var andamento = filtered.filter(function(o) { return o.status === 'EM_ANDAMENTO'; }).length;
-    var encerradas = filtered.filter(function(o) { return o.status === 'ENCERRADA'; }).length;
+    var finalizadas = filtered.filter(function(o) { return o.status === 'FINALIZADA'; }).length;
 
     document.getElementById('dash-total').textContent = total;
 
     // Donut chart
-    renderDonut(normais, urgentes, criticas);
+    renderDonut(normais, poucoUrgentes, urgentes, muitoUrgentes, emergencias);
 
     // Legend
     document.getElementById('dash-legend').innerHTML =
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div><span class="legend-label">Normais</span><span class="legend-count">' + normais + '</span></div>' +
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div><span class="legend-label">Urgentes</span><span class="legend-count">' + urgentes + '</span></div>' +
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div><span class="legend-label">Críticas</span><span class="legend-count">' + criticas + '</span></div>';
+      '<div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div><span class="legend-label">Não Urgente</span><span class="legend-count">' + normais + '</span></div>' +
+      '<div class="legend-item"><div class="legend-dot" style="background:#0ea5e9"></div><span class="legend-label">Pouco Urgente</span><span class="legend-count">' + poucoUrgentes + '</span></div>' +
+      '<div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div><span class="legend-label">Urgente</span><span class="legend-count">' + urgentes + '</span></div>' +
+      '<div class="legend-item"><div class="legend-dot" style="background:#e11d48"></div><span class="legend-label">Muito Urgente</span><span class="legend-count">' + muitoUrgentes + '</span></div>' +
+      '<div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div><span class="legend-label">Emergência</span><span class="legend-count">' + emergencias + '</span></div>';
 
     // Status
     document.getElementById('dash-status').innerHTML =
-      '<div class="status-row"><div class="status-label"><div class="status-dot" style="background:var(--success)"></div>Abertas</div><div class="status-count">' + abertas + '</div></div>' +
-      '<div class="status-row"><div class="status-label"><div class="status-dot" style="background:var(--primary)"></div>Em Andamento</div><div class="status-count">' + andamento + '</div></div>' +
-      '<div class="status-row"><div class="status-label"><div class="status-dot" style="background:var(--text3)"></div>Encerradas</div><div class="status-count">' + encerradas + '</div></div>';
+      '<div class="status-row"><div class="status-label"><div class="status-dot" style="background:var(--primary)"></div>Abertas</div><div class="status-count">' + abertas + '</div></div>' +
+      '<div class="status-row"><div class="status-label"><div class="status-dot" style="background:var(--success)"></div>Finalizadas</div><div class="status-count">' + finalizadas + '</div></div>';
 
     // Cards
     var listEl = document.getElementById('dash-occ-list');
@@ -1227,11 +1237,11 @@
   }
 
   function renderOccCard(occ) {
-    var urgClass = occ.urgencia === 'CRITICA' ? 'critico' : (occ.urgencia === 'URGENTE' ? 'urgente' : 'normal');
-    var urgLabel = occ.urgencia === 'NAO_URGENTE' ? 'NÃO URGENTE' : (occ.urgencia === 'URGENTE' ? 'URGENTE' : 'CRÍTICA');
-    var urgBadge = occ.urgencia === 'CRITICA' ? 'critico' : (occ.urgencia === 'URGENTE' ? 'urgente' : 'nao-urgente');
-    var statusClass = occ.status === 'ABERTA' ? 'aberta' : (occ.status === 'EM_ANDAMENTO' ? 'em-andamento' : 'encerrada');
-    var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : (occ.status === 'EM_ANDAMENTO' ? 'Em Andamento' : 'Encerrada');
+    var urgClass = occ.urgencia === 'EMERGENCIA' ? 'emergencia' : (occ.urgencia === 'MUITO_URGENTE' ? 'muito-urgente' : (occ.urgencia === 'URGENTE' ? 'urgente' : (occ.urgencia === 'POUCO_URGENTE' ? 'pouco-urgente' : 'normal')));
+    var urgLabel = ({'NAO_URGENTE':'NÃO URGENTE','POUCO_URGENTE':'POUCO URGENTE','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO URGENTE','EMERGENCIA':'EMERGÊNCIA'})[occ.urgencia] || occ.urgencia;
+    var urgBadge = ({'NAO_URGENTE':'nao-urgente','POUCO_URGENTE':'pouco-urgente','URGENTE':'urgente','MUITO_URGENTE':'muito-urgente','EMERGENCIA':'emergencia'})[occ.urgencia] || 'nao-urgente';
+    var statusClass = occ.status === 'ABERTA' ? 'aberta' : 'finalizada';
+    var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Finalizada';
 
     var d = new Date(occ.inicio);
     var dataInicio = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
@@ -1265,31 +1275,42 @@
     '</div>';
   }
 
-  function renderDonut(n, u, c) {
-    var total = n + u + c;
+  function renderDonut(n, pu, u, mu, e) {
+    var total = n + pu + u + mu + e;
     var svg = document.getElementById('dash-donut');
     if (total === 0) {
       svg.innerHTML = '<circle cx="60" cy="60" r="50" fill="none" stroke="#e5e7eb" stroke-width="16"/>';
       return;
     }
-    var colors = ['#1E5EFF', '#f59e0b', '#b91c1c'];
-    var vals = [n, u, c];
+    var colors = ['#1E5EFF', '#0ea5e9', '#f59e0b', '#e11d48', '#b91c1c'];
+    var vals = [n, pu, u, mu, e];
     var cumul = 0;
     var paths = '';
-    for (var i = 0; i < 3; i++) {
+    var cx = 60, cy = 60, r = 50, sw = 16;
+    for (var i = 0; i < 5; i++) {
       if (vals[i] === 0) continue;
       var pct = vals[i] / total;
-      var start = cumul * 2 * Math.PI - Math.PI / 2;
+      var startAngle = cumul * 2 * Math.PI - Math.PI / 2;
       cumul += pct;
-      var end = cumul * 2 * Math.PI - Math.PI / 2;
+      var endAngle = cumul * 2 * Math.PI - Math.PI / 2;
       var large = pct > 0.5 ? 1 : 0;
-      var x1 = 60 + 50 * Math.cos(start);
-      var y1 = 60 + 50 * Math.sin(start);
-      var x2 = 60 + 50 * Math.cos(end);
-      var y2 = 60 + 50 * Math.sin(end);
-      paths += '<path d="M60,60 L' + x1 + ',' + y1 + ' A50,50 0 ' + large + ',1 ' + x2 + ',' + y2 + ' Z" fill="' + colors[i] + '"/>';
+      var x1 = cx + r * Math.cos(startAngle);
+      var y1 = cy + r * Math.sin(startAngle);
+      var x2 = cx + r * Math.cos(endAngle);
+      var y2 = cy + r * Math.sin(endAngle);
+      paths += '<path d="M' + x1 + ',' + y1 + ' A' + r + ',' + r + ' 0 ' + large + ',1 ' + x2 + ',' + y2 + '" fill="none" stroke="' + colors[i] + '" stroke-width="' + sw + '" stroke-linecap="butt"/>';
     }
-    svg.innerHTML = paths + '<circle cx="60" cy="60" r="34" fill="white"/>';
+    if (cumul < 1) {
+      var startA = cumul * 2 * Math.PI - Math.PI / 2;
+      var endA = Math.PI * 2 - Math.PI / 2;
+      var x1e = cx + r * Math.cos(startA);
+      var y1e = cy + r * Math.sin(startA);
+      var x2e = cx + r * Math.cos(endA);
+      var y2e = cy + r * Math.sin(endA);
+      var largeE = (1 - cumul) > 0.5 ? 1 : 0;
+      paths += '<path d="M' + x1e + ',' + y1e + ' A' + r + ',' + r + ' 0 ' + largeE + ',1 ' + x2e + ',' + y2e + '" fill="none" stroke="#e5e7eb" stroke-width="' + sw + '" stroke-linecap="butt"/>';
+    }
+    svg.innerHTML = paths;
   }
 
   function getFilteredOcorrencias() {
@@ -1321,59 +1342,47 @@
     var d = new Date(occ.inicio);
     var dataFmt = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
     var horaFmt = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-    var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : (occ.status === 'EM_ANDAMENTO' ? 'Em Andamento' : 'Encerrada');
-    var urgLabel = occ.urgencia === 'NAO_URGENTE' ? 'Não Urgente' : (occ.urgencia === 'URGENTE' ? 'Urgente' : 'Crítica');
+    var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Finalizada';
+    var urgLabel = ({'NAO_URGENTE':'Não Urgente','POUCO_URGENTE':'Pouco Urgente','URGENTE':'Urgente','MUITO_URGENTE':'Muito Urgente','EMERGENCIA':'Emergência'})[occ.urgencia] || occ.urgencia;
+    var catLabel = CATEGORIAS_FIXAS[occ.categoria_nome] || occ.categoria_nome || '-';
 
-    var html = '<div style="margin-bottom:16px">' +
-      '<div style="font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1.5px solid var(--border)">Informações</div>' +
-      '<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9"><div style="font-size:11px;font-weight:700;color:var(--primary);min-width:100px">Protocolo</div><div style="font-size:13px;font-family:monospace;font-weight:600">' + escapeHtml(occ.protocolo) + '</div></div>' +
-      '<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9"><div style="font-size:11px;font-weight:700;color:var(--primary);min-width:100px">Data</div><div style="font-size:13px">' + dataFmt + '</div></div>' +
-      '<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9"><div style="font-size:11px;font-weight:700;color:var(--primary);min-width:100px">Hora</div><div style="font-size:13px">' + horaFmt + '</div></div>' +
-      '<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9"><div style="font-size:11px;font-weight:700;color:var(--primary);min-width:100px">Colaborador</div><div style="font-size:13px">' + escapeHtml(occ.colaborador || '-') + '</div></div>' +
-      '<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9"><div style="font-size:11px;font-weight:700;color:var(--primary);min-width:100px">Categoria</div><div style="font-size:13px">' + escapeHtml(occ.categoria_nome || '-') + '</div></div>' +
-      '<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9"><div style="font-size:11px;font-weight:700;color:var(--primary);min-width:100px">Urgência</div><div style="font-size:13px">' + urgLabel + '</div></div>' +
-      '<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9"><div style="font-size:11px;font-weight:700;color:var(--primary);min-width:100px">Local</div><div style="font-size:13px">' + escapeHtml(occ.local || '-') + (occ.local_descricao ? ' — ' + escapeHtml(occ.local_descricao) : '') + '</div></div>' +
-      '<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9"><div style="font-size:11px;font-weight:700;color:var(--primary);min-width:100px">Status</div><div style="font-size:13px">' + statusLabel + '</div></div>' +
-      (occ.outros_envolvidos ? '<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9"><div style="font-size:11px;font-weight:700;color:var(--primary);min-width:100px">Envolvidos</div><div style="font-size:13px">' + escapeHtml(occ.outros_envolvidos) + '</div></div>' : '') +
+    var html = '<div class="detalhe-section">' +
+      '<div class="detalhe-section-title">Informações</div>' +
+      '<div class="detalhe-field"><div class="detalhe-label">Protocolo</div><div class="detalhe-value" style="font-family:monospace;font-weight:700">' + escapeHtml(occ.protocolo) + '</div></div>' +
+      '<div class="detalhe-field"><div class="detalhe-label">Data</div><div class="detalhe-value">' + dataFmt + '</div></div>' +
+      '<div class="detalhe-field"><div class="detalhe-label">Hora</div><div class="detalhe-value">' + horaFmt + '</div></div>' +
+      '<div class="detalhe-field"><div class="detalhe-label">Colaborador</div><div class="detalhe-value">' + escapeHtml(occ.colaborador || '-') + '</div></div>' +
+      '<div class="detalhe-field"><div class="detalhe-label">Categoria</div><div class="detalhe-value">' + escapeHtml(catLabel) + '</div></div>' +
+      '<div class="detalhe-field"><div class="detalhe-label">Urgência</div><div class="detalhe-value">' + urgLabel + '</div></div>' +
+      '<div class="detalhe-field"><div class="detalhe-label">Local</div><div class="detalhe-value">' + escapeHtml(occ.local || '-') + (occ.local_descricao ? ' — ' + escapeHtml(occ.local_descricao) : '') + '</div></div>' +
+      '<div class="detalhe-field"><div class="detalhe-label">Status</div><div class="detalhe-value"><span class="occ-badge ' + (occ.status === 'ABERTA' ? 'aberta' : 'finalizada') + '">' + statusLabel + '</span></div></div>' +
+      (occ.outros_envolvidos ? '<div class="detalhe-field"><div class="detalhe-label">Envolvidos</div><div class="detalhe-value">' + escapeHtml(occ.outros_envolvidos) + '</div></div>' : '') +
       '</div>';
 
-    if (occ.recebimento) {
-      html += '<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1.5px solid var(--border)">Recebimento</div>' +
-        '<div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;color:#475569;line-height:1.6">' + occ.recebimento + '</div></div>';
-    }
-
-    html += '<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1.5px solid var(--border)">Descritivo</div>' +
-      '<div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;color:#475569;line-height:1.6">' + (occ.descritivo || '<em>Sem descritivo</em>') + '</div></div>';
+    html += '<div class="detalhe-section"><div class="detalhe-section-title">Descritivo</div><div class="detalhe-box">' + (occ.descritivo || '<em>Sem descritivo</em>') + '</div></div>';
 
     if (occ.danos && occ.descricao_dano) {
-      html += '<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:700;color:var(--danger);text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1.5px solid var(--danger-border)">Danos</div>' +
-        '<div style="background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--danger);line-height:1.6">' + escapeHtml(occ.descricao_dano) + '</div></div>';
+      html += '<div class="detalhe-section"><div class="detalhe-section-title" style="color:var(--danger)">Danos</div><div class="detalhe-box danger">' + escapeHtml(occ.descricao_dano) + '</div></div>';
     }
 
     if (occ.assinatura) {
-      html += '<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1.5px solid var(--border)">Assinatura</div>' +
-        '<div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px;display:inline-block"><img src="' + occ.assinatura + '" alt="Assinatura" style="max-width:300px;max-height:150px;display:block"/></div></div>';
+      html += '<div class="detalhe-section"><div class="detalhe-section-title">Assinatura</div><div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px;display:inline-block"><img src="' + occ.assinatura + '" alt="Assinatura" style="max-width:300px;max-height:150px;display:block"/></div></div>';
     }
 
-    // Status actions
-    if (occ.status !== 'ENCERRADA') {
-      html += '<div style="display:flex;gap:8px;margin-top:16px">';
-      if (occ.status === 'ABERTA') {
-        html += '<button class="btn btn-warning" onclick="atualizarStatus(\'' + occ.id + '\', \'EM_ANDAMENTO\')" style="flex:1;width:auto;padding:10px;font-size:13px">🔄 Iniciar Atendimento</button>';
-      }
-      html += '<button class="btn btn-success" onclick="atualizarStatus(\'' + occ.id + '\', \'ENCERRADA\')" style="flex:1;width:auto;padding:10px;font-size:13px">✅ Encerrar</button>';
-      html += '</div>';
+    document.getElementById('detalhe-body').innerHTML = html;
+
+    // Footer actions
+    var footerHtml = '<button class="btn btn-outline" onclick="voltarDashboard()" style="flex:1">← Voltar</button>';
+    if (occ.status === 'ABERTA') {
+      footerHtml = '<button class="btn btn-outline" onclick="voltarDashboard()" style="flex:1">← Voltar</button>' +
+        '<button class="btn btn-success" onclick="atualizarStatus(\'' + occ.id + '\', \'FINALIZADA\')" style="flex:1">✅ Finalizar</button>';
     }
+    document.getElementById('detalhe-footer').innerHTML = footerHtml;
 
-    document.getElementById('sp-body').innerHTML = html;
-    document.getElementById('sp-overlay').style.display = 'block';
-    document.getElementById('sp-panel').style.transform = 'translateX(0)';
+    showScreen('detalhe-screen');
   };
 
-  window.fecharDetalhe = function() {
-    document.getElementById('sp-panel').style.transform = 'translateX(100%)';
-    document.getElementById('sp-overlay').style.display = 'none';
-  };
+  window.fecharDetalhe = function() { voltarDashboard(); };
 
   window.atualizarStatus = async function(id, status) {
     try {
@@ -1384,7 +1393,6 @@
       });
       var body = await resp.json();
       if (body.ok) {
-        fecharDetalhe();
         await carregarDashboard();
       }
     } catch (err) {
@@ -1397,8 +1405,6 @@
     document.getElementById('cad-inicio').value = new Date().toISOString().slice(0, 16);
     document.getElementById('cad-urgencia').value = 'NAO_URGENTE';
     document.getElementById('cad-categoria-id').value = '';
-    document.getElementById('cad-categoria-nome').value = '';
-    document.getElementById('cad-categoria-busca').value = '';
     document.getElementById('cad-local').value = '';
     document.getElementById('cad-local-desc').value = '';
     document.getElementById('cad-descritivo').value = '';
@@ -1417,46 +1423,13 @@
     document.getElementById('cad-danos-section').classList.toggle('hidden', !checked);
   };
 
-  window.filtrarCategorias = function() {
-    var busca = (document.getElementById('cad-categoria-busca').value || '').toLowerCase();
-    var dropdown = document.getElementById('cad-categoria-dropdown');
-    if (busca.length < 1) { dropdown.style.display = 'none'; return; }
-    var filtradas = categoriasCache.filter(function(c) {
-      return (c.nome || '').toLowerCase().indexOf(busca) !== -1;
-    }).slice(0, 10);
-    if (filtradas.length === 0) {
-      dropdown.innerHTML = '<div style="padding:8px 12px;color:var(--text2);font-size:13px">Nenhuma categoria encontrada</div>';
-    } else {
-      dropdown.innerHTML = filtradas.map(function(c) {
-        return '<div style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px" ' +
-          'onmouseover="this.style.background=\'#f0f9ff\'" onmouseout="this.style.background=\'transparent\'" ' +
-          'onclick="selecionarCategoria(\'' + c.id + '\', \'' + escapeHtml(c.nome).replace(/'/g, "\\'") + '\')">' +
-          escapeHtml(c.nome) + '</div>';
-      }).join('');
-    }
-    dropdown.style.display = 'block';
-  };
-
-  window.selecionarCategoria = function(id, nome) {
-    document.getElementById('cad-categoria-id').value = id;
-    document.getElementById('cad-categoria-nome').value = nome;
-    document.getElementById('cad-categoria-busca').value = nome;
-    document.getElementById('cad-categoria-dropdown').style.display = 'none';
-  };
-
-  document.addEventListener('click', function(e) {
-    var dd = document.getElementById('cad-categoria-dropdown');
-    var inp = document.getElementById('cad-categoria-busca');
-    if (dd && inp && !inp.contains(e.target) && !dd.contains(e.target)) dd.style.display = 'none';
-  });
-
   window.salvarOcorrencia = async function() {
     var erroEl = document.getElementById('cad-erro');
     erroEl.style.display = 'none';
     var inicio = document.getElementById('cad-inicio').value;
     var urgencia = document.getElementById('cad-urgencia').value;
     var catId = document.getElementById('cad-categoria-id').value;
-    var catNome = document.getElementById('cad-categoria-nome').value;
+    var catNome = CATEGORIAS_FIXAS[catId] || catId;
     var local = document.getElementById('cad-local').value.trim();
     var localDesc = document.getElementById('cad-local-desc').value.trim();
     var descritivo = document.getElementById('cad-descritivo').value.trim();
@@ -1478,12 +1451,12 @@
       urgencia: urgencia,
       categoria_id: catId,
       categoria_nome: catNome,
-      local: local,
-      local_descricao: localDesc || null,
-      descritivo: descritivo,
-      outros_envolvidos: envolvidos || null,
+      local: local.toUpperCase(),
+      local_descricao: localDesc ? localDesc.toUpperCase() : null,
+      descritivo: descritivo.toUpperCase(),
+      outros_envolvidos: envolvidos ? envolvidos.toUpperCase() : null,
       danos: danos,
-      descricao_dano: descDano || null,
+      descricao_dano: descDano ? descDano.toUpperCase() : null,
       recebimento: null,
       passagem: null,
       assinatura: null
@@ -1500,17 +1473,15 @@
         showErro(erroEl, result.error || 'Erro ao salvar ocorrência.');
         return;
       }
-      // Show signature screen with the saved occurrence ID
-      window._occIdParaAssinar = result.id;
-      window._occProtocoloParaAssinar = result.protocolo;
-      showAssinarScreen();
+      document.getElementById('sucesso-protocolo').textContent = result.protocolo || '';
+      showScreen('sucesso-screen');
     } catch (err) {
       showErro(erroEl, 'Erro ao conectar. Tente novamente.');
     }
   };
 
-  window.voltarCadastro = function() { showScreen('cadastro-screen'); };
-  window.voltarDashboard = function() { carregarDashboard(); };
+  window.voltarCadastro = function() { window._passagemTexto = null; showScreen('cadastro-screen'); };
+  window.voltarDashboard = function() { window._passagemTexto = null; carregarDashboard(); };
 
   // ─── ASSINATURA ─────────────────────────────────────────────────────────
   var assinaturaCanvas = null;
@@ -1587,7 +1558,15 @@
       return;
     }
     assinaturaAtual = assinaturaCanvas.toDataURL('image/png');
-    atualizarOcorrenciaAssinatura();
+    // Check if this is a passagem (closing book) or regular occurrence
+    if (window._passagemTexto) {
+      // Passagem: logout after signature
+      limparSessao();
+      fazerLogout();
+    } else {
+      // Regular occurrence: update signature and show success
+      atualizarOcorrenciaAssinatura();
+    }
   };
 
   async function atualizarOcorrenciaAssinatura() {
@@ -1629,6 +1608,7 @@
     document.getElementById('psg-erro').style.display = 'none';
     var nomePosto = escalaAtual ? escalaAtual.id_posto : '';
     document.getElementById('psg-posto-badge').textContent = '📋 Livro — ' + nomePosto;
+    carregarColaboradoresPosto();
     configurarBuscaReceptor();
     gerarTextoPassagem();
     showScreen('passagem-screen');
@@ -1701,8 +1681,11 @@
     if (!cargoReceptor) { showErro(erroEl, 'Informe o cargo.'); return; }
     if (!tipoReceptor) { showErro(erroEl, 'Selecione o tipo.'); return; }
     if (!horario) { showErro(erroEl, 'Informe o horário.'); return; }
-    limparSessao();
-    fazerLogout();
+    // Store passagem data and show signature screen
+    window._passagemTexto = document.getElementById('psg-texto').value;
+    document.getElementById('assinar-resumo').innerHTML = '<strong>Passagem de Serviço</strong><br/>Confirme com sua assinatura para fechar o livro.';
+    initAssinatura();
+    showScreen('assinar-screen');
   };
 
   // ─── LOGOUT ─────────────────────────────────────────────────────────────
