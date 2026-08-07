@@ -1,6 +1,7 @@
 /*.html
   Content-Type: text/html; charset=utf-8
   Cache-Control: no-cache, must-revalidate
+  CF-Cache-Tag: v2-livro-utf8
 
 /*.png
   Cache-Control: public, max-age=31536000, immutable
