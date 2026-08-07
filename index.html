@@ -263,7 +263,7 @@
       <label>Senha</label>
       <div class="pw-wrap">
         <input type="password" id="senha-input" placeholder="••••••" autocomplete="current-password"/>
-        <span class="pw-eye" onclick="togglePw()">­ƒæü</span>
+        <span class="pw-eye" onclick="togglePw()">👁</span>
       </div>
     </div>
     <button class="btn btn-primary" id="btn-login" onclick="fazerLogin()">Entrar →</button>
@@ -409,14 +409,14 @@
       <div id="dash-status"></div>
     </div>
     <div style="margin-top:12px">
-      <button class="btn btn-outline" onclick="fecharLivro()" style="width:100%;font-size:13px;padding:10px">­ƒÜ¬ Fechar Livro</button>
+      <button class="btn btn-outline" onclick="fecharLivro()" style="width:100%;font-size:13px;padding:10px">🚪 Fechar Livro</button>
     </div>
   </div>
   <!-- Conte├║do -->
   <div class="dashboard-content">
     <div class="filter-bar">
       <div class="search-input">
-        <span class="search-icon">­ƒöì</span>
+        <span class="search-icon">🔍</span>
         <input type="text" id="dash-busca" placeholder="Buscar Ocorrências..." oninput="filtrarDashboard()"/>
       </div>
       <select class="filter-select" id="dash-filtro-status" onchange="filtrarDashboard()">
@@ -451,7 +451,7 @@
 <div class="screen cadastro-screen" id="cadastro-screen">
   <div class="form-card">
     <div class="form-card-header">
-      <span class="icon">­ƒôä</span>
+      <span class="icon">📄</span>
       <span class="title">Dados da Ocorrência</span>
     </div>
     <div class="form-card-body">
@@ -515,7 +515,7 @@
     </div>
     <div class="form-card-footer">
       <button class="btn btn-outline" onclick="cancelarCadastro()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarOcorrencia()">­ƒÆ¥ Salvar Ocorrência</button>
+      <button class="btn btn-primary" onclick="salvarOcorrencia()">💾 Salvar Ocorrência</button>
     </div>
   </div>
 </div>
@@ -588,7 +588,7 @@
         <textarea id="psg-texto" rows="5" readonly style="background:#f8fafc;font-size:13px;line-height:1.6"></textarea>
       </div>
       <div id="psg-erro" class="alert alert-error" style="display:none"></div>
-      <button class="btn btn-primary" onclick="confirmarPassagem()">­ƒÜ¬ Confirmar e Sair</button>
+      <button class="btn btn-primary" onclick="confirmarPassagem()">🚪 Confirmar e Sair</button>
       <div style="margin-top:10px"><button class="btn btn-outline" onclick="voltarDashboard()">← Voltar ao Dashboard</button></div>
     </div>
   </div>
@@ -611,7 +611,7 @@
     </div>
     <div id="assinar-erro" class="alert alert-error" style="display:none"></div>
     <div style="margin-top:12px">
-      <button class="btn btn-outline" onclick="limparAssinatura()" style="width:auto;padding:8px 14px;font-size:12px">­ƒùæ´©Å Limpar</button>
+      <button class="btn btn-outline" onclick="limparAssinatura()" style="width:auto;padding:8px 14px;font-size:12px">🧹 Limpar</button>
     </div>
     <div style="margin-top:14px">
       <button class="btn btn-primary" onclick="confirmarAssinatura()">✅ Confirmar Assinatura</button>
@@ -628,7 +628,7 @@
     <div class="sucesso-icon">✅</div>
     <h2>Ocorrência Registrada!</h2>
     <p>Sua ocorrência foi registrada com sucesso.<br/>Protocolo: <strong id="sucesso-protocolo"></strong></p>
-    <button class="btn btn-primary" onclick="voltarDashboard()">­ƒôï Voltar ao Dashboard</button>
+    <button class="btn btn-primary" onclick="voltarDashboard()">📋 Voltar ao Dashboard</button>
     <button class="btn btn-outline" onclick="abrirCadastro()">+ Nova Ocorrência</button>
   </div>
 </div>
@@ -639,8 +639,8 @@
     <div class="sucesso-icon">✅</div>
     <h2>Livro Fechado!</h2>
     <p>Sua passagem de serviço foi registrada com sucesso.</p>
-    <button class="btn btn-primary" onclick="abrirNovoLivro()">­ƒôï Abrir Novo Livro</button>
-    <button class="btn btn-outline" onclick="fazerLogout()" style="margin-top:8px">­ƒÜ¬ Sair (Logout)</button>
+    <button class="btn btn-primary" onclick="abrirNovoLivro()">📋 Abrir Novo Livro</button>
+    <button class="btn btn-outline" onclick="fazerLogout()" style="margin-top:8px">🚪 Sair (Logout)</button>
   </div>
 </div>
 
@@ -648,7 +648,7 @@
 <div class="screen detalhe-screen" id="detalhe-screen">
   <div class="form-card">
     <div class="form-card-header">
-      <span class="icon">­ƒôï</span>
+      <span class="icon">📋</span>
       <span class="title">Detalhes da Ocorrência</span>
     </div>
     <div class="form-card-body" id="detalhe-body"></div>
@@ -914,7 +914,7 @@
     infoEl.innerHTML = 'Olí <strong>' + escapeHtml(user.nome) + '</strong>';
     infoEl.style.display = 'flex';
     document.getElementById('livros-lista').innerHTML =
-      '<div class="no-livro"><div class="no-livro-icon">­ƒô¡</div>' +
+      '<div class="no-livro"><div class="no-livro-icon">📭</div>' +
       '<h3 style="font-size:16px;font-weight:700;margin-bottom:8px">Nenhum Livro Disponável</h3>' +
       '<p style="font-size:13px;color:var(--text2)">Você não possui livro cadastrado.<br/>Contacte o administrador.</p></div>';
     showScreen('livros-screen');
@@ -947,7 +947,7 @@
       } catch(e) {}
       var titulo = nomePosto !== esc.id_posto ? nomePosto + ' (' + esc.id_posto + ')' : esc.id_posto;
       return '<div class="livro-item" onclick="abrirLivro(\'' + esc.id + '\')">' +
-        '<h3>­ƒôï Livro ─ ' + escapeHtml(titulo) + '</h3>' +
+        '<h3>📋 Livro ─ ' + escapeHtml(titulo) + '</h3>' +
         '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' → ' + fmtData(esc.data_fim) + '</div>' +
         '<div class="abrir">Abrir Livro →</div></div>';
     }
@@ -955,7 +955,7 @@
     window._escalasAtivos = livrosDisponiveis;
     document.getElementById('livros-lista').innerHTML = livrosDisponiveis.length > 0
       ? livrosDisponiveis.map(renderLivro).join('')
-      : '<div class="no-livro"><div class="no-livro-icon">­ƒôï</div><p style="font-size:13px;color:var(--text2)">Nenhum livro disponável no momento.</p></div>';
+      : '<div class="no-livro"><div class="no-livro-icon">📋</div><p style="font-size:13px;color:var(--text2)">Nenhum livro disponável no momento.</p></div>';
     showScreen('livros-screen');
   }
 
@@ -1001,7 +1001,7 @@
   // ─── RECEBIMENTO ────────────────────────────────────────────────────────
   window.iniciarRecebimento = function() {
     var recBar = document.getElementById('rec-user-bar');
-    recBar.innerHTML = '<span>­ƒæñ ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
+    recBar.innerHTML = '<span>👑 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
     document.getElementById('rec-nome').value = usuarioLogado.nome || '';
     document.getElementById('rec-re').value = usuarioLogado.re || '';
     document.getElementById('rec-funcao').value = '';
@@ -1025,7 +1025,7 @@
         if (d && d.length > 0 && d[0].nome) nomePosto = d[0].nome + ' (' + (d[0].cc || escalaAtual.id_posto) + ')';
       }
     } catch(e) {}
-    document.getElementById('rec-posto-badge').textContent = '­ƒôï Livro ─ ' + nomePosto;
+    document.getElementById('rec-posto-badge').textContent = '📋 Livro ─ ' + nomePosto;
 
     carregarColaboradoresPosto();
     carregarMaterialCarga();
@@ -1229,7 +1229,7 @@
     // Cards
     var listEl = document.getElementById('dash-occ-list');
     if (filtered.length === 0) {
-      listEl.innerHTML = '<div class="occ-empty"><div class="occ-empty-icon">­ƒôï</div><p>Nenhuma ocorrência encontrada</p></div>';
+      listEl.innerHTML = '<div class="occ-empty"><div class="occ-empty-icon">📋</div><p>Nenhuma ocorrência encontrada</p></div>';
       return;
     }
     listEl.innerHTML = filtered.map(renderOccCard).join('');
@@ -1639,7 +1639,7 @@
       if (!confirm('Hí ' + abertas.length + ' ocorrência(s) em aberto. Deseja fechar mesmo assim?')) return;
     }
     var psgBar = document.getElementById('psg-user-bar');
-    psgBar.innerHTML = '<span>­ƒæñ ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
+    psgBar.innerHTML = '<span>👑 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
     document.getElementById('psg-nome').value = usuarioLogado.nome || '';
     document.getElementById('psg-re').value = usuarioLogado.re || '';
     document.getElementById('psg-funcao').value = '';
@@ -1652,7 +1652,7 @@
     document.getElementById('psg-texto').value = '';
     document.getElementById('psg-erro').style.display = 'none';
     var nomePosto = escalaAtual ? escalaAtual.id_posto : '';
-    document.getElementById('psg-posto-badge').textContent = '­ƒôï Livro ─ ' + nomePosto;
+    document.getElementById('psg-posto-badge').textContent = '📋 Livro ─ ' + nomePosto;
     carregarColaboradoresPosto();
     configurarBuscaReceptor();
     gerarTextoPassagem();
