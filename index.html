@@ -438,7 +438,7 @@
         <option value="OPERACIONAL">Operacional</option>
         <option value="CONTROLE DE ACESSO">Controle de Acesso</option>
         <option value="BOMBEIRO CIVIL">Bombeiro Civil</option>
-        <option value="SISTEMAS E TÉCNICOS">Sistemas e T®cnicos</option>
+        <option value="SISTEMAS E TÉCNICOS">Sistemas e Técnicos</option>
         <option value="TESTES E CHECKLISTS">Testes e Checklists</option>
       </select>
       <button class="btn btn-primary btn-nova" onclick="abrirCadastro()">+ Nova Ocorrência</button>
@@ -468,7 +468,7 @@
             <option value="POUCO_URGENTE">POUCO URGENTE</option>
             <option value="URGENTE">URGENTE</option>
             <option value="MUITO_URGENTE">MUITO URGENTE</option>
-            <option value="EMERGENCIA">EMERGêNCIA</option>
+            <option value="EMERGENCIA">EMERGÊNCIA</option>
           </select>
         </div>
       </div>
@@ -1237,8 +1237,8 @@
 
   function renderOccCard(occ) {
     var urgClass = ({'NAO_URGENTE':'normal','POUCO_URGENTE':'pouco-urgente','URGENTE':'urgente','MUITO_URGENTE':'muito-urgente','EMERGENCIA':'emergencia'})[occ.urgencia] || 'normal';
-    var urgLabel = ({'NAO_URGENTE':'NÃO URGENTE','POUCO_URGENTE':'POUCO URGENTE','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO URGENTE','EMERGENCIA':'EMERGêNCIA'})[occ.urgencia] || occ.urgencia;
-    var urgLabelShort = ({'NAO_URGENTE':'NÃO','POUCO_URGENTE':'POUCO','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO','EMERGENCIA':'EMERGêNCIA'})[occ.urgencia] || occ.urgencia;
+    var urgLabel = ({'NAO_URGENTE':'NÃO URGENTE','POUCO_URGENTE':'POUCO URGENTE','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO URGENTE','EMERGENCIA':'EMERGÊNCIA'})[occ.urgencia] || occ.urgencia;
+    var urgLabelShort = ({'NAO_URGENTE':'NÃO','POUCO_URGENTE':'POUCO','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO','EMERGENCIA':'EMERGÊNCIA'})[occ.urgencia] || occ.urgencia;
     var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Encerrada';
 
     var d = new Date(occ.inicio);
@@ -1272,7 +1272,7 @@
         '<div class="occ-card-meta occ-card-desktop">' +
           '<div><div class="occ-card-field-label">Urgência</div><div class="occ-card-field-value"><span class="occ-card-badge ' + urgClass + '">' + urgLabel + '</span></div></div>' +
           '<div><div class="occ-card-field-label">Início</div><div class="occ-card-field-value">' + dataInicio + '</div></div>' +
-          '<div><div class="occ-card-field-label">T®rmino</div><div class="occ-card-field-value">' + termStr + '</div></div>' +
+          '<div><div class="occ-card-field-label">Término</div><div class="occ-card-field-value">' + termStr + '</div></div>' +
           '<div><div class="occ-card-field-label">Local</div><div class="occ-card-field-value">' + escapeHtml(occ.local || '-') + '</div></div>' +
         '</div>' +
 
@@ -1283,7 +1283,7 @@
         '</div>' +
         '<div class="occ-card-meta occ-card-mobile">' +
           '<div><div class="occ-card-field-label">Local</div><div class="occ-card-field-value">' + escapeHtml(occ.local || '-') + '</div></div>' +
-          '<div><div class="occ-card-field-label">T®rmino</div><div class="occ-card-field-value">' + termStr + '</div></div>' +
+          '<div><div class="occ-card-field-label">Término</div><div class="occ-card-field-value">' + termStr + '</div></div>' +
           '<div><div class="occ-card-field-label">Dano</div><div class="occ-card-field-value">' + danoHtml + '</div></div>' +
         '</div>' +
 
