@@ -108,24 +108,39 @@
     .user-bar{background:var(--primary-light);border:1px solid #c7d2fe;border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:16px;font-size:12px;color:var(--primary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
 
     /* ─── DASHBOARD ─── */
-    .dashboard-screen{width:100%;min-height:calc(100vh - 56px);padding:20px}
-    .dashboard-badge{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;max-width:400px;margin:0 auto 24px;box-shadow:var(--shadow)}
-    .dashboard-badge .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-    .dashboard-badge .card-title{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);letter-spacing:.5px}
-    .dashboard-badge .card-badge{background:var(--primary-light);color:var(--primary);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
-    .dashboard-badge .stats-number{font-size:36px;font-weight:800;color:var(--text);line-height:1;margin-bottom:16px}
-    .dashboard-content{max-width:900px;margin:0 auto}
-    .donut-container{display:flex;flex-direction:column;align-items:center;margin-bottom:16px}
-    .donut-legend{display:flex;flex-direction:column;gap:8px;width:100%}
-    .legend-item{display:flex;align-items:center;gap:8px;font-size:13px}
-    .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-    .legend-label{flex:1;color:var(--text2)}
-    .legend-count{font-weight:700;color:var(--text)}
-    .status-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
-    .status-row:last-child{border-bottom:none}
-    .status-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text)}
-    .status-dot{width:8px;height:8px;border-radius:50%}
-    .status-count{font-weight:700;font-size:15px;color:var(--text)}
+    .dashboard-screen{width:100%;min-height:calc(100vh - 56px);padding:20px;max-width:1100px;margin:0 auto}
+    .dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+    .dash-header h1{font-size:18px;font-weight:800;color:var(--text);margin:0}
+    .dash-header-actions{display:flex;gap:8px}
+    .dash-summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+    .dash-summary-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow)}
+    .dash-summary-label{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);letter-spacing:.5px;margin-bottom:12px}
+    .dash-summary-number{font-size:36px;font-weight:800;color:var(--text);line-height:1}
+    .dash-status-grid{display:flex;flex-direction:column;gap:10px}
+    .dash-status-row{display:flex;align-items:center;gap:8px}
+    .dash-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .dash-status-text{font-size:13px;color:var(--text);flex:1}
+    .dash-status-count{font-weight:700;font-size:15px;color:var(--text)}
+    .urg-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .urg-bar-label{font-size:12px;color:var(--text2);width:110px;flex-shrink:0}
+    .urg-bar-track{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+    .urg-bar-fill{height:100%;border-radius:4px;transition:width .3s}
+    .urg-bar-count{font-size:12px;font-weight:700;color:var(--text);width:30px;text-align:right}
+    .occ-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:12px}
+    .dash-pagination{display:flex;justify-content:center;gap:6px;margin-top:16px}
+    .dash-page-btn{padding:6px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--card);cursor:pointer;font-size:13px;color:var(--text)}
+    .dash-page-btn:hover{background:var(--bg)}
+    .dash-page-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .occ-card-status-badge{display:inline-flex;padding:3px 8px;border-radius:9999px;font-size:10px;font-weight:600}
+    .occ-card-status-badge.aberta{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+    .occ-card-status-badge.finalizada{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+    @media(max-width:1023px){
+      .dash-summary-grid{grid-template-columns:1fr}
+      .occ-grid{grid-template-columns:1fr}
+      .occ-card-desktop{display:none!important}
+      .occ-card-mobile{display:block}
+      .occ-card-meta{grid-template-columns:repeat(3,1fr)}
+    }
 
     /* ─── FILTER BAR ─── */
     .filter-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
@@ -138,7 +153,6 @@
     .btn-nova{white-space:nowrap;padding:10px 16px;font-size:13px;font-weight:700;border-radius:var(--radius-sm);width:auto}
 
     /* ─── OCCURRENCE CARDS ─── */
-    .occ-list{display:flex;flex-direction:column;gap:12px}
     .occ-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);transition:all .15s;cursor:pointer;display:flex;overflow:hidden}
     .occ-card:hover{box-shadow:var(--shadow-md)}
     .occ-card-stripe{width:6px;flex-shrink:0;margin:-16px 0 -16px -16px;margin-right:12px;border-radius:var(--radius) 0 0 var(--radius)}
@@ -394,56 +408,74 @@
 
 <!-- ══════════ DASHBOARD ══════════ -->
 <div class="screen dashboard-screen" id="dashboard-screen">
-  <!-- Badge flutuante -->
-  <div class="dashboard-badge" id="dashboard-badge">
-    <div class="card-header">
-      <span class="card-title">Total Ocorrências</span>
-      <span class="card-badge" id="dash-filtro-badge">Todos</span>
-    </div>
-    <div class="stats-number" id="dash-total">0</div>
-    <div class="donut-container">
-      <svg id="dash-donut" width="120" height="120" viewBox="0 0 120 120"></svg>
-      <div class="donut-legend" id="dash-legend"></div>
-    </div>
-    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px">
-      <div id="dash-status"></div>
-    </div>
-    <div style="margin-top:12px">
-      <button class="btn btn-outline" onclick="fecharLivro()" style="width:100%;font-size:13px;padding:10px">🚪 Fechar Livro</button>
+  <div class="dash-header">
+    <h1>Livro de Ocorrências Eletrônico</h1>
+    <div class="dash-header-actions">
+      <button class="btn btn-outline" onclick="gerarPdfLivro()" style="width:auto;padding:8px 16px;font-size:13px">📄 Gerar PDF</button>
+      <button class="btn btn-primary" onclick="abrirCadastro()" style="width:auto;padding:8px 16px;font-size:13px">+ Nova Ocorrência</button>
     </div>
   </div>
-  <!-- Conteúdo -->
-  <div class="dashboard-content">
-    <div class="filter-bar">
-      <div class="search-input">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="dash-busca" placeholder="Buscar Ocorrências..." oninput="filtrarDashboard()"/>
-      </div>
-      <select class="filter-select" id="dash-filtro-status" onchange="filtrarDashboard()">
-        <option value="">Status</option>
-        <option value="ABERTA">Aberta</option>
-        <option value="FINALIZADA">Finalizada</option>
-      </select>
-      <select class="filter-select" id="dash-filtro-urgencia" onchange="filtrarDashboard()">
-        <option value="">Urgência</option>
-        <option value="NAO_URGENTE">Não Urgente</option>
-        <option value="POUCO_URGENTE">Pouco Urgente</option>
-        <option value="URGENTE">Urgente</option>
-        <option value="MUITO_URGENTE">Muito Urgente</option>
-        <option value="EMERGENCIA">Emergência</option>
-      </select>
-      <select class="filter-select" id="dash-filtro-categoria" onchange="filtrarDashboard()">
-        <option value="">Categoria</option>
-        <option value="PATRIMONIAL">Patrimonial</option>
-        <option value="OPERACIONAL">Operacional</option>
-        <option value="CONTROLE DE ACESSO">Controle de Acesso</option>
-        <option value="BOMBEIRO CIVIL">Bombeiro Civil</option>
-        <option value="SISTEMAS E TÉCNICOS">Sistemas e Técnicos</option>
-        <option value="TESTES E CHECKLISTS">Testes e Checklists</option>
-      </select>
-      <button class="btn btn-primary btn-nova" onclick="abrirCadastro()">+ Nova Ocorrência</button>
+
+  <div class="dash-summary-grid">
+    <div class="dash-summary-card">
+      <div class="dash-summary-label">Total de Ocorrências</div>
+      <div class="dash-summary-number" id="dash-total">0</div>
     </div>
-    <div class="occ-list" id="dash-occ-list"></div>
+    <div class="dash-summary-card">
+      <div class="dash-summary-label">Status</div>
+      <div class="dash-status-grid">
+        <div class="dash-status-row">
+          <div class="dash-status-dot" style="background:var(--primary)"></div>
+          <span class="dash-status-text">Abertas</span>
+          <span class="dash-status-count" id="dash-abertas-count">0</span>
+        </div>
+        <div class="dash-status-row">
+          <div class="dash-status-dot" style="background:var(--success)"></div>
+          <span class="dash-status-text">Encerradas</span>
+          <span class="dash-status-count" id="dash-encerradas-count">0</span>
+        </div>
+      </div>
+    </div>
+    <div class="dash-summary-card">
+      <div class="dash-summary-label">Ocorrências por Urgência</div>
+      <div id="dash-urgencia-bars"></div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="search-input">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="dash-busca" placeholder="Buscar Ocorrências..." oninput="filtrarDashboard()"/>
+    </div>
+    <select class="filter-select" id="dash-filtro-status" onchange="filtrarDashboard()">
+      <option value="">Status</option>
+      <option value="ABERTA">Aberta</option>
+      <option value="FINALIZADA">Finalizada</option>
+    </select>
+    <select class="filter-select" id="dash-filtro-urgencia" onchange="filtrarDashboard()">
+      <option value="">Urgência</option>
+      <option value="NAO_URGENTE">Não Urgente</option>
+      <option value="POUCO_URGENTE">Pouco Urgente</option>
+      <option value="URGENTE">Urgente</option>
+      <option value="MUITO_URGENTE">Muito Urgente</option>
+      <option value="EMERGENCIA">Emergência</option>
+    </select>
+    <select class="filter-select" id="dash-filtro-categoria" onchange="filtrarDashboard()">
+      <option value="">Categoria</option>
+      <option value="PATRIMONIAL">Patrimonial</option>
+      <option value="OPERACIONAL">Operacional</option>
+      <option value="CONTROLE DE ACESSO">Controle de Acesso</option>
+      <option value="BOMBEIRO CIVIL">Bombeiro Civil</option>
+      <option value="SISTEMAS E TÉCNICOS">Sistemas e Técnicos</option>
+      <option value="TESTES E CHECKLISTS">Testes e Checklists</option>
+    </select>
+  </div>
+
+  <div class="occ-grid" id="dash-occ-list"></div>
+  <div class="dash-pagination" id="dash-pagination"></div>
+
+  <div style="text-align:center;margin-top:20px">
+    <button class="btn btn-outline" onclick="fecharLivro()" style="width:auto;padding:10px 24px;font-size:13px">🚪 Fechar Livro</button>
   </div>
 </div>
 
@@ -1200,9 +1232,11 @@
     }
   }
 
+  var dashPage = 1;
+  var dashPerPage = 10;
+
   function renderDashboard() {
     var filtered = getFilteredOcorrencias();
-    // Stats
     var total = filtered.length;
     var normais = filtered.filter(function(o) { return o.urgencia === 'NAO_URGENTE' || o.urgencia === 'POUCO_URGENTE'; }).length;
     var urgentes = filtered.filter(function(o) { return o.urgencia === 'URGENTE' || o.urgencia === 'MUITO_URGENTE'; }).length;
@@ -1211,34 +1245,52 @@
     var finalizadas = filtered.filter(function(o) { return o.status === 'FINALIZADA'; }).length;
 
     document.getElementById('dash-total').textContent = total;
+    document.getElementById('dash-abertas-count').textContent = abertas;
+    document.getElementById('dash-encerradas-count').textContent = finalizadas;
 
-    // Donut chart
-    renderDonut(normais, urgentes, criticas);
+    var maxUrg = Math.max(normais, urgentes, criticas, 1);
+    document.getElementById('dash-urgencia-bars').innerHTML =
+      '<div class="urg-bar-row"><span class="urg-bar-label">Normais</span><div class="urg-bar-track"><div class="urg-bar-fill" style="width:' + (normais / maxUrg * 100) + '%;background:var(--primary)"></div></div><span class="urg-bar-count">' + normais + '</span></div>' +
+      '<div class="urg-bar-row"><span class="urg-bar-label">Urgentes</span><div class="urg-bar-track"><div class="urg-bar-fill" style="width:' + (urgentes / maxUrg * 100) + '%;background:var(--warning)"></div></div><span class="urg-bar-count">' + urgentes + '</span></div>' +
+      '<div class="urg-bar-row"><span class="urg-bar-label">Críticas</span><div class="urg-bar-track"><div class="urg-bar-fill" style="width:' + (criticas / maxUrg * 100) + '%;background:var(--danger)"></div></div><span class="urg-bar-count">' + criticas + '</span></div>';
 
-    // Legend
-    document.getElementById('dash-legend').innerHTML =
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div><span class="legend-label">Normais</span><span class="legend-count">' + normais + '</span></div>' +
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div><span class="legend-label">Urgentes</span><span class="legend-count">' + urgentes + '</span></div>' +
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div><span class="legend-label">Críticas</span><span class="legend-count">' + criticas + '</span></div>';
-
-    // Status
-    document.getElementById('dash-status').innerHTML =
-      '<div class="status-row"><div class="status-label"><div class="status-dot" style="background:var(--primary)"></div>Abertas</div><div class="status-count">' + abertas + '</div></div>' +
-      '<div class="status-row"><div class="status-label"><div class="status-dot" style="background:var(--success)"></div>Finalizadas</div><div class="status-count">' + finalizadas + '</div></div>';
-
-    // Cards
     var listEl = document.getElementById('dash-occ-list');
+    var pagEl = document.getElementById('dash-pagination');
     if (filtered.length === 0) {
       listEl.innerHTML = '<div class="occ-empty"><div class="occ-empty-icon">📋</div><p>Nenhuma ocorrência encontrada</p></div>';
+      pagEl.innerHTML = '';
       return;
     }
-    listEl.innerHTML = filtered.map(renderOccCard).join('');
+
+    var totalPages = Math.ceil(filtered.length / dashPerPage);
+    if (dashPage > totalPages) dashPage = totalPages;
+    var start = (dashPage - 1) * dashPerPage;
+    var pageItems = filtered.slice(start, start + dashPerPage);
+
+    listEl.innerHTML = pageItems.map(renderOccCard).join('');
+
+    var pagHtml = '';
+    if (totalPages > 1) {
+      pagHtml += '<button class="dash-page-btn" onclick="dashPage=1;renderDashboard()" ' + (dashPage === 1 ? 'disabled' : '') + '>&laquo;</button>';
+      pagHtml += '<button class="dash-page-btn" onclick="dashPage=Math.max(1,dashPage-1);renderDashboard()" ' + (dashPage === 1 ? 'disabled' : '') + '>&lsaquo;</button>';
+      for (var i = 1; i <= totalPages; i++) {
+        if (totalPages > 7 && i > 3 && i < totalPages - 2 && Math.abs(i - dashPage) > 1) {
+          if (i === 4 || i === totalPages - 3) pagHtml += '<span style="padding:6px;color:var(--text3)">...</span>';
+          continue;
+        }
+        pagHtml += '<button class="dash-page-btn' + (i === dashPage ? ' active' : '') + '" onclick="dashPage=' + i + ';renderDashboard()">' + i + '</button>';
+      }
+      pagHtml += '<button class="dash-page-btn" onclick="dashPage=Math.min(' + totalPages + ',dashPage+1);renderDashboard()" ' + (dashPage === totalPages ? 'disabled' : '') + '>&rsaquo;</button>';
+      pagHtml += '<button class="dash-page-btn" onclick="dashPage=' + totalPages + ';renderDashboard()" ' + (dashPage === totalPages ? 'disabled' : '') + '>&raquo;</button>';
+    }
+    pagEl.innerHTML = pagHtml;
   }
 
   function renderOccCard(occ) {
     var urgClass = ({'NAO_URGENTE':'normal','POUCO_URGENTE':'pouco-urgente','URGENTE':'urgente','MUITO_URGENTE':'muito-urgente','EMERGENCIA':'emergencia'})[occ.urgencia] || 'normal';
     var urgLabel = ({'NAO_URGENTE':'NÃO URGENTE','POUCO_URGENTE':'POUCO URGENTE','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO URGENTE','EMERGENCIA':'EMERGÊNCIA'})[occ.urgencia] || occ.urgencia;
     var urgLabelShort = ({'NAO_URGENTE':'NÃO','POUCO_URGENTE':'POUCO','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO','EMERGENCIA':'EMERGÊNCIA'})[occ.urgencia] || occ.urgencia;
+    var statusClass = occ.status === 'ABERTA' ? 'aberta' : 'finalizada';
     var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Encerrada';
 
     var d = new Date(occ.inicio);
@@ -1251,11 +1303,7 @@
     }
 
     var desc = escapeHtml(occ.descritivo || '');
-    var descTrunc = desc.length > 60 ? desc.substring(0, 60) + '...' : desc;
-
-    var danoHtml = occ.danos
-      ? '<div class="occ-card-dano sim"><svg viewBox="0 0 512 512" width="12" height="12" fill="currentColor"><path d="M504 256c0 137-111 248-248 248S8 393 8 256 119 8 256 8s248 111 248 248zm-248 50c-25 0-46 21-46 46s21 46 46 46 46-21 46-46-21-46-46-46zm-44-165l7 136c0 6 5 11 12 11h49c7 0 12-5 11-11l7-136c0-7-6-12-12-12h-63c-7 0-12 5-12 12z"/></svg>SIM</div>'
-      : '<div class="occ-card-dano nao"><svg viewBox="0 0 512 512" width="12" height="12" fill="currentColor"><path d="M504 256c0 137-111 248-248 248S8 393 8 256 119 8 256 8s248 111 248 248zm-248 50c-25 0-46 21-46 46s21 46 46 46 46-21 46-46-21-46-46-46zm-44-165l7 136c0 6 5 11 12 11h49c7 0 12-5 11-11l7-136c0-7-6-12-12-12h-63c-7 0-12 5-12 12z"/></svg>NÃO</div>';
+    var descTrunc = desc.length > 80 ? desc.substring(0, 80) + '...' : desc;
 
     return '<div class="occ-card" onclick="verDetalhe(\'' + occ.id + '\')">' +
       '<div class="occ-card-stripe ' + urgClass + '"></div>' +
@@ -1263,10 +1311,11 @@
 
         '<div class="occ-card-header">' +
           '<div class="occ-card-icon"><svg viewBox="0 0 512 512" width="20" height="20" fill="currentColor"><path d="M256 8a248 248 0 1 0 0 496 248 248 0 0 0 0-496zm0 90c21 0 38 17 38 38s-17 38-38 38-38-17-38-38 17-38 38-38zm44 137l-17 136c0 6-5 11-11 11h-32c-7 0-12-5-11-11l-17-136c-1-6 4-11 11-11h56c7 0 12 5 11 11z"/></svg></div>' +
-          '<div>' +
+          '<div style="flex:1">' +
             '<div class="occ-card-title">' + escapeHtml(occ.categoria_nome || 'Ocorrência') + '</div>' +
             '<div class="occ-card-protocolo">' + escapeHtml(occ.protocolo) + '</div>' +
           '</div>' +
+          '<span class="occ-card-status-badge ' + statusClass + '">' + statusLabel + '</span>' +
         '</div>' +
 
         '<div class="occ-card-meta occ-card-desktop">' +
@@ -1279,65 +1328,21 @@
         '<div class="occ-card-meta occ-card-mobile">' +
           '<div><div class="occ-card-field-label">Urgência</div><div class="occ-card-field-value"><span class="occ-card-badge ' + urgClass + '">' + urgLabelShort + '</span></div></div>' +
           '<div><div class="occ-card-field-label">Início</div><div class="occ-card-field-value">' + dataInicio + '</div></div>' +
-          '<div><div class="occ-card-field-label">Progresso</div><div class="occ-card-field-value">1/1</div></div>' +
+          '<div><div class="occ-card-field-label">Local</div><div class="occ-card-field-value">' + escapeHtml(occ.local || '-') + '</div></div>' +
         '</div>' +
         '<div class="occ-card-meta occ-card-mobile">' +
-          '<div><div class="occ-card-field-label">Local</div><div class="occ-card-field-value">' + escapeHtml(occ.local || '-') + '</div></div>' +
           '<div><div class="occ-card-field-label">Término</div><div class="occ-card-field-value">' + termStr + '</div></div>' +
-          '<div><div class="occ-card-field-label">Dano</div><div class="occ-card-field-value">' + danoHtml + '</div></div>' +
+          '<div><div class="occ-card-field-label">Status</div><div class="occ-card-field-value"><span class="occ-card-status-badge ' + statusClass + '">' + statusLabel + '</span></div></div>' +
+          '<div></div>' +
         '</div>' +
 
         '<div class="occ-card-footer">' +
           '<div class="occ-card-desc"><strong>Descrição:</strong> ' + descTrunc + '</div>' +
-          danoHtml +
           '<div class="occ-card-status">' + statusLabel + '</div>' +
         '</div>' +
 
       '</div>' +
     '</div>';
-  }
-
-  function renderDonut(normais, urgentes, criticas) {
-    var total = normais + urgentes + criticas;
-    var svg = document.getElementById('dash-donut');
-    if (total === 0) {
-      svg.innerHTML = '<circle cx="60" cy="60" r="50" fill="none" stroke="#e5e7eb" stroke-width="16"/>';
-      return;
-    }
-    var colors = ['#1E5EFF', '#f59e0b', '#b91c1c'];
-    var vals = [normais, urgentes, criticas];
-    var cx = 60, cy = 60, r = 50, sw = 16;
-    var paths = '';
-    var cumul = 0;
-    for (var i = 0; i < 3; i++) {
-      if (vals[i] === 0) continue;
-      var pct = vals[i] / total;
-      if (pct >= 1) {
-        paths += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + colors[i] + '" stroke-width="' + sw + '"/>';
-        cumul = 1;
-        break;
-      }
-      var startAngle = cumul * 2 * Math.PI - Math.PI / 2;
-      cumul += pct;
-      var endAngle = cumul * 2 * Math.PI - Math.PI / 2;
-      var large = pct > 0.5 ? 1 : 0;
-      var x1 = cx + r * Math.cos(startAngle);
-      var y1 = cy + r * Math.sin(startAngle);
-      var x2 = cx + r * Math.cos(endAngle);
-      var y2 = cy + r * Math.sin(endAngle);
-      paths += '<path d="M' + x1 + ',' + y1 + ' A' + r + ',' + r + ' 0 ' + large + ',1 ' + x2 + ',' + y2 + '" fill="none" stroke="' + colors[i] + '" stroke-width="' + sw + '" stroke-linecap="butt"/>';
-    }
-    if (cumul < 1) {
-      var startA = cumul * 2 * Math.PI - Math.PI / 2;
-      var endA = Math.PI * 2 - Math.PI / 2;
-      var x1e = cx + r * Math.cos(startA);
-      var y1e = cy + r * Math.sin(startA);
-      var x2e = cx + r * Math.cos(endA);
-      var y2e = cy + r * Math.sin(endA);
-      var largeE = (1 - cumul) > 0.5 ? 1 : 0;
-      paths += '<path d="M' + x1e + ',' + y1e + ' A' + r + ',' + r + ' 0 ' + largeE + ',1 ' + x2e + ',' + y2e + '" fill="none" stroke="#e5e7eb" stroke-width="' + sw + '" stroke-linecap="butt"/>';
-    }
-    svg.innerHTML = paths;
   }
 
   function getFilteredOcorrencias() {
@@ -1357,7 +1362,36 @@
     });
   }
 
-  window.filtrarDashboard = function() { renderDashboard(); };
+  window.filtrarDashboard = function() { dashPage = 1; renderDashboard(); };
+
+  window.gerarPdfLivro = function() {
+    var filtered = getFilteredOcorrencias();
+    if (filtered.length === 0) { alert('Nenhuma ocorrência para gerar PDF.'); return; }
+
+    var rows = filtered.map(function(occ) {
+      var d = new Date(occ.inicio);
+      var dataInicio = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+      var termStr = '-';
+      if (occ.termino) {
+        var dt = new Date(occ.termino);
+        termStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + ' ' + String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+      }
+      var urgLabel = ({'NAO_URGENTE':'Não Urgente','POUCO_URGENTE':'Pouco Urgente','URGENTE':'Urgente','MUITO_URGENTE':'Muito Urgente','EMERGENCIA':'Emergência'})[occ.urgencia] || occ.urgencia;
+      var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Encerrada';
+      return '<tr><td>' + (occ.protocolo || '') + '</td><td>' + dataInicio + '</td><td>' + termStr + '</td><td>' + (occ.colaborador || '') + '</td><td>' + (occ.categoria_nome || '') + '</td><td>' + urgLabel + '</td><td>' + (occ.local || '') + '</td><td>' + statusLabel + '</td><td>' + (occ.descritivo || '') + '</td></tr>';
+    }).join('');
+
+    var html = '<table><thead><tr><th>Protocolo</th><th>Início</th><th>Término</th><th>Colaborador</th><th>Categoria</th><th>Urgência</th><th>Local</th><th>Status</th><th>Descrição</th></tr></thead><tbody>' + rows + '</tbody></table>';
+
+    var printWindow = window.open('', '_blank');
+    printWindow.document.write('<html><head><title>Livro de Ocorrências</title><style>body{font-family:sans-serif;font-size:11px;padding:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;font-size:10px}th{background:#f0f0f0;font-weight:700}tr:nth-child(even){background:#f9f9f9}</style></head><body>');
+    printWindow.document.write('<h2 style="text-align:center">Livro de Ocorrências Eletrônico</h2>');
+    printWindow.document.write('<p style="text-align:center;color:#666">Total: ' + filtered.length + ' ocorrência(s)</p>');
+    printWindow.document.write(html);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.print();
+  };
 
   // ─── DETALHE ────────────────────────────────────────────────────────────
   window.verDetalhe = function(id) {
