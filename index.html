@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Livro de Ocorr├¬ncias ÔÇö GSS</title>
+  <title>Livro de Ocorrências — GSS</title>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -20,7 +20,7 @@
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;margin:0}
     .hidden{display:none !important}
 
-    /* ÔöÇÔöÇÔöÇ HEADER ÔöÇÔöÇÔöÇ */
+    /* ─── HEADER ─── */
     .app-header{position:sticky;top:0;left:0;right:0;height:56px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;align-items:center;padding:0 16px;z-index:100;gap:12px}
     .app-header .logo{display:flex;align-items:center;gap:8px;text-decoration:none}
     .app-header .logo-icon{width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800}
@@ -31,12 +31,12 @@
     .app-header .btn-back{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text);padding:4px 8px;border-radius:var(--radius-sm);display:none}
     .app-header .btn-back:hover{background:var(--bg)}
 
-    /* ÔöÇÔöÇÔöÇ MAIN LAYOUT ÔöÇÔöÇÔöÇ */
+    /* ─── MAIN LAYOUT ─── */
     .app-body{margin-top:56px;min-height:calc(100vh - 56px)}
     .screen{display:none}
     .screen.active{display:flex}
 
-    /* ÔöÇÔöÇÔöÇ LOGIN ÔöÇÔöÇÔöÇ */
+    /* ─── LOGIN ─── */
     .login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0c1a2e 0%,#0f3460 55%,#1E5EFF 100%);z-index:1000;display:flex;align-items:center;justify-content:center;margin:0}
     .login-box{background:#fff;border-radius:20px;padding:36px 38px;width:360px;max-width:93%;box-shadow:0 30px 80px rgba(0,0,0,.45)}
     .login-logo{text-align:center;margin-bottom:8px}
@@ -60,7 +60,7 @@
     .btn-success{background:var(--success);color:#fff}.btn-success:hover{background:#14532d}
     .btn-warning{background:var(--warning);color:#fff}.btn-warning:hover{background:#d97706}
 
-    /* ÔöÇÔöÇÔöÇ FORMS ÔöÇÔöÇÔöÇ */
+    /* ─── FORMS ─── */
     .form-field{margin-bottom:16px}
     .form-field label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
     .form-field label .required{color:var(--danger)}
@@ -74,16 +74,16 @@
     .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     .form-grid-1{grid-template-columns:1fr}
 
-    /* ÔöÇÔöÇÔöÇ LOADING ÔöÇÔöÇÔöÇ */
+    /* ─── LOADING ─── */
     .loading-screen{display:none;align-items:center;justify-content:center;min-height:100vh;width:100%}
     .loading-screen.active{display:flex}
     .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* ÔöÇÔöÇÔöÇ TROCAR SENHA ÔöÇÔöÇÔöÇ */
+    /* ─── TROCAR SENHA ─── */
     .trocar-senha-screen{align-items:center;justify-content:center;min-height:100vh;width:100%;padding:20px}
 
-    /* ÔöÇÔöÇÔöÇ LIVROS ÔöÇÔöÇÔöÇ */
+    /* ─── LIVROS ─── */
     .livros-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:600px;margin:0 auto}
     .livros-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:24px;margin-bottom:16px}
     .livro-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all .15s}
@@ -94,7 +94,7 @@
     .no-livro{text-align:center;padding:40px 20px;color:var(--text2)}
     .no-livro-icon{font-size:48px;margin-bottom:12px}
 
-    /* ÔöÇÔöÇÔöÇ RECEBIMENTO ÔöÇÔöÇÔöÇ */
+    /* ─── RECEBIMENTO ─── */
     .recebimento-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:700px;margin:0 auto}
     .section-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
     .section-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px}
@@ -107,7 +107,7 @@
     .posto-badge{display:inline-block;background:var(--primary-light);color:var(--primary);padding:4px 10px;border-radius:var(--radius-sm);font-size:12px;font-weight:700;margin-bottom:16px}
     .user-bar{background:var(--primary-light);border:1px solid #c7d2fe;border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:16px;font-size:12px;color:var(--primary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
 
-    /* ÔöÇÔöÇÔöÇ DASHBOARD ÔöÇÔöÇÔöÇ */
+    /* ─── DASHBOARD ─── */
     .dashboard-screen{width:100%;min-height:calc(100vh - 56px);padding:20px}
     .dashboard-badge{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;max-width:400px;margin:0 auto 24px;box-shadow:var(--shadow)}
     .dashboard-badge .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
@@ -127,7 +127,7 @@
     .status-dot{width:8px;height:8px;border-radius:50%}
     .status-count{font-weight:700;font-size:15px;color:var(--text)}
 
-    /* ÔöÇÔöÇÔöÇ FILTER BAR ÔöÇÔöÇÔöÇ */
+    /* ─── FILTER BAR ─── */
     .filter-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
     .search-input{flex:1;min-width:200px;position:relative}
     .search-input input{width:100%;padding:10px 14px 10px 36px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--card)}
@@ -137,7 +137,7 @@
     .filter-select:focus{outline:none;border-color:var(--border-focus)}
     .btn-nova{white-space:nowrap;padding:10px 16px;font-size:13px;font-weight:700;border-radius:var(--radius-sm);width:auto}
 
-    /* ÔöÇÔöÇÔöÇ OCCURRENCE CARDS ÔöÇÔöÇÔöÇ */
+    /* ─── OCCURRENCE CARDS ─── */
     .occ-list{display:flex;flex-direction:column;gap:12px}
     .occ-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);transition:all .15s;cursor:pointer;display:flex;overflow:hidden}
     .occ-card:hover{box-shadow:var(--shadow-md)}
@@ -176,7 +176,7 @@
       .occ-card-meta{grid-template-columns:repeat(3,1fr)}
     }
 
-    /* ÔöÇÔöÇÔöÇ CADASTRO ÔöÇÔöÇÔöÇ */
+    /* ─── CADASTRO ─── */
     .cadastro-screen{flex-direction:column;min-height:100vh;width:100%;max-width:700px;margin:0 auto;padding:20px}
     .form-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);overflow:hidden}
     .form-card-header{background:var(--primary);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:10px}
@@ -190,15 +190,15 @@
     .checkbox-field input[type="checkbox"]{width:18px;height:18px;accent-color:var(--primary)}
     .checkbox-field label{font-size:14px;font-weight:600;cursor:pointer}
 
-    /* ÔöÇÔöÇÔöÇ PASSAGEM ÔöÇÔöÇÔöÇ */
+    /* ─── PASSAGEM ─── */
     .passagem-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:600px;margin:0 auto}
 
-    /* ÔöÇÔöÇÔöÇ ASSINATURA ÔöÇÔöÇÔöÇ */
+    /* ─── ASSINATURA ─── */
     .assinar-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:600px;margin:0 auto}
     .assinatura-canvas-wrap{border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
     .assinatura-canvas-wrap canvas{width:100%;height:280px;touch-action:none;cursor:crosshair;display:block}
 
-    /* ÔöÇÔöÇÔöÇ DETALHE ÔöÇÔöÇÔöÇ */
+    /* ─── DETALHE ─── */
     .detalhe-screen{flex-direction:column;min-height:100vh;width:100%;max-width:700px;margin:0 auto;padding:20px}
     .detalhe-field{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9}
     .detalhe-label{font-size:11px;font-weight:700;color:var(--primary);min-width:120px;text-transform:uppercase;letter-spacing:.3px}
@@ -208,7 +208,7 @@
     .detalhe-box{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;color:#475569;line-height:1.6}
     .detalhe-box.danger{background:var(--danger-bg);border:1px solid var(--danger-border);color:var(--danger)}
 
-    /* ÔöÇÔöÇÔöÇ SUCESSO ÔöÇÔöÇÔöÇ */
+    /* ─── SUCESSO ─── */
     .sucesso-screen{align-items:center;justify-content:center;min-height:100vh;width:100%;padding:20px}
     .sucesso-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:40px 32px;text-align:center;max-width:400px;width:100%}
     .sucesso-icon{font-size:56px;margin-bottom:12px}
@@ -216,7 +216,7 @@
     .sucesso-card p{font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6}
     .sucesso-card .btn{margin-bottom:10px}
 
-    /* ÔöÇÔöÇÔöÇ RESPONSIVE ÔöÇÔöÇÔöÇ */
+    /* ─── RESPONSIVE ─── */
     @media(max-width:768px){
       .app-header .hamburger{display:block}
       .app-header .btn-back{display:block}
@@ -237,23 +237,23 @@
 </head>
 <body>
 
-<!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ HEADER ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+<!-- ════════════ HEADER ════════════ -->
 <header class="app-header" id="app-header">
-  <button class="btn-back" id="btn-header-back" onclick="headerBack()">ÔåÉ</button>
-  <button class="hamburger" onclick="toggleSidebar()">Ôÿ░</button>
+  <button class="btn-back" id="btn-header-back" onclick="headerBack()">←</button>
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
   <a class="logo" href="#">
     <div class="logo-icon">G</div>
-    <div class="logo-text">GSS<span>Livro de Ocorr├¬ncias</span></div>
+    <div class="logo-text">GSS<span>Livro de Ocorrências</span></div>
   </a>
   <div class="user-info" id="header-user"></div>
 </header>
 
-<!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ LOGIN ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+<!-- ════════════ LOGIN ════════════ -->
 <div class="login-screen" id="login-screen">
   <div class="login-box">
     <div class="login-logo"><img src="logo-gss.png" alt="GSS"/></div>
-    <div class="login-titulo">Livro de Ocorr├¬ncias</div>
-    <div class="login-sub">GSS RJ ÔÇö Acesso Restrito</div>
+    <div class="login-titulo">Livro de Ocorrências</div>
+    <div class="login-sub">GSS RJ ─ Acesso Restrito</div>
     <div class="login-err" id="login-erro"></div>
     <div class="login-field">
       <label>Login</label>
@@ -262,15 +262,15 @@
     <div class="login-field">
       <label>Senha</label>
       <div class="pw-wrap">
-        <input type="password" id="senha-input" placeholder="ÔÇóÔÇóÔÇóÔÇóÔÇóÔÇó" autocomplete="current-password"/>
+        <input type="password" id="senha-input" placeholder="••••••" autocomplete="current-password"/>
         <span class="pw-eye" onclick="togglePw()">­ƒæü</span>
       </div>
     </div>
-    <button class="btn btn-primary" id="btn-login" onclick="fazerLogin()">Entrar ÔåÆ</button>
+    <button class="btn btn-primary" id="btn-login" onclick="fazerLogin()">Entrar →</button>
   </div>
 </div>
 
-<!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ LOADING ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+<!-- ════════════ LOADING ════════════ -->
 <div class="loading-screen" id="loading-screen">
   <div style="text-align:center">
     <div class="spinner"></div>
@@ -278,7 +278,7 @@
   </div>
 </div>
 
-<!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ TROCAR SENHA ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+<!-- ════════════ TROCAR SENHA ════════════ -->
 <div class="screen trocar-senha-screen" id="trocar-senha-screen">
   <div class="livros-card" style="max-width:400px;width:100%">
     <div style="text-align:center;margin-bottom:20px">
@@ -289,36 +289,36 @@
     <div class="login-err" id="trocar-erro"></div>
     <div class="form-field">
       <label>Nova Senha <span class="required">*</span></label>
-      <input type="password" id="nova-senha-input" placeholder="M├¡nimo 6 caracteres" autocomplete="new-password"/>
+      <input type="password" id="nova-senha-input" placeholder="Mánimo 6 caracteres" autocomplete="new-password"/>
     </div>
     <div class="form-field">
       <label>Confirmar Senha <span class="required">*</span></label>
       <input type="password" id="confirmar-senha-input" placeholder="Repita a nova senha" autocomplete="new-password"/>
     </div>
-    <button class="btn btn-primary" onclick="trocarSenha()">Salvar Nova Senha ÔåÆ</button>
+    <button class="btn btn-primary" onclick="trocarSenha()">Salvar Nova Senha →</button>
   </div>
 </div>
 
-<!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ LIVROS ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+<!-- ════════════ LIVROS ════════════ -->
 <div class="screen livros-screen" id="livros-screen">
   <div class="livros-card">
     <div style="text-align:center;margin-bottom:16px">
-      <h1 style="font-size:18px;font-weight:800;margin-bottom:4px">Livros Dispon├¡veis</h1>
-      <p style="font-size:13px;color:var(--text2)">Selecione o livro de ocorr├¬ncia</p>
+      <h1 style="font-size:18px;font-weight:800;margin-bottom:4px">Livros Disponáveis</h1>
+      <p style="font-size:13px;color:var(--text2)">Selecione o livro de ocorrência</p>
     </div>
     <div id="livros-user-info" class="user-bar" style="display:none"></div>
     <div id="livros-lista"></div>
     <div style="margin-top:16px">
-      <button class="btn btn-outline" onclick="fazerLogout()">ÔåÉ Sair</button>
+      <button class="btn btn-outline" onclick="fazerLogout()">← Sair</button>
     </div>
   </div>
 </div>
 
-<!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ RECEBIMENTO ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+<!-- ════════════ RECEBIMENTO ════════════ -->
 <div class="screen recebimento-screen" id="recebimento-screen">
   <div class="livros-card">
     <div style="text-align:center;margin-bottom:16px">
-      <h1 style="font-size:18px;font-weight:800;margin-bottom:4px">Recebimento de Servi├ºo</h1>
+      <h1 style="font-size:18px;font-weight:800;margin-bottom:4px">Recebimento de Serviço</h1>
       <p style="font-size:13px;color:var(--text2)">Preencha os dados do recebimento</p>
     </div>
     <div id="rec-user-bar" class="user-bar"></div>
@@ -332,7 +332,7 @@
       </div>
       <div class="field-row">
         <div class="form-field">
-          <label>Fun├º├úo <span class="required">*</span></label>
+          <label>Função <span class="required">*</span></label>
           <input type="text" id="rec-funcao" placeholder="Ex: Vigilante, Bombeiro"/>
         </div>
         <div class="form-field">
@@ -347,7 +347,7 @@
     </div>
 
     <div class="section-card">
-      <div class="section-title">Passagem de Servi├ºo</div>
+      <div class="section-title">Passagem de Serviço</div>
       <div class="form-field">
         <label>Recebido de <span class="required">*</span></label>
         <div style="position:relative">
@@ -371,7 +371,7 @@
         </div>
       </div>
       <div class="form-field">
-        <label>Hor├írio da Passagem <span class="required">*</span></label>
+        <label>Horírio da Passagem <span class="required">*</span></label>
         <input type="time" id="rec-horario"/>
       </div>
       <div class="form-field">
@@ -386,18 +386,18 @@
         <textarea id="rec-texto" rows="5" readonly style="background:#f8fafc;font-size:13px;line-height:1.6"></textarea>
       </div>
       <div id="rec-erro" class="alert alert-error" style="display:none"></div>
-      <button class="btn btn-primary" onclick="confirmarRecebimento()">Continuar para Dashboard ÔåÆ</button>
-      <div style="margin-top:10px"><button class="btn btn-outline" onclick="voltarLivros()">ÔåÉ Voltar aos Livros</button></div>
+      <button class="btn btn-primary" onclick="confirmarRecebimento()">Continuar para Dashboard →</button>
+      <div style="margin-top:10px"><button class="btn btn-outline" onclick="voltarLivros()">← Voltar aos Livros</button></div>
     </div>
   </div>
 </div>
 
-<!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ DASHBOARD ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+<!-- ════════════ DASHBOARD ════════════ -->
 <div class="screen dashboard-screen" id="dashboard-screen">
   <!-- Badge flutuante -->
   <div class="dashboard-badge" id="dashboard-badge">
     <div class="card-header">
-      <span class="card-title">Total Ocorr├¬ncias</span>
+      <span class="card-title">Total Ocorrências</span>
       <span class="card-badge" id="dash-filtro-badge">Todos</span>
     </div>
     <div class="stats-number" id="dash-total">0</div>
@@ -417,7 +417,7 @@
     <div class="filter-bar">
       <div class="search-input">
         <span class="search-icon">­ƒöì</span>
-        <input type="text" id="dash-busca" placeholder="Buscar Ocorr├¬ncias..." oninput="filtrarDashboard()"/>
+        <input type="text" id="dash-busca" placeholder="Buscar Ocorrências..." oninput="filtrarDashboard()"/>
       </div>
       <select class="filter-select" id="dash-filtro-status" onchange="filtrarDashboard()">
         <option value="">Status</option>
@@ -425,12 +425,12 @@
         <option value="FINALIZADA">Finalizada</option>
       </select>
       <select class="filter-select" id="dash-filtro-urgencia" onchange="filtrarDashboard()">
-        <option value="">Urg├¬ncia</option>
-        <option value="NAO_URGENTE">N├úo Urgente</option>
+        <option value="">Urgência</option>
+        <option value="NAO_URGENTE">Não Urgente</option>
         <option value="POUCO_URGENTE">Pouco Urgente</option>
         <option value="URGENTE">Urgente</option>
         <option value="MUITO_URGENTE">Muito Urgente</option>
-        <option value="EMERGENCIA">Emerg├¬ncia</option>
+        <option value="EMERGENCIA">Emergência</option>
       </select>
       <select class="filter-select" id="dash-filtro-categoria" onchange="filtrarDashboard()">
         <option value="">Categoria</option>
@@ -438,37 +438,37 @@
         <option value="OPERACIONAL">Operacional</option>
         <option value="CONTROLE DE ACESSO">Controle de Acesso</option>
         <option value="BOMBEIRO CIVIL">Bombeiro Civil</option>
-        <option value="SISTEMAS E T├ëCNICOS">Sistemas e T├®cnicos</option>
+        <option value="SISTEMAS E TÉCNICOS">Sistemas e T®cnicos</option>
         <option value="TESTES E CHECKLISTS">Testes e Checklists</option>
       </select>
-      <button class="btn btn-primary btn-nova" onclick="abrirCadastro()">+ Nova Ocorr├¬ncia</button>
+      <button class="btn btn-primary btn-nova" onclick="abrirCadastro()">+ Nova Ocorrência</button>
     </div>
     <div class="occ-list" id="dash-occ-list"></div>
   </div>
 </div>
 
-<!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ CADASTRO ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+<!-- ════════════ CADASTRO ════════════ -->
 <div class="screen cadastro-screen" id="cadastro-screen">
   <div class="form-card">
     <div class="form-card-header">
       <span class="icon">­ƒôä</span>
-      <span class="title">Dados da Ocorr├¬ncia</span>
+      <span class="title">Dados da Ocorrência</span>
     </div>
     <div class="form-card-body">
       <div id="cad-erro" class="alert alert-error" style="display:none"></div>
       <div class="form-grid">
         <div class="form-field">
-          <label>In├¡cio <span class="required">*</span></label>
+          <label>Início <span class="required">*</span></label>
           <input type="datetime-local" id="cad-inicio"/>
         </div>
         <div class="form-field">
-          <label>Urg├¬ncia <span class="required">*</span></label>
+          <label>Urgência <span class="required">*</span></label>
           <select id="cad-urgencia">
-            <option value="NAO_URGENTE">N├âO URGENTE</option>
+            <option value="NAO_URGENTE">NâO URGENTE</option>
             <option value="POUCO_URGENTE">POUCO URGENTE</option>
             <option value="URGENTE">URGENTE</option>
             <option value="MUITO_URGENTE">MUITO URGENTE</option>
-            <option value="EMERGENCIA">EMERG├èNCIA</option>
+            <option value="EMERGENCIA">EMERGèNCIA</option>
           </select>
         </div>
       </div>
@@ -481,7 +481,7 @@
             <option value="OPERACIONAL">OPERACIONAL</option>
             <option value="CONTROLE DE ACESSO">CONTROLE DE ACESSO</option>
             <option value="BOMBEIRO CIVIL">BOMBEIRO CIVIL</option>
-            <option value="SISTEMAS E T├ëCNICOS">SISTEMAS E T├ëCNICOS</option>
+            <option value="SISTEMAS E TÉCNICOS">SISTEMAS E TÉCNICOS</option>
             <option value="TESTES E CHECKLISTS">TESTES E CHECKLISTS</option>
           </select>
         </div>
@@ -491,16 +491,16 @@
         </div>
       </div>
       <div class="form-field">
-        <label>Local - Descri├º├úo Adicional</label>
+        <label>Local - Descrição Adicional</label>
         <input type="text" id="cad-local-desc" placeholder="Ex: TORRE A - ELEVADOR 02" class="uppercase"/>
       </div>
       <div class="form-field">
-        <label>Descritivo da Ocorr├¬ncia <span class="required">*</span></label>
+        <label>Descritivo da Ocorrência <span class="required">*</span></label>
         <textarea id="cad-descritivo" placeholder="Detalhe o que ocorreu..." class="uppercase"></textarea>
       </div>
       <div class="form-field">
         <label>Outros Envolvidos</label>
-        <input type="text" id="cad-envolvidos" placeholder="Ex: JO├âO SILVA (S├ìNDICO), MARIA SANTOS (MORADORA)" class="uppercase"/>
+        <input type="text" id="cad-envolvidos" placeholder="Ex: JOâO SILVA (SìNDICO), MARIA SANTOS (MORADORA)" class="uppercase"/>
       </div>
       <div class="checkbox-field">
         <input type="checkbox" id="cad-danos" onchange="toggleDanos()"/>
@@ -508,23 +508,23 @@
       </div>
       <div class="conditional-section hidden" id="cad-danos-section">
         <div class="form-field" style="margin-bottom:0">
-          <label>Descri├º├úo do Dano / Preju├¡zo <span class="required">*</span></label>
+          <label>Descrição do Dano / Prejuázo <span class="required">*</span></label>
           <textarea id="cad-desc-dano" placeholder="Descreva os danos causados..." style="min-height:80px" class="uppercase"></textarea>
         </div>
       </div>
     </div>
     <div class="form-card-footer">
       <button class="btn btn-outline" onclick="cancelarCadastro()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarOcorrencia()">­ƒÆ¥ Salvar Ocorr├¬ncia</button>
+      <button class="btn btn-primary" onclick="salvarOcorrencia()">­ƒÆ¥ Salvar Ocorrência</button>
     </div>
   </div>
 </div>
 
-<!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ PASSAGEM (FECHAR LIVRO) ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+<!-- ════════════ PASSAGEM (FECHAR LIVRO) ════════════ -->
 <div class="screen passagem-screen" id="passagem-screen">
   <div class="livros-card">
     <div style="text-align:center;margin-bottom:16px">
-      <h1 style="font-size:18px;font-weight:800;margin-bottom:4px">Passagem de Servi├ºo</h1>
+      <h1 style="font-size:18px;font-weight:800;margin-bottom:4px">Passagem de Serviço</h1>
       <p style="font-size:13px;color:var(--text2)">Preencha os dados da passagem do posto</p>
     </div>
     <div id="psg-user-bar" class="user-bar"></div>
@@ -538,7 +538,7 @@
       </div>
       <div class="field-row">
         <div class="form-field">
-          <label>Fun├º├úo <span class="required">*</span></label>
+          <label>Função <span class="required">*</span></label>
           <input type="text" id="psg-funcao" placeholder="Ex: Vigilante"/>
         </div>
         <div class="form-field">
@@ -553,7 +553,7 @@
     </div>
 
     <div class="section-card">
-      <div class="section-title">Passagem de Servi├ºo</div>
+      <div class="section-title">Passagem de Serviço</div>
       <div class="form-field">
         <label>Passar para <span class="required">*</span></label>
         <div style="position:relative">
@@ -577,7 +577,7 @@
         </div>
       </div>
       <div class="form-field">
-        <label>Hor├írio da Passagem <span class="required">*</span></label>
+        <label>Horírio da Passagem <span class="required">*</span></label>
         <input type="time" id="psg-horario"/>
       </div>
     </div>
@@ -589,12 +589,12 @@
       </div>
       <div id="psg-erro" class="alert alert-error" style="display:none"></div>
       <button class="btn btn-primary" onclick="confirmarPassagem()">­ƒÜ¬ Confirmar e Sair</button>
-      <div style="margin-top:10px"><button class="btn btn-outline" onclick="voltarDashboard()">ÔåÉ Voltar ao Dashboard</button></div>
+      <div style="margin-top:10px"><button class="btn btn-outline" onclick="voltarDashboard()">← Voltar ao Dashboard</button></div>
     </div>
   </div>
 </div>
 
-<!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ ASSINATURA ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+<!-- ════════════ ASSINATURA ════════════ -->
 <div class="screen assinar-screen" id="assinar-screen">
   <div class="livros-card">
     <div style="text-align:center;margin-bottom:16px">
@@ -614,42 +614,42 @@
       <button class="btn btn-outline" onclick="limparAssinatura()" style="width:auto;padding:8px 14px;font-size:12px">­ƒùæ´©Å Limpar</button>
     </div>
     <div style="margin-top:14px">
-      <button class="btn btn-primary" onclick="confirmarAssinatura()">Ô£à Confirmar Assinatura</button>
+      <button class="btn btn-primary" onclick="confirmarAssinatura()">✅ Confirmar Assinatura</button>
     </div>
     <div style="margin-top:10px">
-      <button class="btn btn-outline" onclick="voltarCadastro()">ÔåÉ Voltar ao Formul├írio</button>
+      <button class="btn btn-outline" onclick="voltarCadastro()">← Voltar ao Formulírio</button>
     </div>
   </div>
 </div>
 
-<!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ SUCESSO ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+<!-- ════════════ SUCESSO ════════════ -->
 <div class="screen sucesso-screen" id="sucesso-screen">
   <div class="sucesso-card">
-    <div class="sucesso-icon">Ô£à</div>
-    <h2>Ocorr├¬ncia Registrada!</h2>
-    <p>Sua ocorr├¬ncia foi registrada com sucesso.<br/>Protocolo: <strong id="sucesso-protocolo"></strong></p>
+    <div class="sucesso-icon">✅</div>
+    <h2>Ocorrência Registrada!</h2>
+    <p>Sua ocorrência foi registrada com sucesso.<br/>Protocolo: <strong id="sucesso-protocolo"></strong></p>
     <button class="btn btn-primary" onclick="voltarDashboard()">­ƒôï Voltar ao Dashboard</button>
-    <button class="btn btn-outline" onclick="abrirCadastro()">+ Nova Ocorr├¬ncia</button>
+    <button class="btn btn-outline" onclick="abrirCadastro()">+ Nova Ocorrência</button>
   </div>
 </div>
 
-<!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ LIVRO FECHADO ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+<!-- ════════════ LIVRO FECHADO ════════════ -->
 <div class="screen fechado-screen" id="fechado-screen">
   <div class="sucesso-card">
-    <div class="sucesso-icon">Ô£à</div>
+    <div class="sucesso-icon">✅</div>
     <h2>Livro Fechado!</h2>
-    <p>Sua passagem de servi├ºo foi registrada com sucesso.</p>
+    <p>Sua passagem de serviço foi registrada com sucesso.</p>
     <button class="btn btn-primary" onclick="abrirNovoLivro()">­ƒôï Abrir Novo Livro</button>
     <button class="btn btn-outline" onclick="fazerLogout()" style="margin-top:8px">­ƒÜ¬ Sair (Logout)</button>
   </div>
 </div>
 
-<!-- ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ DETALHE ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ -->
+<!-- ════════════ DETALHE ════════════ -->
 <div class="screen detalhe-screen" id="detalhe-screen">
   <div class="form-card">
     <div class="form-card-header">
       <span class="icon">­ƒôï</span>
-      <span class="title">Detalhes da Ocorr├¬ncia</span>
+      <span class="title">Detalhes da Ocorrência</span>
     </div>
     <div class="form-card-body" id="detalhe-body"></div>
     <div class="form-card-footer" id="detalhe-footer"></div>
@@ -664,7 +664,7 @@
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5ZmxscmNkcmN2amltendiZnNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzQ4NzUsImV4cCI6MjA5Nzg1MDg3NX0.nHgqNJnfWQW5BTfEWQTK92LRPLqNadiC-xios5zN4_A';
   var SUPABASE_EDGE = SUPABASE_URL + '/functions/v1';
 
-  // ÔöÇÔöÇÔöÇ STATE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── STATE ──────────────────────────────────────────────────────────────
   var usuarioLogado = null;
   var escalaAtual = null;
   var recebimentoHabilitadoAtual = false;
@@ -674,7 +674,7 @@
   var recebimentoDados = { materiais: [], materialComProblema: [] };
   var recebimentoTexto = null;
 
-  // ÔöÇÔöÇÔöÇ SESSION PERSISTENCE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── SESSION PERSISTENCE ────────────────────────────────────────────────
   var SESSION_KEY = 'gss_session';
   var BOOK_KEY = 'gss_book_active';
   var SESSION_MAX_AGE = 8 * 60 * 60 * 1000; // 8 hours
@@ -717,7 +717,7 @@
     recebimentoTexto = null;
   }
 
-  // ÔöÇÔöÇÔöÇ UTILS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── UTILS ──────────────────────────────────────────────────────────────
   function showScreen(id) {
     var screens = document.querySelectorAll('.screen');
     screens.forEach(function(s) { s.classList.remove('active'); });
@@ -781,10 +781,10 @@
     return '#' + y + m + d + '/' + hh + mm + '/' + idPosto;
   }
 
-  // ÔöÇÔöÇÔöÇ INIT ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── INIT ───────────────────────────────────────────────────────────────
   function init() {
     if (restaurarSessao()) {
-      // Session valid ÔåÆ go to dashboard or livros
+      // Session valid → go to dashboard or livros
       if (escalaAtual) {
         showScreen('loading-screen');
         carregarDashboard();
@@ -797,7 +797,7 @@
     }
   }
 
-  // ÔöÇÔöÇÔöÇ HEADER BACK ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── HEADER BACK ────────────────────────────────────────────────────────
   window.headerBack = function() {
     var active = document.querySelector('.screen.active');
     if (!active) return;
@@ -808,8 +808,8 @@
     else if (id === 'detalhe-screen') voltarDashboard();
   };
 
-  // ÔöÇÔöÇÔöÇ TOGGLE SIDEBAR (MOBILE) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-  // ÔöÇÔöÇÔöÇ LOGIN ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── TOGGLE SIDEBAR (MOBILE) ───────────────────────────────────────────
+  // ─── LOGIN ──────────────────────────────────────────────────────────────
   window.fazerLogin = async function() {
     var login = (document.getElementById('login-input').value || '').trim();
     var senha = (document.getElementById('senha-input').value || '').trim();
@@ -849,10 +849,10 @@
     }
   };
 
-  // ÔöÇÔöÇÔöÇ TROCAR SENHA ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── TROCAR SENHA ──────────────────────────────────────────────────────
   function showTrocarSenha(user) {
     var infoEl = document.getElementById('trocar-user-info');
-    infoEl.innerHTML = 'Ol├í <strong>' + escapeHtml(user.nome) + '</strong>! Defina uma nova senha.';
+    infoEl.innerHTML = 'Olí <strong>' + escapeHtml(user.nome) + '</strong>! Defina uma nova senha.';
     infoEl.style.display = 'flex';
     showScreen('trocar-senha-screen');
     document.getElementById('nova-senha-input').focus();
@@ -864,7 +864,7 @@
     var erroEl = document.getElementById('trocar-erro');
     erroEl.style.display = 'none';
     if (nova.length < 6) { showErro(erroEl, 'A senha deve ter pelo menos 6 caracteres.'); return; }
-    if (nova !== conf) { showErro(erroEl, 'As senhas n├úo conferem.'); return; }
+    if (nova !== conf) { showErro(erroEl, 'As senhas não conferem.'); return; }
     showScreen('loading-screen');
     try {
       var resp = await fetch(SUPABASE_EDGE + '/auth-form', {
@@ -888,7 +888,7 @@
     }
   };
 
-  // ÔöÇÔöÇÔöÇ CARREGAR LIVROS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── CARREGAR LIVROS ───────────────────────────────────────────────────
   async function carregarLivros(user) {
     showScreen('loading-screen');
     try {
@@ -911,12 +911,12 @@
 
   function showNoLivros(user) {
     var infoEl = document.getElementById('livros-user-info');
-    infoEl.innerHTML = 'Ol├í <strong>' + escapeHtml(user.nome) + '</strong>';
+    infoEl.innerHTML = 'Olí <strong>' + escapeHtml(user.nome) + '</strong>';
     infoEl.style.display = 'flex';
     document.getElementById('livros-lista').innerHTML =
       '<div class="no-livro"><div class="no-livro-icon">­ƒô¡</div>' +
-      '<h3 style="font-size:16px;font-weight:700;margin-bottom:8px">Nenhum Livro Dispon├¡vel</h3>' +
-      '<p style="font-size:13px;color:var(--text2)">Voc├¬ n├úo possui livro cadastrado.<br/>Contacte o administrador.</p></div>';
+      '<h3 style="font-size:16px;font-weight:700;margin-bottom:8px">Nenhum Livro Disponável</h3>' +
+      '<p style="font-size:13px;color:var(--text2)">Você não possui livro cadastrado.<br/>Contacte o administrador.</p></div>';
     showScreen('livros-screen');
   }
 
@@ -928,7 +928,7 @@
     todosDisponiveis.forEach(function(l) {
       if (!seen[l.id_posto]) { seen[l.id_posto] = true; livrosDisponiveis.push(l); }
     });
-    infoEl.innerHTML = 'Ol├í <strong>' + escapeHtml(user.nome) + '</strong> ÔÇö ' + livrosDisponiveis.length + ' livro(s) dispon├¡vel(is)';
+    infoEl.innerHTML = 'Olí <strong>' + escapeHtml(user.nome) + '</strong> ─ ' + livrosDisponiveis.length + ' livro(s) disponável(is)';
     infoEl.style.display = 'flex';
 
     function renderLivro(esc) {
@@ -947,15 +947,15 @@
       } catch(e) {}
       var titulo = nomePosto !== esc.id_posto ? nomePosto + ' (' + esc.id_posto + ')' : esc.id_posto;
       return '<div class="livro-item" onclick="abrirLivro(\'' + esc.id + '\')">' +
-        '<h3>­ƒôï Livro ÔÇö ' + escapeHtml(titulo) + '</h3>' +
-        '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' ÔåÆ ' + fmtData(esc.data_fim) + '</div>' +
-        '<div class="abrir">Abrir Livro ÔåÆ</div></div>';
+        '<h3>­ƒôï Livro ─ ' + escapeHtml(titulo) + '</h3>' +
+        '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' → ' + fmtData(esc.data_fim) + '</div>' +
+        '<div class="abrir">Abrir Livro →</div></div>';
     }
 
     window._escalasAtivos = livrosDisponiveis;
     document.getElementById('livros-lista').innerHTML = livrosDisponiveis.length > 0
       ? livrosDisponiveis.map(renderLivro).join('')
-      : '<div class="no-livro"><div class="no-livro-icon">­ƒôï</div><p style="font-size:13px;color:var(--text2)">Nenhum livro dispon├¡vel no momento.</p></div>';
+      : '<div class="no-livro"><div class="no-livro-icon">­ƒôï</div><p style="font-size:13px;color:var(--text2)">Nenhum livro disponável no momento.</p></div>';
     showScreen('livros-screen');
   }
 
@@ -998,7 +998,7 @@
     carregarLivros(usuarioLogado);
   };
 
-  // ÔöÇÔöÇÔöÇ RECEBIMENTO ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── RECEBIMENTO ────────────────────────────────────────────────────────
   window.iniciarRecebimento = function() {
     var recBar = document.getElementById('rec-user-bar');
     recBar.innerHTML = '<span>­ƒæñ ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
@@ -1025,7 +1025,7 @@
         if (d && d.length > 0 && d[0].nome) nomePosto = d[0].nome + ' (' + (d[0].cc || escalaAtual.id_posto) + ')';
       }
     } catch(e) {}
-    document.getElementById('rec-posto-badge').textContent = '­ƒôï Livro ÔÇö ' + nomePosto;
+    document.getElementById('rec-posto-badge').textContent = '­ƒôï Livro ─ ' + nomePosto;
 
     carregarColaboradoresPosto();
     carregarMaterialCarga();
@@ -1074,7 +1074,7 @@
     recebimentoDados.materiais.forEach(function(m) {
       var cor = m.estado === 'Bom' ? 'var(--success)' : (m.estado === 'Regular' ? 'var(--warning)' : 'var(--danger)');
       html += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">' +
-        '<span>' + escapeHtml(m.nome) + (m.especificacao ? ' (' + escapeHtml(m.especificacao) + ')' : '') + ' ├ù ' + m.quantidade + '</span>' +
+        '<span>' + escapeHtml(m.nome) + (m.especificacao ? ' (' + escapeHtml(m.especificacao) + ')' : '') + ' ù ' + m.quantidade + '</span>' +
         '<span style="color:' + cor + ';font-weight:600">' + escapeHtml(m.estado || 'Bom') + '</span></div>';
     });
     statusEl.innerHTML = html;
@@ -1142,12 +1142,12 @@
       document.getElementById('rec-texto').value = 'Preencha todos os campos para gerar o texto.';
       return;
     }
-    var condicao = 'em totais condi├º├Áes de uso';
+    var condicao = 'em totais condiçÁes de uso';
     if (recebimentoDados.materialComProblema.length > 0) {
       var itens = recebimentoDados.materialComProblema.map(function(m) { return m.nome + ' (' + m.estado + ')'; }).join(', ');
-      condicao = 'n├úo estava de acordo ÔÇö ' + itens;
+      condicao = 'não estava de acordo ─ ' + itens;
     }
-    var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', recebi o posto de ' + recebeu + ', ' + cargoRecebeu + ', ' + tipoRecebeu + ' ├ás ' + horario + ' ciente das normas em vigor, das determina├º├Áes e material carga ' + condicao + ', bem como estou ciente das ocorr├¬ncias registradas no per├¡odo anterior.';
+    var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', recebi o posto de ' + recebeu + ', ' + cargoRecebeu + ', ' + tipoRecebeu + ' ás ' + horario + ' ciente das normas em vigor, das determinaçÁes e material carga ' + condicao + ', bem como estou ciente das ocorrências registradas no peráodo anterior.';
     document.getElementById('rec-texto').value = texto;
   }
 
@@ -1164,24 +1164,24 @@
     var horario = document.getElementById('rec-horario').value;
     var erroEl = document.getElementById('rec-erro');
     erroEl.style.display = 'none';
-    if (!funcao) { showErro(erroEl, 'Informe a fun├º├úo.'); return; }
+    if (!funcao) { showErro(erroEl, 'Informe a função.'); return; }
     if (!tipo) { showErro(erroEl, 'Selecione o tipo.'); return; }
     if (!recebeu) { showErro(erroEl, 'Informe de quem passou.'); return; }
     if (!cargoRecebeu) { showErro(erroEl, 'Informe o cargo.'); return; }
     if (!tipoRecebeu) { showErro(erroEl, 'Selecione o tipo de quem passou.'); return; }
-    if (!horario) { showErro(erroEl, 'Informe o hor├írio.'); return; }
+    if (!horario) { showErro(erroEl, 'Informe o horírio.'); return; }
     recebimentoTexto = document.getElementById('rec-texto').value;
     salvarSessao();
     carregarDashboard();
   };
 
-  // ÔöÇÔöÇÔöÇ DASHBOARD ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── DASHBOARD ──────────────────────────────────────────────────────────
   async function carregarDashboard() {
     showScreen('loading-screen');
     document.getElementById('app-header').style.display = 'flex';
     updateHeaderUser();
     try {
-      // Carregar ocorr├¬ncias do posto
+      // Carregar ocorrências do posto
       if (escalaAtual) {
         var resp = await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
           method: 'POST',
@@ -1219,7 +1219,7 @@
     document.getElementById('dash-legend').innerHTML =
       '<div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div><span class="legend-label">Normais</span><span class="legend-count">' + normais + '</span></div>' +
       '<div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div><span class="legend-label">Urgentes</span><span class="legend-count">' + urgentes + '</span></div>' +
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div><span class="legend-label">Cr├¡ticas</span><span class="legend-count">' + criticas + '</span></div>';
+      '<div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div><span class="legend-label">Cráticas</span><span class="legend-count">' + criticas + '</span></div>';
 
     // Status
     document.getElementById('dash-status').innerHTML =
@@ -1229,7 +1229,7 @@
     // Cards
     var listEl = document.getElementById('dash-occ-list');
     if (filtered.length === 0) {
-      listEl.innerHTML = '<div class="occ-empty"><div class="occ-empty-icon">­ƒôï</div><p>Nenhuma ocorr├¬ncia encontrada</p></div>';
+      listEl.innerHTML = '<div class="occ-empty"><div class="occ-empty-icon">­ƒôï</div><p>Nenhuma ocorrência encontrada</p></div>';
       return;
     }
     listEl.innerHTML = filtered.map(renderOccCard).join('');
@@ -1237,8 +1237,8 @@
 
   function renderOccCard(occ) {
     var urgClass = ({'NAO_URGENTE':'normal','POUCO_URGENTE':'pouco-urgente','URGENTE':'urgente','MUITO_URGENTE':'muito-urgente','EMERGENCIA':'emergencia'})[occ.urgencia] || 'normal';
-    var urgLabel = ({'NAO_URGENTE':'N├âO URGENTE','POUCO_URGENTE':'POUCO URGENTE','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO URGENTE','EMERGENCIA':'EMERG├èNCIA'})[occ.urgencia] || occ.urgencia;
-    var urgLabelShort = ({'NAO_URGENTE':'N├âO','POUCO_URGENTE':'POUCO','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO','EMERGENCIA':'EMERG├èNCIA'})[occ.urgencia] || occ.urgencia;
+    var urgLabel = ({'NAO_URGENTE':'NâO URGENTE','POUCO_URGENTE':'POUCO URGENTE','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO URGENTE','EMERGENCIA':'EMERGèNCIA'})[occ.urgencia] || occ.urgencia;
+    var urgLabelShort = ({'NAO_URGENTE':'NâO','POUCO_URGENTE':'POUCO','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO','EMERGENCIA':'EMERGèNCIA'})[occ.urgencia] || occ.urgencia;
     var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Encerrada';
 
     var d = new Date(occ.inicio);
@@ -1255,7 +1255,7 @@
 
     var danoHtml = occ.danos
       ? '<div class="occ-card-dano sim"><svg viewBox="0 0 512 512" width="12" height="12" fill="currentColor"><path d="M504 256c0 137-111 248-248 248S8 393 8 256 119 8 256 8s248 111 248 248zm-248 50c-25 0-46 21-46 46s21 46 46 46 46-21 46-46-21-46-46-46zm-44-165l7 136c0 6 5 11 12 11h49c7 0 12-5 11-11l7-136c0-7-6-12-12-12h-63c-7 0-12 5-12 12z"/></svg>SIM</div>'
-      : '<div class="occ-card-dano nao"><svg viewBox="0 0 512 512" width="12" height="12" fill="currentColor"><path d="M504 256c0 137-111 248-248 248S8 393 8 256 119 8 256 8s248 111 248 248zm-248 50c-25 0-46 21-46 46s21 46 46 46 46-21 46-46-21-46-46-46zm-44-165l7 136c0 6 5 11 12 11h49c7 0 12-5 11-11l7-136c0-7-6-12-12-12h-63c-7 0-12 5-12 12z"/></svg>N├âO</div>';
+      : '<div class="occ-card-dano nao"><svg viewBox="0 0 512 512" width="12" height="12" fill="currentColor"><path d="M504 256c0 137-111 248-248 248S8 393 8 256 119 8 256 8s248 111 248 248zm-248 50c-25 0-46 21-46 46s21 46 46 46 46-21 46-46-21-46-46-46zm-44-165l7 136c0 6 5 11 12 11h49c7 0 12-5 11-11l7-136c0-7-6-12-12-12h-63c-7 0-12 5-12 12z"/></svg>NâO</div>';
 
     return '<div class="occ-card" onclick="verDetalhe(\'' + occ.id + '\')">' +
       '<div class="occ-card-stripe ' + urgClass + '"></div>' +
@@ -1264,31 +1264,31 @@
         '<div class="occ-card-header">' +
           '<div class="occ-card-icon"><svg viewBox="0 0 512 512" width="20" height="20" fill="currentColor"><path d="M256 8a248 248 0 1 0 0 496 248 248 0 0 0 0-496zm0 90c21 0 38 17 38 38s-17 38-38 38-38-17-38-38 17-38 38-38zm44 137l-17 136c0 6-5 11-11 11h-32c-7 0-12-5-11-11l-17-136c-1-6 4-11 11-11h56c7 0 12 5 11 11z"/></svg></div>' +
           '<div>' +
-            '<div class="occ-card-title">' + escapeHtml(occ.categoria_nome || 'Ocorr├¬ncia') + '</div>' +
+            '<div class="occ-card-title">' + escapeHtml(occ.categoria_nome || 'Ocorrência') + '</div>' +
             '<div class="occ-card-protocolo">' + escapeHtml(occ.protocolo) + '</div>' +
           '</div>' +
         '</div>' +
 
         '<div class="occ-card-meta occ-card-desktop">' +
-          '<div><div class="occ-card-field-label">Urg├¬ncia</div><div class="occ-card-field-value"><span class="occ-card-badge ' + urgClass + '">' + urgLabel + '</span></div></div>' +
-          '<div><div class="occ-card-field-label">In├¡cio</div><div class="occ-card-field-value">' + dataInicio + '</div></div>' +
-          '<div><div class="occ-card-field-label">T├®rmino</div><div class="occ-card-field-value">' + termStr + '</div></div>' +
+          '<div><div class="occ-card-field-label">Urgência</div><div class="occ-card-field-value"><span class="occ-card-badge ' + urgClass + '">' + urgLabel + '</span></div></div>' +
+          '<div><div class="occ-card-field-label">Início</div><div class="occ-card-field-value">' + dataInicio + '</div></div>' +
+          '<div><div class="occ-card-field-label">T®rmino</div><div class="occ-card-field-value">' + termStr + '</div></div>' +
           '<div><div class="occ-card-field-label">Local</div><div class="occ-card-field-value">' + escapeHtml(occ.local || '-') + '</div></div>' +
         '</div>' +
 
         '<div class="occ-card-meta occ-card-mobile">' +
-          '<div><div class="occ-card-field-label">Urg├¬ncia</div><div class="occ-card-field-value"><span class="occ-card-badge ' + urgClass + '">' + urgLabelShort + '</span></div></div>' +
-          '<div><div class="occ-card-field-label">In├¡cio</div><div class="occ-card-field-value">' + dataInicio + '</div></div>' +
+          '<div><div class="occ-card-field-label">Urgência</div><div class="occ-card-field-value"><span class="occ-card-badge ' + urgClass + '">' + urgLabelShort + '</span></div></div>' +
+          '<div><div class="occ-card-field-label">Início</div><div class="occ-card-field-value">' + dataInicio + '</div></div>' +
           '<div><div class="occ-card-field-label">Progresso</div><div class="occ-card-field-value">1/1</div></div>' +
         '</div>' +
         '<div class="occ-card-meta occ-card-mobile">' +
           '<div><div class="occ-card-field-label">Local</div><div class="occ-card-field-value">' + escapeHtml(occ.local || '-') + '</div></div>' +
-          '<div><div class="occ-card-field-label">T├®rmino</div><div class="occ-card-field-value">' + termStr + '</div></div>' +
+          '<div><div class="occ-card-field-label">T®rmino</div><div class="occ-card-field-value">' + termStr + '</div></div>' +
           '<div><div class="occ-card-field-label">Dano</div><div class="occ-card-field-value">' + danoHtml + '</div></div>' +
         '</div>' +
 
         '<div class="occ-card-footer">' +
-          '<div class="occ-card-desc"><strong>Descri├º├úo:</strong> ' + descTrunc + '</div>' +
+          '<div class="occ-card-desc"><strong>Descrição:</strong> ' + descTrunc + '</div>' +
           danoHtml +
           '<div class="occ-card-status">' + statusLabel + '</div>' +
         '</div>' +
@@ -1359,7 +1359,7 @@
 
   window.filtrarDashboard = function() { renderDashboard(); };
 
-  // ÔöÇÔöÇÔöÇ DETALHE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── DETALHE ────────────────────────────────────────────────────────────
   window.verDetalhe = function(id) {
     var occ = null;
     for (var i = 0; i < ocorrenciasDashboard.length; i++) {
@@ -1370,18 +1370,18 @@
     var dataFmt = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
     var horaFmt = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Finalizada';
-    var urgLabel = ({'NAO_URGENTE':'N├úo Urgente','POUCO_URGENTE':'Pouco Urgente','URGENTE':'Urgente','MUITO_URGENTE':'Muito Urgente','EMERGENCIA':'Emerg├¬ncia'})[occ.urgencia] || occ.urgencia;
+    var urgLabel = ({'NAO_URGENTE':'Não Urgente','POUCO_URGENTE':'Pouco Urgente','URGENTE':'Urgente','MUITO_URGENTE':'Muito Urgente','EMERGENCIA':'Emergência'})[occ.urgencia] || occ.urgencia;
     var catLabel = occ.categoria_nome || '-';
 
     var html = '<div class="detalhe-section">' +
-      '<div class="detalhe-section-title">Informa├º├Áes</div>' +
+      '<div class="detalhe-section-title">InformaçÁes</div>' +
       '<div class="detalhe-field"><div class="detalhe-label">Protocolo</div><div class="detalhe-value" style="font-family:monospace;font-weight:700">' + escapeHtml(occ.protocolo) + '</div></div>' +
       '<div class="detalhe-field"><div class="detalhe-label">Data</div><div class="detalhe-value">' + dataFmt + '</div></div>' +
       '<div class="detalhe-field"><div class="detalhe-label">Hora</div><div class="detalhe-value">' + horaFmt + '</div></div>' +
       '<div class="detalhe-field"><div class="detalhe-label">Colaborador</div><div class="detalhe-value">' + escapeHtml(occ.colaborador || '-') + '</div></div>' +
       '<div class="detalhe-field"><div class="detalhe-label">Categoria</div><div class="detalhe-value">' + escapeHtml(catLabel) + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Urg├¬ncia</div><div class="detalhe-value">' + urgLabel + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Local</div><div class="detalhe-value">' + escapeHtml(occ.local || '-') + (occ.local_descricao ? ' ÔÇö ' + escapeHtml(occ.local_descricao) : '') + '</div></div>' +
+      '<div class="detalhe-field"><div class="detalhe-label">Urgência</div><div class="detalhe-value">' + urgLabel + '</div></div>' +
+      '<div class="detalhe-field"><div class="detalhe-label">Local</div><div class="detalhe-value">' + escapeHtml(occ.local || '-') + (occ.local_descricao ? ' ─ ' + escapeHtml(occ.local_descricao) : '') + '</div></div>' +
       '<div class="detalhe-field"><div class="detalhe-label">Status</div><div class="detalhe-value"><span class="occ-badge ' + (occ.status === 'ABERTA' ? 'aberta' : 'finalizada') + '">' + statusLabel + '</span></div></div>' +
       (occ.outros_envolvidos ? '<div class="detalhe-field"><div class="detalhe-label">Envolvidos</div><div class="detalhe-value">' + escapeHtml(occ.outros_envolvidos) + '</div></div>' : '') +
       '</div>';
@@ -1399,10 +1399,10 @@
     document.getElementById('detalhe-body').innerHTML = html;
 
     // Footer actions
-    var footerHtml = '<button class="btn btn-outline" onclick="voltarDashboard()" style="flex:1">ÔåÉ Voltar</button>';
+    var footerHtml = '<button class="btn btn-outline" onclick="voltarDashboard()" style="flex:1">← Voltar</button>';
     if (occ.status === 'ABERTA') {
-      footerHtml = '<button class="btn btn-outline" onclick="voltarDashboard()" style="flex:1">ÔåÉ Voltar</button>' +
-        '<button class="btn btn-success" onclick="atualizarStatus(\'' + occ.id + '\', \'FINALIZADA\')" style="flex:1">Ô£à Finalizar</button>';
+      footerHtml = '<button class="btn btn-outline" onclick="voltarDashboard()" style="flex:1">← Voltar</button>' +
+        '<button class="btn btn-success" onclick="atualizarStatus(\'' + occ.id + '\', \'FINALIZADA\')" style="flex:1">✅ Finalizar</button>';
     }
     document.getElementById('detalhe-footer').innerHTML = footerHtml;
 
@@ -1427,7 +1427,7 @@
     }
   };
 
-  // ÔöÇÔöÇÔöÇ CADASTRO ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── CADASTRO ───────────────────────────────────────────────────────────
   window.abrirCadastro = function() {
     document.getElementById('cad-inicio').value = new Date().toISOString().slice(0, 16);
     document.getElementById('cad-urgencia').value = 'NAO_URGENTE';
@@ -1464,10 +1464,10 @@
     var envolvidos = document.getElementById('cad-envolvidos').value.trim();
     var danos = document.getElementById('cad-danos').checked;
     var descDano = document.getElementById('cad-desc-dano').value.trim();
-    if (!inicio) { showErro(erroEl, 'Informe a data/hora de in├¡cio.'); return; }
+    if (!inicio) { showErro(erroEl, 'Informe a data/hora de inácio.'); return; }
     if (!catId) { showErro(erroEl, 'Selecione uma categoria.'); return; }
     if (!local) { showErro(erroEl, 'Informe o local.'); return; }
-    if (!descritivo) { showErro(erroEl, 'Informe o descritivo da ocorr├¬ncia.'); return; }
+    if (!descritivo) { showErro(erroEl, 'Informe o descritivo da ocorrência.'); return; }
     if (danos && !descDano) { showErro(erroEl, 'Descreva os danos causados.'); return; }
 
     var body = {
@@ -1498,7 +1498,7 @@
       });
       var result = await resp.json();
       if (!result.ok) {
-        showErro(erroEl, result.error || 'Erro ao salvar ocorr├¬ncia.');
+        showErro(erroEl, result.error || 'Erro ao salvar ocorrência.');
         return;
       }
       document.getElementById('sucesso-protocolo').textContent = result.protocolo || '';
@@ -1516,7 +1516,7 @@
     carregarLivros();
   };
 
-  // ÔöÇÔöÇÔöÇ ASSINATURA ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── ASSINATURA ─────────────────────────────────────────────────────────
   var assinaturaCanvas = null;
   var assinaturaCtx = null;
   var assinaturaDesenhando = false;
@@ -1632,11 +1632,11 @@
     }
   }
 
-  // ÔöÇÔöÇÔöÇ FECHAR LIVRO (PASSAGEM) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── FECHAR LIVRO (PASSAGEM) ────────────────────────────────────────────
   window.fecharLivro = function() {
     var abertas = ocorrenciasDashboard.filter(function(o) { return o.status === 'ABERTA'; });
     if (abertas.length > 0) {
-      if (!confirm('H├í ' + abertas.length + ' ocorr├¬ncia(s) em aberto. Deseja fechar mesmo assim?')) return;
+      if (!confirm('Hí ' + abertas.length + ' ocorrência(s) em aberto. Deseja fechar mesmo assim?')) return;
     }
     var psgBar = document.getElementById('psg-user-bar');
     psgBar.innerHTML = '<span>­ƒæñ ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
@@ -1652,7 +1652,7 @@
     document.getElementById('psg-texto').value = '';
     document.getElementById('psg-erro').style.display = 'none';
     var nomePosto = escalaAtual ? escalaAtual.id_posto : '';
-    document.getElementById('psg-posto-badge').textContent = '­ƒôï Livro ÔÇö ' + nomePosto;
+    document.getElementById('psg-posto-badge').textContent = '­ƒôï Livro ─ ' + nomePosto;
     carregarColaboradoresPosto();
     configurarBuscaReceptor();
     gerarTextoPassagem();
@@ -1703,7 +1703,7 @@
       document.getElementById('psg-texto').value = 'Preencha todos os campos para gerar o texto.';
       return;
     }
-    var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', passo o posto para ' + receptor + ', ' + cargoReceptor + ', ' + tipoReceptor + ' ├ás ' + horario + ' juntamente com as normas em vigor, determina├º├Áes e material carga em Total Condi├º├Áes de Uso, bem como as ocorr├¬ncias registradas no meu per├¡odo de trabalho.';
+    var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', passo o posto para ' + receptor + ', ' + cargoReceptor + ', ' + tipoReceptor + ' ás ' + horario + ' juntamente com as normas em vigor, determinaçÁes e material carga em Total CondiçÁes de Uso, bem como as ocorrências registradas no meu peráodo de trabalho.';
     document.getElementById('psg-texto').value = texto;
   }
 
@@ -1720,20 +1720,20 @@
     var horario = document.getElementById('psg-horario').value;
     var erroEl = document.getElementById('psg-erro');
     erroEl.style.display = 'none';
-    if (!funcao) { showErro(erroEl, 'Informe a fun├º├úo.'); return; }
+    if (!funcao) { showErro(erroEl, 'Informe a função.'); return; }
     if (!tipo) { showErro(erroEl, 'Selecione o tipo.'); return; }
     if (!receptor) { showErro(erroEl, 'Informe para quem vai passar.'); return; }
     if (!cargoReceptor) { showErro(erroEl, 'Informe o cargo.'); return; }
     if (!tipoReceptor) { showErro(erroEl, 'Selecione o tipo.'); return; }
-    if (!horario) { showErro(erroEl, 'Informe o hor├írio.'); return; }
+    if (!horario) { showErro(erroEl, 'Informe o horírio.'); return; }
     // Store passagem data and show signature screen
     window._passagemTexto = document.getElementById('psg-texto').value;
-    document.getElementById('assinar-resumo').innerHTML = '<strong>Passagem de Servi├ºo</strong><br/>Confirme com sua assinatura para fechar o livro.';
+    document.getElementById('assinar-resumo').innerHTML = '<strong>Passagem de Serviço</strong><br/>Confirme com sua assinatura para fechar o livro.';
     initAssinatura();
     showScreen('assinar-screen');
   };
 
-  // ÔöÇÔöÇÔöÇ LOGOUT ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── LOGOUT ─────────────────────────────────────────────────────────────
   window.fazerLogout = function() {
     usuarioLogado = null;
     escalaAtual = null;
@@ -1750,7 +1750,7 @@
     document.getElementById('login-input').focus();
   };
 
-  // ÔöÇÔöÇÔöÇ ENTER KEY HANDLERS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+  // ─── ENTER KEY HANDLERS ────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('senha-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') window.fazerLogin(); });
     document.getElementById('login-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('senha-input').focus(); });
