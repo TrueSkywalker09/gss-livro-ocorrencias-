@@ -289,7 +289,7 @@
     <div class="login-err" id="trocar-erro"></div>
     <div class="form-field">
       <label>Nova Senha <span class="required">*</span></label>
-      <input type="password" id="nova-senha-input" placeholder="Mánimo 6 caracteres" autocomplete="new-password"/>
+      <input type="password" id="nova-senha-input" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
     </div>
     <div class="form-field">
       <label>Confirmar Senha <span class="required">*</span></label>
@@ -371,7 +371,7 @@
         </div>
       </div>
       <div class="form-field">
-        <label>Horírio da Passagem <span class="required">*</span></label>
+        <label>Horário da Passagem <span class="required">*</span></label>
         <input type="time" id="rec-horario"/>
       </div>
       <div class="form-field">
@@ -464,11 +464,11 @@
         <div class="form-field">
           <label>Urgência <span class="required">*</span></label>
           <select id="cad-urgencia">
-            <option value="NAO_URGENTE">NâO URGENTE</option>
+            <option value="NAO_URGENTE">NÃO URGENTE</option>
             <option value="POUCO_URGENTE">POUCO URGENTE</option>
             <option value="URGENTE">URGENTE</option>
             <option value="MUITO_URGENTE">MUITO URGENTE</option>
-            <option value="EMERGENCIA">EMERGèNCIA</option>
+            <option value="EMERGENCIA">EMERGêNCIA</option>
           </select>
         </div>
       </div>
@@ -500,7 +500,7 @@
       </div>
       <div class="form-field">
         <label>Outros Envolvidos</label>
-        <input type="text" id="cad-envolvidos" placeholder="Ex: JOâO SILVA (SìNDICO), MARIA SANTOS (MORADORA)" class="uppercase"/>
+        <input type="text" id="cad-envolvidos" placeholder="Ex: JOÃO SILVA (SìNDICO), MARIA SANTOS (MORADORA)" class="uppercase"/>
       </div>
       <div class="checkbox-field">
         <input type="checkbox" id="cad-danos" onchange="toggleDanos()"/>
@@ -577,7 +577,7 @@
         </div>
       </div>
       <div class="form-field">
-        <label>Horírio da Passagem <span class="required">*</span></label>
+        <label>Horário da Passagem <span class="required">*</span></label>
         <input type="time" id="psg-horario"/>
       </div>
     </div>
@@ -617,7 +617,7 @@
       <button class="btn btn-primary" onclick="confirmarAssinatura()">✅ Confirmar Assinatura</button>
     </div>
     <div style="margin-top:10px">
-      <button class="btn btn-outline" onclick="voltarCadastro()">← Voltar ao Formulírio</button>
+      <button class="btn btn-outline" onclick="voltarCadastro()">← Voltar ao Formulário</button>
     </div>
   </div>
 </div>
@@ -1169,7 +1169,7 @@
     if (!recebeu) { showErro(erroEl, 'Informe de quem passou.'); return; }
     if (!cargoRecebeu) { showErro(erroEl, 'Informe o cargo.'); return; }
     if (!tipoRecebeu) { showErro(erroEl, 'Selecione o tipo de quem passou.'); return; }
-    if (!horario) { showErro(erroEl, 'Informe o horírio.'); return; }
+    if (!horario) { showErro(erroEl, 'Informe o horário.'); return; }
     recebimentoTexto = document.getElementById('rec-texto').value;
     salvarSessao();
     carregarDashboard();
@@ -1237,8 +1237,8 @@
 
   function renderOccCard(occ) {
     var urgClass = ({'NAO_URGENTE':'normal','POUCO_URGENTE':'pouco-urgente','URGENTE':'urgente','MUITO_URGENTE':'muito-urgente','EMERGENCIA':'emergencia'})[occ.urgencia] || 'normal';
-    var urgLabel = ({'NAO_URGENTE':'NâO URGENTE','POUCO_URGENTE':'POUCO URGENTE','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO URGENTE','EMERGENCIA':'EMERGèNCIA'})[occ.urgencia] || occ.urgencia;
-    var urgLabelShort = ({'NAO_URGENTE':'NâO','POUCO_URGENTE':'POUCO','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO','EMERGENCIA':'EMERGèNCIA'})[occ.urgencia] || occ.urgencia;
+    var urgLabel = ({'NAO_URGENTE':'NÃO URGENTE','POUCO_URGENTE':'POUCO URGENTE','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO URGENTE','EMERGENCIA':'EMERGêNCIA'})[occ.urgencia] || occ.urgencia;
+    var urgLabelShort = ({'NAO_URGENTE':'NÃO','POUCO_URGENTE':'POUCO','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO','EMERGENCIA':'EMERGêNCIA'})[occ.urgencia] || occ.urgencia;
     var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Encerrada';
 
     var d = new Date(occ.inicio);
@@ -1255,7 +1255,7 @@
 
     var danoHtml = occ.danos
       ? '<div class="occ-card-dano sim"><svg viewBox="0 0 512 512" width="12" height="12" fill="currentColor"><path d="M504 256c0 137-111 248-248 248S8 393 8 256 119 8 256 8s248 111 248 248zm-248 50c-25 0-46 21-46 46s21 46 46 46 46-21 46-46-21-46-46-46zm-44-165l7 136c0 6 5 11 12 11h49c7 0 12-5 11-11l7-136c0-7-6-12-12-12h-63c-7 0-12 5-12 12z"/></svg>SIM</div>'
-      : '<div class="occ-card-dano nao"><svg viewBox="0 0 512 512" width="12" height="12" fill="currentColor"><path d="M504 256c0 137-111 248-248 248S8 393 8 256 119 8 256 8s248 111 248 248zm-248 50c-25 0-46 21-46 46s21 46 46 46 46-21 46-46-21-46-46-46zm-44-165l7 136c0 6 5 11 12 11h49c7 0 12-5 11-11l7-136c0-7-6-12-12-12h-63c-7 0-12 5-12 12z"/></svg>NâO</div>';
+      : '<div class="occ-card-dano nao"><svg viewBox="0 0 512 512" width="12" height="12" fill="currentColor"><path d="M504 256c0 137-111 248-248 248S8 393 8 256 119 8 256 8s248 111 248 248zm-248 50c-25 0-46 21-46 46s21 46 46 46 46-21 46-46-21-46-46-46zm-44-165l7 136c0 6 5 11 12 11h49c7 0 12-5 11-11l7-136c0-7-6-12-12-12h-63c-7 0-12 5-12 12z"/></svg>NÃO</div>';
 
     return '<div class="occ-card" onclick="verDetalhe(\'' + occ.id + '\')">' +
       '<div class="occ-card-stripe ' + urgClass + '"></div>' +
@@ -1725,7 +1725,7 @@
     if (!receptor) { showErro(erroEl, 'Informe para quem vai passar.'); return; }
     if (!cargoReceptor) { showErro(erroEl, 'Informe o cargo.'); return; }
     if (!tipoReceptor) { showErro(erroEl, 'Selecione o tipo.'); return; }
-    if (!horario) { showErro(erroEl, 'Informe o horírio.'); return; }
+    if (!horario) { showErro(erroEl, 'Informe o horário.'); return; }
     // Store passagem data and show signature screen
     window._passagemTexto = document.getElementById('psg-texto').value;
     document.getElementById('assinar-resumo').innerHTML = '<strong>Passagem de Serviço</strong><br/>Confirme com sua assinatura para fechar o livro.';
