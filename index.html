@@ -4,266 +4,103 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Livro de Ocorrências — GSS</title>
+  <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{
-      --primary:#1E5EFF;--primary-hover:#1a4fe0;--primary-light:#e8efff;
-      --bg:#F4F5F7;--card:#FFFFFF;--text:#1f2937;--text2:#6b7280;--text3:#9ca3af;
-      --border:#e5e7eb;--border-focus:#1E5EFF;
-      --success:#15803d;--success-bg:#f0fdf4;--success-border:#bbf7d0;
-      --warning:#f59e0b;--warning-bg:#fffbeb;--warning-border:#fde68a;
-      --danger:#b91c1c;--danger-bg:#fef2f2;--danger-border:#fecaca;
-      --radius:10px;--radius-sm:6px;--radius-lg:14px;
-      --shadow:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 12px rgba(0,0,0,.1);
-      --sidebar-w:280px;
-    }
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;margin:0}
-    .hidden{display:none !important}
-
-    /* ─── HEADER ─── */
-    .app-header{position:sticky;top:0;left:0;right:0;height:56px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;align-items:center;padding:0 16px;z-index:100;gap:12px}
-    .app-header .logo{display:flex;align-items:center;gap:8px;text-decoration:none}
-    .app-header .logo-icon{width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800}
-    .app-header .logo-text{font-size:14px;font-weight:700;color:var(--text);line-height:1.2}
-    .app-header .logo-text span{display:block;font-size:11px;color:var(--text2);font-weight:400}
-    .app-header .hamburger{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text);padding:4px;display:none}
-    .app-header .user-info{margin-left:auto;font-size:13px;font-weight:600;color:var(--text);text-transform:uppercase}
-    .app-header .btn-back{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text);padding:4px 8px;border-radius:var(--radius-sm);display:none}
-    .app-header .btn-back:hover{background:var(--bg)}
-
-    /* ─── MAIN LAYOUT ─── */
-    .app-body{margin-top:56px;min-height:calc(100vh - 56px)}
-    .screen{display:none}
-    .screen.active{display:flex}
-
-    /* ─── LOGIN ─── */
-    .login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0c1a2e 0%,#0f3460 55%,#1E5EFF 100%);z-index:1000;display:flex;align-items:center;justify-content:center;margin:0}
-    .login-box{background:#fff;border-radius:20px;padding:36px 38px;width:360px;max-width:93%;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+    :root{--primary:#0369a1;--primary-hover:#0284c7;--success:#15803d;--error:#b91c1c;--warning:#b45309;--bg:#f1f5f9;--surface:#fff;--text:#0f172a;--text2:#64748b;--border:#e2e8f0;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,.08)}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+    #login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0c1a2e 0%,#0f3460 55%,#0369a1 100%);z-index:1000;display:flex;align-items:center;justify-content:center}
+    #login-overlay .login-box{background:#fff;border-radius:20px;padding:36px 38px;width:360px;max-width:93%;box-shadow:0 30px 80px rgba(0,0,0,.45)}
     .login-logo{text-align:center;margin-bottom:8px}
     .login-logo img{max-width:120px;max-height:50px}
     .login-titulo{font-size:20px;font-weight:800;color:#0f172a;text-align:center;margin-bottom:3px}
-    .login-sub{font-size:12px;color:var(--text2);text-align:center;margin-bottom:24px}
-    .login-err{background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--danger);margin-bottom:12px;display:none}
+    .login-sub{font-size:12px;color:#64748b;text-align:center;margin-bottom:24px}
+    .login-err{background:#fff1f2;border:1px solid #fca5a5;border-radius:8px;padding:8px 12px;font-size:12px;color:#b91c1c;margin-bottom:12px;display:none}
     .login-field{margin-bottom:16px}
-    .login-field label{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-    .login-field input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);transition:border-color .15s}
-    .login-field input:focus{outline:none;border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(30,94,255,.12)}
+    .login-field label{display:block;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+    .login-field input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--surface);transition:border-color .15s}
+    .login-field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(3,105,161,.12)}
     .pw-wrap{position:relative;display:flex;align-items:center}
-    .pw-wrap input{padding-right:38px !important}
-    .pw-eye{position:absolute;right:10px;cursor:pointer;color:var(--text3);font-size:16px;user-select:none}
-    .pw-eye:hover{color:var(--text2)}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 20px;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;transition:all .15s}
-    .btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-hover)}
-    .btn-primary:disabled{background:var(--text3);cursor:not-allowed}
-    .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}.btn-outline:hover{background:var(--bg)}
-    .btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#991b1b}
-    .btn-success{background:var(--success);color:#fff}.btn-success:hover{background:#14532d}
-    .btn-warning{background:var(--warning);color:#fff}.btn-warning:hover{background:#d97706}
-
-    /* ─── FORMS ─── */
-    .form-field{margin-bottom:16px}
-    .form-field label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
-    .form-field label .required{color:var(--danger)}
-    .form-field input,.form-field textarea,.form-field select{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);background:var(--card);transition:border-color .15s}
-    .form-field input.uppercase,.form-field textarea.uppercase{text-transform:uppercase}
-    .form-field input:focus,.form-field textarea:focus,.form-field select:focus{outline:none;border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(30,94,255,.12)}
-    .form-field textarea{min-height:120px;resize:vertical;line-height:1.6}
-    .form-field .error-msg{color:var(--danger);font-size:12px;margin-top:4px;display:none}
-    .form-field.has-error input,.form-field.has-error textarea,.form-field.has-error select{border-color:var(--danger)}
-    .form-field.has-error .error-msg{display:block}
-    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .form-grid-1{grid-template-columns:1fr}
-
-    /* ─── LOADING ─── */
-    .loading-screen{display:none;align-items:center;justify-content:center;min-height:100vh;width:100%}
-    .loading-screen.active{display:flex}
+    .pw-wrap input{padding-right:38px !important;width:100%}
+    .pw-eye{position:absolute;right:10px;cursor:pointer;color:#94a3b8;font-size:16px;line-height:1;user-select:none;transition:color .15s;flex-shrink:0}
+    .pw-eye:hover{color:#475569}
+    .login-btn{width:100%;justify-content:center;padding:12px;font-size:14px}
+    .container{width:100%;max-width:500px}
+    .card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px;margin-bottom:16px}
+    .logo{text-align:center;margin-bottom:24px}
+    .logo h1{font-size:18px;font-weight:800;color:var(--text);margin-top:8px}
+    .logo p{font-size:13px;color:var(--text2);margin-top:4px}
+    .field{margin-bottom:18px}
+    .field label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+    .field input,.field textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--surface);transition:border-color .15s}
+    .field input:focus,.field textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(3,105,161,.12)}
+    .field textarea{min-height:140px;resize:vertical;line-height:1.6}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 20px;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;transition:all .15s}
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-primary:hover{background:var(--primary-hover)}
+    .btn-primary:disabled{background:#94a3b8;cursor:not-allowed}
+    .btn-success{background:var(--success);color:#fff}
+    .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+    .btn-outline:hover{background:var(--bg)}
+    .alert{padding:14px 16px;border-radius:8px;font-size:13px;margin-bottom:18px;display:none}
+    .alert-error{background:#fef2f2;border:1px solid #fecaca;color:var(--error);display:block}
+    .alert-success{background:#f0fdf4;border:1px solid #bbf7d0;color:var(--success);display:block}
+    .alert-info{background:#f0f9ff;border:1px solid #bae6fd;color:var(--primary);display:block}
+    .posto-badge{display:inline-block;background:#e0f2fe;color:var(--primary);padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;margin-bottom:16px}
+    .loading{display:none;text-align:center;padding:40px}
+    .loading.active{display:block}
     .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
     @keyframes spin{to{transform:rotate(360deg)}}
-
-    /* ─── TROCAR SENHA ─── */
-    .trocar-senha-screen{align-items:center;justify-content:center;min-height:100vh;width:100%;padding:20px}
-
-    /* ─── LIVROS ─── */
-    .livros-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:600px;margin:0 auto}
-    .livros-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:24px;margin-bottom:16px}
-    .livro-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all .15s}
-    .livro-item:hover{border-color:var(--primary);box-shadow:0 2px 12px rgba(30,94,255,.15)}
-    .livro-item h3{font-size:15px;font-weight:700;margin-bottom:4px}
+    .blocked{text-align:center;padding:40px 20px}
+    .blocked-icon{font-size:48px;margin-bottom:12px}
+    .blocked h2{font-size:18px;font-weight:700;margin-bottom:8px}
+    .blocked p{font-size:13px;color:var(--text2)}
+    .success-screen{text-align:center;padding:30px 20px}
+    .success-icon{font-size:56px;margin-bottom:12px}
+    .success-screen h2{font-size:20px;font-weight:800;color:var(--success);margin-bottom:8px}
+    .success-screen p{font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6}
+    .footer{text-align:center;margin-top:auto;font-size:11px;color:var(--text2);width:100%;padding:12px 0}
+    .user-info{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:var(--primary);display:none}
+    .livro-item{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;cursor:pointer;transition:all .15s}
+    .livro-item:hover{border-color:var(--primary);box-shadow:0 2px 12px rgba(3,105,161,.15)}
+    .livro-item h3{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
     .livro-item .periodo{font-size:12px;color:var(--text2);margin-bottom:8px}
     .livro-item .abrir{font-size:13px;font-weight:700;color:var(--primary)}
+    .livro-expirado{opacity:.65;border-style:dashed}
     .no-livro{text-align:center;padding:40px 20px;color:var(--text2)}
     .no-livro-icon{font-size:48px;margin-bottom:12px}
-
-    /* ─── RECEBIMENTO ─── */
-    .recebimento-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:700px;margin:0 auto}
-    .section-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
-    .section-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px}
-    .field-row{display:flex;gap:12px}
-    .field-row .form-field{flex:1}
-    .field-row .form-field:last-child{flex:0 0 auto}
-    .alert{padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:14px}
-    .alert-error{background:var(--danger-bg);border:1px solid var(--danger-border);color:var(--danger)}
-    .alert-success{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success)}
-    .posto-badge{display:inline-block;background:var(--primary-light);color:var(--primary);padding:4px 10px;border-radius:var(--radius-sm);font-size:12px;font-weight:700;margin-bottom:16px}
-    .user-bar{background:var(--primary-light);border:1px solid #c7d2fe;border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:16px;font-size:12px;color:var(--primary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
-
-    /* ─── DASHBOARD ─── */
-    .dashboard-screen{width:100%;min-height:calc(100vh - 56px);padding:20px;max-width:1100px;margin:0 auto}
-    .dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
-    .dash-header h1{font-size:18px;font-weight:800;color:var(--text);margin:0}
-    .dash-header-actions{display:flex;gap:8px}
-    .dash-summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
-    .dash-summary-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow)}
-    .dash-summary-label{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);letter-spacing:.5px;margin-bottom:12px}
-    .dash-summary-number{font-size:36px;font-weight:800;color:var(--text);line-height:1}
-    .dash-status-grid{display:flex;flex-direction:column;gap:10px}
-    .dash-status-row{display:flex;align-items:center;gap:8px}
-    .dash-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-    .dash-status-text{font-size:13px;color:var(--text);flex:1}
-    .dash-status-count{font-weight:700;font-size:15px;color:var(--text)}
-    .urg-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-    .urg-bar-label{font-size:12px;color:var(--text2);width:110px;flex-shrink:0}
-    .urg-bar-track{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
-    .urg-bar-fill{height:100%;border-radius:4px;transition:width .3s}
-    .urg-bar-count{font-size:12px;font-weight:700;color:var(--text);width:30px;text-align:right}
-    .occ-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:12px}
-    .dash-pagination{display:flex;justify-content:center;gap:6px;margin-top:16px}
-    .dash-page-btn{padding:6px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--card);cursor:pointer;font-size:13px;color:var(--text)}
-    .dash-page-btn:hover{background:var(--bg)}
-    .dash-page-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-    .occ-card-status-badge{display:inline-flex;padding:3px 8px;border-radius:9999px;font-size:10px;font-weight:600}
-    .occ-card-status-badge.aberta{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
-    .occ-card-status-badge.finalizada{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
-    @media(max-width:1023px){
-      .dash-summary-grid{grid-template-columns:1fr}
-      .occ-grid{grid-template-columns:1fr}
-      .occ-card-desktop{display:none!important}
-      .occ-card-mobile{display:block}
-      .occ-card-meta{grid-template-columns:repeat(3,1fr)}
-    }
-
-    /* ─── FILTER BAR ─── */
-    .filter-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-    .search-input{flex:1;min-width:200px;position:relative}
-    .search-input input{width:100%;padding:10px 14px 10px 36px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--card)}
-    .search-input input:focus{outline:none;border-color:var(--border-focus)}
-    .search-input .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px}
-    .filter-select{padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--card);min-width:130px}
-    .filter-select:focus{outline:none;border-color:var(--border-focus)}
-    .btn-nova{white-space:nowrap;padding:10px 16px;font-size:13px;font-weight:700;border-radius:var(--radius-sm);width:auto}
-
-    /* ─── OCCURRENCE CARDS ─── */
-    .occ-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);transition:all .15s;cursor:pointer;display:flex;overflow:hidden}
-    .occ-card:hover{box-shadow:var(--shadow-md)}
-    .occ-card-stripe{width:6px;flex-shrink:0;margin:-16px 0 -16px -16px;margin-right:12px;border-radius:var(--radius) 0 0 var(--radius)}
-    .occ-card-stripe.normal{background:#e5e7eb}
-    .occ-card-stripe.pouco-urgente{background:#38bdf8}
-    .occ-card-stripe.urgente{background:#f59e0b}
-    .occ-card-stripe.muito-urgente{background:#e11d48}
-    .occ-card-stripe.emergencia{background:#b91c1c}
-    .occ-card-main{flex:1;min-width:0;padding:16px}
-    .occ-card-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
-    .occ-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#f1f5f9;color:#64748b}
-    .occ-card-title{font-size:15px;font-weight:700;color:#1e293b}
-    .occ-card-protocolo{font-size:11px;color:#94a3b8;font-family:'SF Mono',monospace;margin-top:1px}
-    .occ-card-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
-    .occ-card-field-label{font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;margin-bottom:2px}
-    .occ-card-field-value{font-size:12px;color:#334155;font-weight:500}
-    .occ-card-badge{display:inline-flex;padding:3px 8px;border-radius:9999px;font-size:10px;font-weight:600}
-    .occ-card-badge.nao-urgente{background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0}
-    .occ-card-badge.pouco-urgente{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd}
-    .occ-card-badge.urgente{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
-    .occ-card-badge.muito-urgente{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
-    .occ-card-badge.emergencia{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
-    .occ-card-footer{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid #f1f5f9}
-    .occ-card-desc{font-size:12px;color:#64748b;line-height:1.5;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:12px}
-    .occ-card-dano{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;flex-shrink:0}
-    .occ-card-dano.sim{color:#b45309}
-    .occ-card-dano.nao{color:#16a34a}
-    .occ-card-status{font-size:11px;font-weight:600;color:#64748b;flex-shrink:0}
-    .occ-card-mobile{display:none}
-    .occ-empty{text-align:center;padding:40px 20px;color:var(--text2)}
-    .occ-empty-icon{font-size:40px;margin-bottom:8px}
-    @media(max-width:1023px){
-      .occ-card-desktop{display:none!important}
-      .occ-card-mobile{display:block}
-      .occ-card-meta{grid-template-columns:repeat(3,1fr)}
-    }
-
-    /* ─── CADASTRO ─── */
-    .cadastro-screen{flex-direction:column;min-height:100vh;width:100%;max-width:700px;margin:0 auto;padding:20px}
-    .form-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);overflow:hidden}
-    .form-card-header{background:var(--primary);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:10px}
-    .form-card-header .icon{font-size:20px}
-    .form-card-header .title{font-size:16px;font-weight:700}
-    .form-card-body{padding:20px}
-    .form-card-footer{padding:16px 20px;border-top:1px solid var(--border);display:flex;gap:12px}
-    .form-card-footer .btn{flex:1}
-    .conditional-section{background:var(--bg);border:1.5px dashed var(--border);border-radius:var(--radius);padding:16px;margin-top:8px}
-    .checkbox-field{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-    .checkbox-field input[type="checkbox"]{width:18px;height:18px;accent-color:var(--primary)}
-    .checkbox-field label{font-size:14px;font-weight:600;cursor:pointer}
-
-    /* ─── PASSAGEM ─── */
-    .passagem-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:600px;margin:0 auto}
-
-    /* ─── ASSINATURA ─── */
-    .assinar-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:600px;margin:0 auto}
-    .assinatura-canvas-wrap{border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
-    .assinatura-canvas-wrap canvas{width:100%;height:280px;touch-action:none;cursor:crosshair;display:block}
-
-    /* ─── DETALHE ─── */
-    .detalhe-screen{flex-direction:column;min-height:100vh;width:100%;max-width:700px;margin:0 auto;padding:20px}
-    .detalhe-field{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9}
-    .detalhe-label{font-size:11px;font-weight:700;color:var(--primary);min-width:120px;text-transform:uppercase;letter-spacing:.3px}
-    .detalhe-value{font-size:13px;color:var(--text);flex:1}
-    .detalhe-section{margin-bottom:20px}
-    .detalhe-section-title{font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1.5px solid var(--border);letter-spacing:.5px}
-    .detalhe-box{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;color:#475569;line-height:1.6}
-    .detalhe-box.danger{background:var(--danger-bg);border:1px solid var(--danger-border);color:var(--danger)}
-
-    /* ─── SUCESSO ─── */
-    .sucesso-screen{align-items:center;justify-content:center;min-height:100vh;width:100%;padding:20px}
-    .sucesso-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:40px 32px;text-align:center;max-width:400px;width:100%}
-    .sucesso-icon{font-size:56px;margin-bottom:12px}
-    .sucesso-card h2{font-size:20px;font-weight:800;color:var(--success);margin-bottom:8px}
-    .sucesso-card p{font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6}
-    .sucesso-card .btn{margin-bottom:10px}
-
-    /* ─── RESPONSIVE ─── */
-    @media(max-width:768px){
-      .app-header .hamburger{display:block}
-      .app-header .btn-back{display:block}
-      .form-grid{grid-template-columns:1fr}
-      .filter-bar{flex-direction:column}
-      .search-input{min-width:100%}
-      .filter-select{width:100%}
-      .btn-nova{width:100%}
-      .livros-screen,.recebimento-screen,.cadastro-screen,.passagem-screen,.assinar-screen,.detalhe-screen{padding:16px}
-    }
+    .user-bar{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:var(--primary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
+    @media(max-width:480px){.card{padding:24px 18px}.field input,.field textarea{font-size:16px}}
+    #relato-editor{min-height:180px;border:none;border-radius:8px}
+    .ql-toolbar.ql-snow{border:1px solid var(--border);border-radius:8px 8px 0 0;padding:6px 8px;background:var(--surface)}
+    .ql-container.ql-snow{border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px}
+    .ql-editor{min-height:180px;font-size:14px;line-height:1.6}
+    .ql-snow .ql-stroke{stroke:var(--text2)}
+    .ql-snow .ql-fill{fill:var(--text2)}
+    .ql-snow .ql-picker{color:var(--text2)}
+    .ql-snow .ql-active .ql-stroke{stroke:var(--primary) !important}
+    .ql-snow .ql-active .ql-fill{fill:var(--primary) !important}
+    .ql-snow .ql-active{color:var(--primary) !important}
+    .ql-snow .ql-picker-label{border-color:transparent}
+    .ql-snow .ql-picker-options{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:var(--shadow);padding:4px 0}
+    .ql-snow .ql-tooltip{border:1px solid var(--border);border-radius:8px;background:var(--surface);box-shadow:var(--shadow)}
+    .ql-snow .ql-tooltip input{border:1px solid var(--border);border-radius:4px;padding:4px 8px}
+    .ql-snow .ql-tooltip a{color:var(--primary)}
     @media(max-width:480px){
-      .form-card-body{padding:16px}
-      .form-card-footer{padding:12px 16px;flex-direction:column}
-      .field-row{flex-direction:column;gap:0}
-      .occ-meta{flex-direction:column;gap:4px}
+      #relato-editor{min-height:200px}
+      .ql-toolbar.ql-snow{padding:4px 6px;flex-wrap:wrap;gap:2px}
+      .ql-snow.ql-toolbar button,.ql-snow .ql-toolbar button{width:28px;height:28px;padding:4px}
+      .ql-snow.ql-toolbar button svg,.ql-snow .ql-toolbar button svg{width:14px;height:14px}
+      .ql-snow.ql-toolbar .ql-formats{margin-right:4px}
+      .ql-editor{font-size:16px;min-height:200px;padding:12px}
     }
   </style>
 </head>
 <body>
 
-<!-- ══════════ HEADER ══════════ -->
-<header class="app-header" id="app-header">
-  <button class="btn-back" id="btn-header-back" onclick="headerBack()">←</button>
-  <button class="hamburger" onclick="toggleSidebar()">☰</button>
-  <a class="logo" href="#">
-    <div class="logo-icon">G</div>
-    <div class="logo-text">GSS<span>Livro de Ocorrências</span></div>
-  </a>
-  <div class="user-info" id="header-user"></div>
-</header>
-
-<!-- ══════════ LOGIN ══════════ -->
-<div class="login-screen" id="login-screen">
+<!-- ══════════ TELA DE LOGIN ══════════ -->
+<div id="login-overlay">
   <div class="login-box">
     <div class="login-logo"><img src="logo-gss.png" alt="GSS"/></div>
     <div class="login-titulo">Livro de Ocorrências</div>
@@ -280,364 +117,166 @@
         <span class="pw-eye" onclick="togglePw()">👁</span>
       </div>
     </div>
-    <button class="btn btn-primary" id="btn-login" onclick="fazerLogin()">Entrar →</button>
+    <button class="btn btn-primary login-btn" id="btn-login" onclick="fazerLogin()">Entrar →</button>
   </div>
 </div>
 
-<!-- ══════════ LOADING ══════════ -->
-<div class="loading-screen" id="loading-screen">
-  <div style="text-align:center">
+<div class="container" id="app">
+  <!-- Loading -->
+  <div class="card loading active" id="loading-screen">
     <div class="spinner"></div>
     <div style="font-size:14px;color:var(--text2)">Carregando...</div>
   </div>
-</div>
 
-<!-- ══════════ TROCAR SENHA ══════════ -->
-<div class="screen trocar-senha-screen" id="trocar-senha-screen">
-  <div class="livros-card" style="max-width:400px;width:100%">
-    <div style="text-align:center;margin-bottom:20px">
-      <h1 style="font-size:18px;font-weight:800;margin-bottom:4px">Primeiro Acesso</h1>
-      <p style="font-size:13px;color:var(--text2)">Defina uma nova senha para sua conta</p>
+  <!-- Trocar Senha -->
+  <div class="card" id="trocar-senha-screen" style="display:none">
+    <div class="logo">
+      <h1>Primeiro Acesso</h1>
+      <p>Defina uma nova senha para sua conta</p>
     </div>
-    <div id="trocar-user-info" class="user-bar" style="display:none"></div>
-    <div class="login-err" id="trocar-erro"></div>
-    <div class="form-field">
-      <label>Nova Senha <span class="required">*</span></label>
+    <div id="trocar-user-info" class="user-info"></div>
+    <div class="alert alert-error" id="trocar-erro" style="display:none"></div>
+    <div class="field">
+      <label>Nova Senha</label>
       <input type="password" id="nova-senha-input" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
     </div>
-    <div class="form-field">
-      <label>Confirmar Senha <span class="required">*</span></label>
+    <div class="field">
+      <label>Confirmar Senha</label>
       <input type="password" id="confirmar-senha-input" placeholder="Repita a nova senha" autocomplete="new-password"/>
     </div>
-    <button class="btn btn-primary" onclick="trocarSenha()">Salvar Nova Senha →</button>
+    <button class="btn btn-primary" id="btn-trocar" onclick="trocarSenha()">Salvar Nova Senha →</button>
   </div>
-</div>
 
-<!-- ══════════ LIVROS ══════════ -->
-<div class="screen livros-screen" id="livros-screen">
-  <div class="livros-card">
-    <div style="text-align:center;margin-bottom:16px">
-      <h1 style="font-size:18px;font-weight:800;margin-bottom:4px">Livros Disponíveis</h1>
-      <p style="font-size:13px;color:var(--text2)">Selecione o livro de ocorrência</p>
+  <!-- Livros Disponíveis -->
+  <div class="card" id="livros-screen" style="display:none">
+    <div class="logo">
+      <h1>Livros Disponíveis</h1>
+      <p>Selecione o livro de ocorrência</p>
     </div>
-    <div id="livros-user-info" class="user-bar" style="display:none"></div>
+    <div id="livros-user-info" class="user-info"></div>
     <div id="livros-lista"></div>
     <div style="margin-top:16px">
       <button class="btn btn-outline" onclick="fazerLogout()">← Sair</button>
     </div>
   </div>
-</div>
 
-<!-- ══════════ RECEBIMENTO ══════════ -->
-<div class="screen recebimento-screen" id="recebimento-screen">
-  <div class="livros-card">
-    <div style="text-align:center;margin-bottom:16px">
-      <h1 style="font-size:18px;font-weight:800;margin-bottom:4px">Recebimento de Serviço</h1>
-      <p style="font-size:13px;color:var(--text2)">Preencha os dados do recebimento</p>
+  <!-- Recebimento de Serviço -->
+  <div class="card" id="recebimento-screen" style="display:none">
+    <div class="logo">
+      <h1>Recebimento de Serviço</h1>
+      <p>Preencha os dados do recebimento do posto</p>
     </div>
-    <div id="rec-user-bar" class="user-bar"></div>
+    <div class="user-bar" id="rec-user-bar"></div>
     <div id="rec-posto-badge" class="posto-badge"></div>
 
-    <div class="section-card">
-      <div class="section-title">Colaborador</div>
-      <div class="form-field">
+    <!-- Seção 1: Colaborador -->
+    <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+      <div style="font-size:14px;font-weight:600;color:var(--text1);margin-bottom:12px">Colaborador</div>
+      <div class="field" style="margin-bottom:10px">
         <label>Nome do Colaborador</label>
         <input type="text" id="rec-nome" readonly style="background:#f8fafc"/>
       </div>
-      <div class="field-row">
-        <div class="form-field">
-          <label>Função <span class="required">*</span></label>
-          <input type="text" id="rec-funcao" placeholder="Ex: Vigilante, Bombeiro"/>
+      <div style="display:flex;gap:12px">
+        <div class="field" style="flex:2;margin-bottom:0">
+          <label>Função *</label>
+          <input type="text" id="rec-funcao" placeholder="Ex: Vigilante, Bombeiro, etc."/>
         </div>
-        <div class="form-field">
-          <label>Tipo <span class="required">*</span></label>
-          <select id="rec-tipo"><option value="">Selecione...</option><option>EFETIVO</option><option>COBERTURA</option></select>
+        <div class="field" style="flex:1;margin-bottom:0">
+          <label>Tipo *</label>
+          <select id="rec-tipo">
+            <option value="">Selecione...</option>
+            <option value="EFETIVO">EFETIVO</option>
+            <option value="COBERTURA">COBERTURA</option>
+          </select>
         </div>
       </div>
-      <div class="form-field">
+      <div class="field" style="margin-bottom:0;margin-top:10px">
         <label>RE</label>
         <input type="text" id="rec-re" readonly style="background:#f8fafc"/>
       </div>
     </div>
 
-    <div class="section-card">
-      <div class="section-title">Passagem de Serviço</div>
-      <div class="form-field">
-        <label>Recebido de <span class="required">*</span></label>
+    <!-- Seção 2: Passagem de Serviço -->
+    <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+      <div style="font-size:14px;font-weight:600;color:var(--text1);margin-bottom:12px">Passagem de Serviço</div>
+      <div class="field" style="margin-bottom:10px">
+        <label>Recebido de *</label>
         <div style="position:relative">
-          <input type="text" id="rec-busca-recebeu" placeholder="Buscar por nome ou RE..." autocomplete="off"/>
-          <div id="rec-dropdown-recebeu" style="display:none;position:absolute;background:#fff;border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;width:100%;left:0;top:100%"></div>
+          <input type="text" id="rec-busca-recebeu" placeholder="Buscar por nome ou RE..." autocomplete="off" style="width:100%;box-sizing:border-box"/>
+          <div id="rec-dropdown-recebeu" style="display:none;position:absolute;background:#fff;border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;width:100%;left:0;top:100%;box-sizing:border-box"></div>
         </div>
         <input type="text" id="rec-recebeu-nome" placeholder="Ou digite o nome manualmente" style="margin-top:8px"/>
       </div>
-      <div class="form-field">
+      <div class="field" style="margin-bottom:10px">
         <label>RE de quem passou</label>
-        <input type="text" id="rec-recebeu-re" placeholder="RE (preenchido ao selecionar ou manual)"/>
+        <input type="text" id="rec-recebeu-re" placeholder="RE (preenchido ao selecionar ou manual)" autocomplete="off"/>
       </div>
-      <div class="field-row">
-        <div class="form-field">
-          <label>Cargo de quem passou <span class="required">*</span></label>
-          <input type="text" id="rec-cargo-recebeu" placeholder="Ex: Supervisor"/>
+      <div style="display:flex;gap:12px">
+        <div class="field" style="flex:2;margin-bottom:0">
+          <label>Cargo de quem passou *</label>
+          <input type="text" id="rec-cargo-recebeu" placeholder="Ex: Supervisor, Encarregado, etc."/>
         </div>
-        <div class="form-field">
-          <label>Tipo de quem passou <span class="required">*</span></label>
-          <select id="rec-tipo-recebeu"><option value="">Selecione...</option><option>EFETIVO</option><option>COBERTURA</option></select>
+        <div class="field" style="flex:1;margin-bottom:0">
+          <label>Tipo de quem passou *</label>
+          <select id="rec-tipo-recebeu">
+            <option value="">Selecione...</option>
+            <option value="EFETIVO">EFETIVO</option>
+            <option value="COBERTURA">COBERTURA</option>
+          </select>
         </div>
       </div>
-      <div class="form-field">
-        <label>Horário da Passagem <span class="required">*</span></label>
-        <input type="time" id="rec-horario"/>
+      <div style="display:flex;gap:12px;margin-top:10px">
+        <div class="field" style="flex:1;margin-bottom:0">
+          <label>Horário da Passagem *</label>
+          <input type="time" id="rec-horario"/>
+        </div>
       </div>
-      <div class="form-field">
+      <div class="field" style="margin-bottom:0;margin-top:10px">
         <label>Material Carga</label>
         <div id="rec-material-status" style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px"></div>
       </div>
     </div>
 
-    <div class="section-card">
-      <div class="section-title">Texto de Recebimento</div>
-      <div class="form-field">
-        <textarea id="rec-texto" rows="5" readonly style="background:#f8fafc;font-size:13px;line-height:1.6"></textarea>
+    <!-- Seção 3: Texto de Recebimento -->
+    <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+      <div style="font-size:14px;font-weight:600;color:var(--text1);margin-bottom:12px">Texto de Recebimento</div>
+      <div class="field" style="margin-bottom:12px">
+        <textarea id="rec-texto" rows="5" readonly style="background:#f8fafc;font-size:13px;line-height:1.6;width:100%;box-sizing:border-box"></textarea>
       </div>
       <div id="rec-erro" class="alert alert-error" style="display:none"></div>
-      <button class="btn btn-primary" onclick="confirmarRecebimento()">Continuar para Dashboard →</button>
-      <div style="margin-top:10px"><button class="btn btn-outline" onclick="voltarLivros()">← Voltar aos Livros</button></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════ DASHBOARD ══════════ -->
-<div class="screen dashboard-screen" id="dashboard-screen">
-  <div class="dash-header">
-    <h1>Livro de Ocorrências Eletrônico</h1>
-    <div class="dash-header-actions">
-      <button class="btn btn-outline" onclick="gerarPdfLivro()" style="width:auto;padding:8px 16px;font-size:13px">📄 Gerar PDF</button>
-      <button class="btn btn-primary" onclick="abrirCadastro()" style="width:auto;padding:8px 16px;font-size:13px">+ Nova Ocorrência</button>
+      <button class="btn btn-primary" onclick="confirmarRecebimento()" style="width:100%">Continuar para Ocorrência →</button>
+      <div style="margin-top:10px">
+        <button class="btn btn-outline" onclick="voltarLivros()" style="width:100%">← Voltar aos Livros</button>
+      </div>
     </div>
   </div>
 
-  <div class="dash-summary-grid">
-    <div class="dash-summary-card">
-      <div class="dash-summary-label">Total de Ocorrências</div>
-      <div class="dash-summary-number" id="dash-total">0</div>
+  <!-- Formulário -->
+  <div class="card" id="form-screen" style="display:none">
+    <div class="user-bar" id="form-user-bar"></div>
+    <div id="form-posto-badge" class="posto-badge"></div>
+    <div id="rec-texto-confirmado" style="display:none;background:#f1f5f9;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;line-height:1.6;margin-bottom:12px;color:#334155;white-space:pre-wrap"></div>
+    <div class="field">
+      <label>Relato da Ocorrência</label>
+      <div id="relato-editor"></div>
     </div>
-    <div class="dash-summary-card">
-      <div class="dash-summary-label">Status</div>
-      <div class="dash-status-grid">
-        <div class="dash-status-row">
-          <div class="dash-status-dot" style="background:var(--primary)"></div>
-          <span class="dash-status-text">Abertas</span>
-          <span class="dash-status-count" id="dash-abertas-count">0</span>
-        </div>
-        <div class="dash-status-row">
-          <div class="dash-status-dot" style="background:var(--success)"></div>
-          <span class="dash-status-text">Encerradas</span>
-          <span class="dash-status-count" id="dash-encerradas-count">0</span>
-        </div>
-      </div>
-    </div>
-    <div class="dash-summary-card">
-      <div class="dash-summary-label">Ocorrências por Urgência</div>
-      <div id="dash-urgencia-bars"></div>
+    <button class="btn btn-primary" onclick="enviarOcorrencia()">Registrar Ocorrência →</button>
+    <div style="margin-top:10px">
+      <button class="btn btn-outline" onclick="voltarLivros()">← Voltar aos Livros</button>
     </div>
   </div>
 
-  <div class="filter-bar">
-    <div class="search-input">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="dash-busca" placeholder="Buscar Ocorrências..." oninput="filtrarDashboard()"/>
+  <!-- Assinatura -->
+  <div class="card" id="assinar-screen" style="display:none">
+    <div class="logo">
+      <h1>Sua Assinatura</h1>
+      <p>Assine abaixo para confirmar o registro</p>
     </div>
-    <select class="filter-select" id="dash-filtro-status" onchange="filtrarDashboard()">
-      <option value="">Status</option>
-      <option value="ABERTA">Aberta</option>
-      <option value="FINALIZADA">Finalizada</option>
-    </select>
-    <select class="filter-select" id="dash-filtro-urgencia" onchange="filtrarDashboard()">
-      <option value="">Urgência</option>
-      <option value="NAO_URGENTE">Não Urgente</option>
-      <option value="POUCO_URGENTE">Pouco Urgente</option>
-      <option value="URGENTE">Urgente</option>
-      <option value="MUITO_URGENTE">Muito Urgente</option>
-      <option value="EMERGENCIA">Emergência</option>
-    </select>
-    <select class="filter-select" id="dash-filtro-categoria" onchange="filtrarDashboard()">
-      <option value="">Categoria</option>
-      <option value="PATRIMONIAL">Patrimonial</option>
-      <option value="OPERACIONAL">Operacional</option>
-      <option value="CONTROLE DE ACESSO">Controle de Acesso</option>
-      <option value="BOMBEIRO CIVIL">Bombeiro Civil</option>
-      <option value="SISTEMAS E TÉCNICOS">Sistemas e Técnicos</option>
-      <option value="TESTES E CHECKLISTS">Testes e Checklists</option>
-    </select>
-  </div>
-
-  <div class="occ-grid" id="dash-occ-list"></div>
-  <div class="dash-pagination" id="dash-pagination"></div>
-
-  <div style="text-align:center;margin-top:20px">
-    <button class="btn btn-outline" onclick="fecharLivro()" style="width:auto;padding:10px 24px;font-size:13px">🚪 Fechar Livro</button>
-  </div>
-</div>
-
-<!-- ══════════ CADASTRO ══════════ -->
-<div class="screen cadastro-screen" id="cadastro-screen">
-  <div class="form-card">
-    <div class="form-card-header">
-      <span class="icon">📄</span>
-      <span class="title">Dados da Ocorrência</span>
-    </div>
-    <div class="form-card-body">
-      <div id="cad-erro" class="alert alert-error" style="display:none"></div>
-      <div class="form-grid">
-        <div class="form-field">
-          <label>Início <span class="required">*</span></label>
-          <input type="datetime-local" id="cad-inicio"/>
-        </div>
-        <div class="form-field">
-          <label>Urgência <span class="required">*</span></label>
-          <select id="cad-urgencia">
-            <option value="NAO_URGENTE">NÃO URGENTE</option>
-            <option value="POUCO_URGENTE">POUCO URGENTE</option>
-            <option value="URGENTE">URGENTE</option>
-            <option value="MUITO_URGENTE">MUITO URGENTE</option>
-            <option value="EMERGENCIA">EMERGÊNCIA</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-grid">
-        <div class="form-field">
-          <label>Categoria <span class="required">*</span></label>
-          <select id="cad-categoria-id">
-            <option value="">Selecione...</option>
-            <option value="PATRIMONIAL">PATRIMONIAL</option>
-            <option value="OPERACIONAL">OPERACIONAL</option>
-            <option value="CONTROLE DE ACESSO">CONTROLE DE ACESSO</option>
-            <option value="BOMBEIRO CIVIL">BOMBEIRO CIVIL</option>
-            <option value="SISTEMAS E TÉCNICOS">SISTEMAS E TÉCNICOS</option>
-            <option value="TESTES E CHECKLISTS">TESTES E CHECKLISTS</option>
-          </select>
-        </div>
-        <div class="form-field">
-          <label>Local <span class="required">*</span></label>
-          <input type="text" id="cad-local" placeholder="Ex: PORTARIA PRINCIPAL" class="uppercase"/>
-        </div>
-      </div>
-      <div class="form-field">
-        <label>Local - Descrição Adicional</label>
-        <input type="text" id="cad-local-desc" placeholder="Ex: TORRE A - ELEVADOR 02" class="uppercase"/>
-      </div>
-      <div class="form-field">
-        <label>Descritivo da Ocorrência <span class="required">*</span></label>
-        <textarea id="cad-descritivo" placeholder="Detalhe o que ocorreu..." class="uppercase"></textarea>
-      </div>
-      <div class="form-field">
-        <label>Outros Envolvidos</label>
-        <input type="text" id="cad-envolvidos" placeholder="Ex: JOÃO SILVA (SÍNDICO), MARIA SANTOS (MORADORA)" class="uppercase"/>
-      </div>
-      <div class="checkbox-field">
-        <input type="checkbox" id="cad-danos" onchange="toggleDanos()"/>
-        <label for="cad-danos">Danos causados?</label>
-      </div>
-      <div class="conditional-section hidden" id="cad-danos-section">
-        <div class="form-field" style="margin-bottom:0">
-          <label>Descrição do Dano / Prejuízo <span class="required">*</span></label>
-          <textarea id="cad-desc-dano" placeholder="Descreva os danos causados..." style="min-height:80px" class="uppercase"></textarea>
-        </div>
-      </div>
-    </div>
-    <div class="form-card-footer">
-      <button class="btn btn-outline" onclick="cancelarCadastro()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarOcorrencia()">💾 Salvar Ocorrência</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════ PASSAGEM (FECHAR LIVRO) ══════════ -->
-<div class="screen passagem-screen" id="passagem-screen">
-  <div class="livros-card">
-    <div style="text-align:center;margin-bottom:16px">
-      <h1 style="font-size:18px;font-weight:800;margin-bottom:4px">Passagem de Serviço</h1>
-      <p style="font-size:13px;color:var(--text2)">Preencha os dados da passagem do posto</p>
-    </div>
-    <div id="psg-user-bar" class="user-bar"></div>
-    <div id="psg-posto-badge" class="posto-badge"></div>
-
-    <div class="section-card">
-      <div class="section-title">Colaborador</div>
-      <div class="form-field">
-        <label>Nome do Colaborador</label>
-        <input type="text" id="psg-nome" readonly style="background:#f8fafc"/>
-      </div>
-      <div class="field-row">
-        <div class="form-field">
-          <label>Função <span class="required">*</span></label>
-          <input type="text" id="psg-funcao" placeholder="Ex: Vigilante"/>
-        </div>
-        <div class="form-field">
-          <label>Tipo <span class="required">*</span></label>
-          <select id="psg-tipo"><option value="">Selecione...</option><option>EFETIVO</option><option>COBERTURA</option></select>
-        </div>
-      </div>
-      <div class="form-field">
-        <label>RE</label>
-        <input type="text" id="psg-re" readonly style="background:#f8fafc"/>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-title">Passagem de Serviço</div>
-      <div class="form-field">
-        <label>Passar para <span class="required">*</span></label>
-        <div style="position:relative">
-          <input type="text" id="psg-busca-receptor" placeholder="Buscar por nome ou RE..." autocomplete="off"/>
-          <div id="psg-dropdown-receptor" style="display:none;position:absolute;background:#fff;border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:100;width:100%;left:0;top:100%"></div>
-        </div>
-        <input type="text" id="psg-receptor-nome" placeholder="Ou digite o nome manualmente" style="margin-top:8px"/>
-      </div>
-      <div class="form-field">
-        <label>RE de quem vai receber</label>
-        <input type="text" id="psg-receptor-re" placeholder="RE (preenchido ao selecionar ou manual)"/>
-      </div>
-      <div class="field-row">
-        <div class="form-field">
-          <label>Cargo de quem vai receber <span class="required">*</span></label>
-          <input type="text" id="psg-cargo-receptor" placeholder="Ex: Vigilante"/>
-        </div>
-        <div class="form-field">
-          <label>Tipo de quem vai receber <span class="required">*</span></label>
-          <select id="psg-tipo-receptor"><option value="">Selecione...</option><option>EFETIVO</option><option>COBERTURA</option></select>
-        </div>
-      </div>
-      <div class="form-field">
-        <label>Horário da Passagem <span class="required">*</span></label>
-        <input type="time" id="psg-horario"/>
-      </div>
-    </div>
-
-    <div class="section-card">
-      <div class="section-title">Texto de Passagem</div>
-      <div class="form-field">
-        <textarea id="psg-texto" rows="5" readonly style="background:#f8fafc;font-size:13px;line-height:1.6"></textarea>
-      </div>
-      <div id="psg-erro" class="alert alert-error" style="display:none"></div>
-      <button class="btn btn-primary" onclick="confirmarPassagem()">🚪 Confirmar e Sair</button>
-      <div style="margin-top:10px"><button class="btn btn-outline" onclick="voltarDashboard()">← Voltar ao Dashboard</button></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════ ASSINATURA ══════════ -->
-<div class="screen assinar-screen" id="assinar-screen">
-  <div class="livros-card">
-    <div style="text-align:center;margin-bottom:16px">
-      <h1 style="font-size:18px;font-weight:800;margin-bottom:4px">Sua Assinatura</h1>
-      <p style="font-size:13px;color:var(--text2)">Assine abaixo para confirmar o registro</p>
-    </div>
-    <div id="assinar-resumo" class="user-bar" style="display:block;font-size:12px"></div>
-    <div class="form-field">
-      <label>Assinatura do Colaborador <span class="required">*</span></label>
-      <div class="assinatura-canvas-wrap">
-        <canvas id="assinatura-canvas" width="920" height="400"></canvas>
+    <div id="assinar-resumo" class="user-info" style="display:block;font-size:12px"></div>
+    <div class="field">
+      <label>Assinatura do Colaborador *</label>
+      <div style="border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:#fff">
+        <canvas id="assinatura-canvas" width="920" height="400" style="width:100%;height:280px;touch-action:none;cursor:crosshair;display:block"></canvas>
       </div>
       <div style="font-size:11px;color:var(--text2);margin-top:4px">Assine com o mouse (desktop) ou dedo/caneta (mobile)</div>
     </div>
@@ -646,47 +285,26 @@
       <button class="btn btn-outline" onclick="limparAssinatura()" style="width:auto;padding:8px 14px;font-size:12px">🗑️ Limpar</button>
     </div>
     <div style="margin-top:14px">
-      <button class="btn btn-primary" onclick="confirmarAssinatura()">✅ Confirmar Assinatura</button>
+      <button class="btn btn-primary" onclick="confirmarAssinatura()">✅ Confirmar Assinatura →</button>
     </div>
     <div style="margin-top:10px">
-      <button class="btn btn-outline" onclick="voltarCadastro()">← Voltar ao Formulário</button>
+      <button class="btn btn-outline" onclick="voltarFormulario()">← Voltar ao Formulário</button>
+    </div>
+  </div>
+
+  <!-- Sucesso -->
+  <div class="card" id="sucesso-screen" style="display:none">
+    <div class="success-screen">
+      <div class="success-icon">✅</div>
+      <h2>Ocorrência Registrada!</h2>
+      <p>Sua ocorrência foi registrada com sucesso.<br/>Obrigado pelo relato!</p>
+      <button class="btn btn-primary" onclick="voltarLivros()" style="margin-bottom:10px">Registrar Nova Ocorrência</button>
+      <button class="btn btn-outline" onclick="fazerLogout()">Sair</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════ SUCESSO ══════════ -->
-<div class="screen sucesso-screen" id="sucesso-screen">
-  <div class="sucesso-card">
-    <div class="sucesso-icon">✅</div>
-    <h2>Ocorrência Registrada!</h2>
-    <p>Sua ocorrência foi registrada com sucesso.<br/>Protocolo: <strong id="sucesso-protocolo"></strong></p>
-    <button class="btn btn-primary" onclick="voltarDashboard()">📋 Voltar ao Dashboard</button>
-    <button class="btn btn-outline" onclick="abrirCadastro()">+ Nova Ocorrência</button>
-  </div>
-</div>
-
-<!-- ══════════ LIVRO FECHADO ══════════ -->
-<div class="screen fechado-screen" id="fechado-screen">
-  <div class="sucesso-card">
-    <div class="sucesso-icon">✅</div>
-    <h2>Livro Fechado!</h2>
-    <p>Sua passagem de serviço foi registrada com sucesso.</p>
-    <button class="btn btn-primary" onclick="abrirNovoLivro()">📋 Abrir Novo Livro</button>
-    <button class="btn btn-outline" onclick="fazerLogout()" style="margin-top:8px">🚪 Sair (Logout)</button>
-  </div>
-</div>
-
-<!-- ══════════ DETALHE ══════════ -->
-<div class="screen detalhe-screen" id="detalhe-screen">
-  <div class="form-card">
-    <div class="form-card-header">
-      <span class="icon">📋</span>
-      <span class="title">Detalhes da Ocorrência</span>
-    </div>
-    <div class="form-card-body" id="detalhe-body"></div>
-    <div class="form-card-footer" id="detalhe-footer"></div>
-  </div>
-</div>
+<div class="footer">GSS Controle Gerencial — Livro de Ocorrências Eletrônico</div>
 
 <script>
 (function() {
@@ -696,105 +314,58 @@
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5ZmxscmNkcmN2amltendiZnNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzQ4NzUsImV4cCI6MjA5Nzg1MDg3NX0.nHgqNJnfWQW5BTfEWQTK92LRPLqNadiC-xios5zN4_A';
   var SUPABASE_EDGE = SUPABASE_URL + '/functions/v1';
 
-  // ─── STATE ──────────────────────────────────────────────────────────────
   var usuarioLogado = null;
   var escalaAtual = null;
-  var recebimentoHabilitadoAtual = false;
-  var abaLivrosAtiva = 'ativos';
-  var ocorrenciasDashboard = [];
-  var _colabPosto = [];
-  var recebimentoDados = { materiais: [], materialComProblema: [] };
-  var recebimentoTexto = null;
+  var quillEditor = null;
 
-  // ─── SESSION PERSISTENCE ────────────────────────────────────────────────
-  var SESSION_KEY = 'gss_session';
-  var BOOK_KEY = 'gss_book_active';
-  var SESSION_MAX_AGE = 8 * 60 * 60 * 1000; // 8 hours
-
-  function salvarSessao() {
-    try {
-      localStorage.setItem(SESSION_KEY, JSON.stringify({
-        usuario: usuarioLogado,
-        recebimentoHabilitado: recebimentoHabilitadoAtual,
-        recebimentoTexto: recebimentoTexto,
-        timestamp: Date.now()
-      }));
-      if (escalaAtual) {
-        localStorage.setItem(BOOK_KEY, JSON.stringify(escalaAtual));
+  function initQuill() {
+    quillEditor = new Quill('#relato-editor', {
+      theme: 'snow',
+      placeholder: 'Descreva a ocorrência detalhadamente...',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          ['link']
+        ]
       }
-    } catch(e) {}
+    });
   }
 
-  function restaurarSessao() {
-    try {
-      var session = JSON.parse(localStorage.getItem(SESSION_KEY));
-      var book = JSON.parse(localStorage.getItem(BOOK_KEY));
-      if (session && book && (Date.now() - session.timestamp) < SESSION_MAX_AGE) {
-        usuarioLogado = session.usuario;
-        recebimentoHabilitadoAtual = session.recebimentoHabilitado;
-        recebimentoTexto = session.recebimentoTexto || null;
-        escalaAtual = book;
-        return true;
-      }
-    } catch(e) {}
-    limparSessao();
-    return false;
-  }
-
-  function limparSessao() {
-    try {
-      localStorage.removeItem(SESSION_KEY);
-      localStorage.removeItem(BOOK_KEY);
-    } catch(e) {}
-    recebimentoTexto = null;
-  }
-
-  // ─── UTILS ──────────────────────────────────────────────────────────────
   function showScreen(id) {
-    var screens = document.querySelectorAll('.screen');
-    screens.forEach(function(s) { s.classList.remove('active'); });
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('loading-screen').classList.remove('active');
-    document.getElementById('app-header').style.display = 'none';
-    document.getElementById('btn-header-back').style.display = 'none';
-
+    var loginOverlay = document.getElementById('login-overlay');
+    ['loading-screen','trocar-senha-screen','livros-screen','recebimento-screen','form-screen','assinar-screen','sucesso-screen'].forEach(function(s) {
+      document.getElementById(s).style.display = 'none';
+    });
     if (id === 'login-screen') {
-      document.getElementById('login-screen').style.display = 'flex';
-      return;
-    }
-    if (id === 'loading-screen') {
-      document.getElementById('loading-screen').classList.add('active');
-      return;
-    }
-
-    var el = document.getElementById(id);
-    if (el) el.classList.add('active');
-
-    // Show header for logged-in screens
-    if (['trocar-senha-screen','livros-screen','recebimento-screen','dashboard-screen','cadastro-screen','passagem-screen','assinar-screen','sucesso-screen','detalhe-screen','fechado-screen'].indexOf(id) !== -1) {
-      document.getElementById('app-header').style.display = 'flex';
-      updateHeaderUser();
-      // Show back button on non-main screens
-      if (['cadastro-screen','passagem-screen','assinar-screen','detalhe-screen'].indexOf(id) !== -1) {
-        document.getElementById('btn-header-back').style.display = 'block';
-      }
+      loginOverlay.style.display = 'flex';
+    } else {
+      loginOverlay.style.display = 'none';
+      document.getElementById(id).style.display = 'block';
     }
   }
 
-  function updateHeaderUser() {
-    var el = document.getElementById('header-user');
-    el.textContent = usuarioLogado ? usuarioLogado.nome : '';
-  }
+  window.togglePw = function() {
+    var inp = document.getElementById('senha-input');
+    var eye = inp.parentNode.querySelector('.pw-eye');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      eye.textContent = '🙈';
+    } else {
+      inp.type = 'password';
+      eye.textContent = '👁';
+    }
+  };
 
   function showErro(el, msg) {
     el.textContent = msg;
     el.style.display = 'block';
   }
 
-  function escapeHtml(str) {
-    var div = document.createElement('div');
-    div.textContent = str || '';
-    return div.innerHTML;
+  async function hashSenha(senha) {
+    var enc = new TextEncoder().encode(senha);
+    var hash = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(hash)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
   }
 
   function fmtData(iso) {
@@ -803,73 +374,60 @@
     return p[2] + '/' + p[1] + '/' + p[0];
   }
 
-  function gerarProtocolo(idPosto) {
-    var now = new Date();
-    var y = now.getFullYear();
-    var m = String(now.getMonth() + 1).padStart(2, '0');
-    var d = String(now.getDate()).padStart(2, '0');
-    var hh = String(now.getHours()).padStart(2, '0');
-    var mm = String(now.getMinutes()).padStart(2, '0');
-    return '#' + y + m + d + '/' + hh + mm + '/' + idPosto;
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
   }
 
-  // ─── INIT ───────────────────────────────────────────────────────────────
+  function hojeIso() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  // ─── INIT ─────────────────────────────────────────────────────────────────
   function init() {
-    if (restaurarSessao()) {
-      // Session valid → go to dashboard or livros
-      if (escalaAtual) {
-        showScreen('loading-screen');
-        carregarDashboard();
-      } else {
-        carregarLivros(usuarioLogado);
-      }
-    } else {
-      showScreen('login-screen');
-      document.getElementById('login-input').focus();
-    }
+    initQuill();
+    showScreen('login-screen');
+    document.getElementById('login-input').focus();
   }
 
-  // ─── HEADER BACK ────────────────────────────────────────────────────────
-  window.headerBack = function() {
-    var active = document.querySelector('.screen.active');
-    if (!active) return;
-    var id = active.id;
-    if (id === 'cadastro-screen') voltarDashboard();
-    else if (id === 'assinar-screen') voltarCadastro();
-    else if (id === 'passagem-screen') voltarDashboard();
-    else if (id === 'detalhe-screen') voltarDashboard();
-  };
-
-  // ─── TOGGLE SIDEBAR (MOBILE) ───────────────────────────────────────────
-  // ─── LOGIN ──────────────────────────────────────────────────────────────
+  // ─── LOGIN ────────────────────────────────────────────────────────────────
   window.fazerLogin = async function() {
     var login = (document.getElementById('login-input').value || '').trim();
     var senha = (document.getElementById('senha-input').value || '').trim();
     var erroEl = document.getElementById('login-erro');
     erroEl.style.display = 'none';
+
     if (!login) { showErro(erroEl, 'Informe o login.'); return; }
     if (!senha) { showErro(erroEl, 'Informe a senha.'); return; }
+
     showScreen('loading-screen');
+
     try {
       var resp = await fetch(SUPABASE_EDGE + '/auth-form', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
         body: JSON.stringify({ action: 'login', login: login, senha: senha })
       });
+
       var body = await resp.json();
+
       if (!resp.ok || !body.ok) {
         showScreen('login-screen');
         showErro(erroEl, body.error || 'Erro ao validar login.');
         return;
       }
+
       var user = body.user;
+
       if (user.habilitado === false) {
         showScreen('login-screen');
         showErro(erroEl, 'Seu acesso foi desabilitado. Contacte o administrador.');
         return;
       }
+
       usuarioLogado = user;
-      salvarSessao();
+
       if (user.primeiro_acesso) {
         showTrocarSenha(user);
       } else {
@@ -881,11 +439,11 @@
     }
   };
 
-  // ─── TROCAR SENHA ──────────────────────────────────────────────────────
+  // ─── TROCAR SENHA ─────────────────────────────────────────────────────────
   function showTrocarSenha(user) {
     var infoEl = document.getElementById('trocar-user-info');
-    infoEl.innerHTML = 'Olá <strong>' + escapeHtml(user.nome) + '</strong>! Defina uma nova senha.';
-    infoEl.style.display = 'flex';
+    infoEl.innerHTML = 'Olá <strong>' + escapeHtml(user.nome) + '</strong>! Defina uma nova senha para sua conta.';
+    infoEl.style.display = 'block';
     showScreen('trocar-senha-screen');
     document.getElementById('nova-senha-input').focus();
   }
@@ -895,47 +453,63 @@
     var conf = document.getElementById('confirmar-senha-input').value || '';
     var erroEl = document.getElementById('trocar-erro');
     erroEl.style.display = 'none';
+
     if (nova.length < 6) { showErro(erroEl, 'A senha deve ter pelo menos 6 caracteres.'); return; }
     if (nova !== conf) { showErro(erroEl, 'As senhas não conferem.'); return; }
+
     showScreen('loading-screen');
+
     try {
       var resp = await fetch(SUPABASE_EDGE + '/auth-form', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
         body: JSON.stringify({ action: 'trocar-senha', userId: usuarioLogado.id, novaSenha: nova })
       });
+
       var body = await resp.json();
+
       if (!resp.ok || !body.ok) {
         showScreen('trocar-senha-screen');
-        showErro(erroEl, body.error || 'Erro ao salvar nova senha.');
+        showErro(erroEl, body.error || 'Erro ao salvar nova senha. Tente novamente.');
         return;
       }
+
       usuarioLogado.senha_hash = body.senha_hash;
       usuarioLogado.primeiro_acesso = false;
-      salvarSessao();
+
       await carregarLivros(usuarioLogado);
     } catch (err) {
       showScreen('trocar-senha-screen');
-      showErro(erroEl, 'Erro ao salvar nova senha.');
+      showErro(erroEl, 'Erro ao salvar nova senha. Tente novamente.');
     }
   };
 
-  // ─── CARREGAR LIVROS ───────────────────────────────────────────────────
+  // ─── CARREGAR LIVROS DISPONÍVEIS ──────────────────────────────────────────
   async function carregarLivros(user) {
     showScreen('loading-screen');
+
     try {
-      var resp = await fetch(SUPABASE_EDGE + '/auth-form', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-        body: JSON.stringify({ action: 'listar-livros', id_acesso: user.id })
+      var hoje = new Date();
+      var hojeIsoStr = hoje.toISOString().slice(0, 10);
+      var trintaDiasAtras = new Date(hoje);
+      trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
+      var trintaDiasAtrasIso = trintaDiasAtras.toISOString().slice(0, 10);
+
+      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_escalas?id_acesso=eq.' + user.id + '&data_fim=gte.' + trintaDiasAtrasIso + '&select=*&order=data_inicio.desc', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
       });
-      var body = await resp.json();
-      var livros = body.livros || [];
-      if (!livros || livros.length === 0) {
+
+      if (!resp.ok) throw new Error('Erro ao buscar livros');
+
+      var escalas = await resp.json();
+
+      if (!escalas || escalas.length === 0) {
         showNoLivros(user);
         return;
       }
-      showLivros(user, livros);
+
+      showLivros(user, escalas, hojeIsoStr);
     } catch (err) {
       showNoLivros(user);
     }
@@ -944,96 +518,113 @@
   function showNoLivros(user) {
     var infoEl = document.getElementById('livros-user-info');
     infoEl.innerHTML = 'Olá <strong>' + escapeHtml(user.nome) + '</strong>';
-    infoEl.style.display = 'flex';
+    infoEl.style.display = 'block';
+
     document.getElementById('livros-lista').innerHTML =
-      '<div class="no-livro"><div class="no-livro-icon">📭</div>' +
-      '<h3 style="font-size:16px;font-weight:700;margin-bottom:8px">Nenhum Livro Disponível</h3>' +
-      '<p style="font-size:13px;color:var(--text2)">Você não possui livro cadastrado.<br/>Contacte o administrador.</p></div>';
+      '<div class="no-livro">' +
+        '<div class="no-livro-icon">📭</div>' +
+        '<h3 style="font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text)">Nenhum Livro Disponível</h3>' +
+        '<p style="font-size:13px;color:var(--text2)">Você não possui livro de ocorrência cadastrado para hoje.<br/>Contacte o administrador.</p>' +
+      '</div>';
+
     showScreen('livros-screen');
   }
 
-  function showLivros(user, livros) {
+  function showLivros(user, escalas, hojeIsoStr) {
     var infoEl = document.getElementById('livros-user-info');
-    var todosDisponiveis = livros.filter(function(l) { return !l.tem_ocorrencia || l.eh_hoje; });
-    var seen = {};
-    var livrosDisponiveis = [];
-    todosDisponiveis.forEach(function(l) {
-      if (!seen[l.id_posto]) { seen[l.id_posto] = true; livrosDisponiveis.push(l); }
-    });
-    infoEl.innerHTML = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ' + livrosDisponiveis.length + ' livro(s) disponível(is)';
-    infoEl.style.display = 'flex';
+    var countAtivos = escalas.filter(function(e) { return e.data_fim >= hojeIsoStr; }).length;
+    var infoText = 'Olá <strong>' + escapeHtml(user.nome) + '</strong> — ';
+    if (countAtivos > 0) {
+      infoText += countAtivos + ' livro(s) ativo(s)';
+      if (escalas.length > countAtivos) infoText += ', ' + (escalas.length - countAtivos) + ' expirado(s)';
+    } else {
+      infoText += escalas.length + ' livro(s) nos últimos 30 dias (todos expirados)';
+    }
+    infoEl.innerHTML = infoText;
+    infoEl.style.display = 'block';
 
-    function renderLivro(esc) {
+    var html = escalas.map(function(esc, idx) {
       var nomePosto = esc.id_posto;
+      var cc = esc.id_posto;
       try {
-        var r = new XMLHttpRequest();
-        r.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(esc.id_posto) + '&select=nome,cc', false);
-        r.setRequestHeader('apikey', SUPABASE_ANON_KEY);
-        r.send();
-        if (r.status === 200) {
-          var d = JSON.parse(r.responseText);
-          if (d && d.length > 0) {
-            if (d[0].nome) nomePosto = d[0].nome;
+        var resp2 = new XMLHttpRequest();
+        resp2.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(esc.id_posto) + '&select=nome,cc', false);
+        resp2.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+        resp2.send();
+        if (resp2.status === 200) {
+          var dados = JSON.parse(resp2.responseText);
+          if (dados && dados.length > 0) {
+            if (dados[0].nome) nomePosto = dados[0].nome;
+            if (dados[0].cc) cc = dados[0].cc;
           }
         }
       } catch(e) {}
-      var titulo = nomePosto !== esc.id_posto ? nomePosto + ' (' + esc.id_posto + ')' : esc.id_posto;
-      return '<div class="livro-item" onclick="abrirLivro(\'' + esc.id + '\')">' +
-        '<h3>📋 Livro — ' + escapeHtml(titulo) + '</h3>' +
-        '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' → ' + fmtData(esc.data_fim) + '</div>' +
-        '<div class="abrir">Abrir Livro →</div></div>';
-    }
+      var titulo = nomePosto !== cc ? nomePosto + ' (' + cc + ')' : cc;
+      var expirado = esc.data_fim < hojeIsoStr;
+      var badgeExpirado = expirado ? '<span style="display:inline-block;background:#b91c1c;color:#fff;font-size:9pt;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:normal">Expirado</span>' : '';
 
-    window._escalasAtivos = livrosDisponiveis;
-    document.getElementById('livros-lista').innerHTML = livrosDisponiveis.length > 0
-      ? livrosDisponiveis.map(renderLivro).join('')
-      : '<div class="no-livro"><div class="no-livro-icon">📋</div><p style="font-size:13px;color:var(--text2)">Nenhum livro disponível no momento.</p></div>';
+      return '<div class="livro-item' + (expirado ? ' livro-expirado' : '') + '" onclick="abrirLivro(' + idx + ')">' +
+        '<h3>📋 Livro — ' + escapeHtml(titulo) + badgeExpirado + '</h3>' +
+        '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' → ' + fmtData(esc.data_fim) + '</div>' +
+        '<div class="abrir">Abrir Livro →</div>' +
+      '</div>';
+    }).join('');
+
+    document.getElementById('livros-lista').innerHTML = html;
+    window._escalasDisponiveis = escalas;
     showScreen('livros-screen');
   }
 
-  window.abrirLivro = function(id) {
-    var lista = window._escalasAtivos || [];
-    var escala = null;
-    for (var i = 0; i < lista.length; i++) {
-      if (String(lista[i].id) === String(id)) { escala = lista[i]; break; }
-    }
+  window.abrirLivro = function(idx) {
+    var escala = window._escalasDisponiveis[idx];
     if (!escala) return;
     escalaAtual = escala;
 
+    var infoBar = document.getElementById('form-user-bar');
+    infoBar.innerHTML = '<span>👤 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span><span>Login: ' + escapeHtml(usuarioLogado.login) + '</span>';
+
+    var tituloLivro = escala.id_posto;
     var recebimentoHabilitado = false;
     try {
-      var r = new XMLHttpRequest();
-      r.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(escala.id_posto) + '&select=nome,cc,recebimento_servico', false);
-      r.setRequestHeader('apikey', SUPABASE_ANON_KEY);
-      r.send();
-      if (r.status === 200) {
-        var d = JSON.parse(r.responseText);
-        if (d && d.length > 0) {
-          recebimentoHabilitado = d[0].recebimento_servico === true;
+      var resp3 = new XMLHttpRequest();
+      resp3.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(escala.id_posto) + '&select=nome,cc,recebimento_servico', false);
+      resp3.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      resp3.send();
+      if (resp3.status === 200) {
+        var dados3 = JSON.parse(resp3.responseText);
+        if (dados3 && dados3.length > 0) {
+          if (dados3[0].nome) tituloLivro = dados3[0].nome + ' (' + (dados3[0].cc || escala.id_posto) + ')';
+          recebimentoHabilitado = dados3[0].recebimento_servico === true;
         }
       }
     } catch(e) {}
+    document.getElementById('form-posto-badge').textContent = '📋 Livro — ' + tituloLivro;
+    quillEditor.setContents([]);
 
     if (recebimentoHabilitado) {
-      recebimentoHabilitadoAtual = true;
       iniciarRecebimento();
     } else {
-      recebimentoHabilitadoAtual = false;
-      salvarSessao();
-      carregarDashboard();
+      showScreen('form-screen');
+      quillEditor.focus();
     }
   };
 
   window.voltarLivros = function() {
     escalaAtual = null;
-    limparSessao();
     carregarLivros(usuarioLogado);
   };
 
-  // ─── RECEBIMENTO ────────────────────────────────────────────────────────
+  // ─── RECEBIMENTO DE SERVIÇO ────────────────────────────────────────────
+  var recebimentoDados = {
+    materiais: [],
+    materialComProblema: []
+  };
+  window._colabPosto = [];
+
   window.iniciarRecebimento = function() {
     var recBar = document.getElementById('rec-user-bar');
     recBar.innerHTML = '<span>👤 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
+
     document.getElementById('rec-nome').value = usuarioLogado.nome || '';
     document.getElementById('rec-re').value = usuarioLogado.re || '';
     document.getElementById('rec-funcao').value = '';
@@ -1046,36 +637,31 @@
     document.getElementById('rec-texto').value = '';
     document.getElementById('rec-erro').style.display = 'none';
 
-    var nomePosto = escalaAtual.id_posto;
-    try {
-      var r = new XMLHttpRequest();
-      r.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(escalaAtual.id_posto) + '&select=nome,cc', false);
-      r.setRequestHeader('apikey', SUPABASE_ANON_KEY);
-      r.send();
-      if (r.status === 200) {
-        var d = JSON.parse(r.responseText);
-        if (d && d.length > 0 && d[0].nome) nomePosto = d[0].nome + ' (' + (d[0].cc || escalaAtual.id_posto) + ')';
-      }
-    } catch(e) {}
-    document.getElementById('rec-posto-badge').textContent = '📋 Livro — ' + nomePosto;
+    var postBadge = document.getElementById('rec-posto-badge');
+    postBadge.textContent = document.getElementById('form-posto-badge').textContent;
 
     carregarColaboradoresPosto();
     carregarMaterialCarga();
     configurarBuscaRecebeu();
     gerarTextoRecebimento();
+
     showScreen('recebimento-screen');
   };
 
   function carregarColaboradoresPosto() {
-    _colabPosto = [];
+    window._colabPosto = [];
     if (!escalaAtual) return;
+
     try {
-      var r = new XMLHttpRequest();
-      r.open('POST', SUPABASE_EDGE + '/auth-form', false);
-      r.setRequestHeader('Content-Type', 'application/json');
-      r.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_ANON_KEY);
-      r.send(JSON.stringify({ action: 'listar-colaboradores-posto', id_posto: escalaAtual.id_posto }));
-      if (r.status === 200) _colabPosto = JSON.parse(r.responseText) || [];
+      var resp = new XMLHttpRequest();
+      resp.open('POST', SUPABASE_URL + '/functions/v1/auth-form', false);
+      resp.setRequestHeader('Content-Type', 'application/json');
+      resp.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_ANON_KEY);
+      resp.send(JSON.stringify({ action: 'listar-colaboradores-posto', id_posto: escalaAtual.id_posto }));
+
+      if (resp.status === 200) {
+        window._colabPosto = JSON.parse(resp.responseText) || [];
+      }
     } catch(e) {}
   }
 
@@ -1084,30 +670,37 @@
     statusEl.innerHTML = '<div style="color:var(--text2)">Carregando material...</div>';
     recebimentoDados.materiais = [];
     recebimentoDados.materialComProblema = [];
+
     if (!escalaAtual) return;
+
     try {
-      var r = new XMLHttpRequest();
-      r.open('GET', SUPABASE_URL + '/rest/v1/gss_material_carga?id_posto=eq.' + encodeURIComponent(escalaAtual.id_posto) + '&select=nome,especificacao,quantidade,estado', false);
-      r.setRequestHeader('apikey', SUPABASE_ANON_KEY);
-      r.send();
-      if (r.status === 200) {
-        var mats = JSON.parse(r.responseText);
-        if (mats && mats.length > 0) {
-          recebimentoDados.materiais = mats;
-          recebimentoDados.materialComProblema = mats.filter(function(m) { return m.estado && m.estado !== 'Bom'; });
+      var resp = new XMLHttpRequest();
+      resp.open('GET', SUPABASE_URL + '/rest/v1/gss_material_carga?id_posto=eq.' + encodeURIComponent(escalaAtual.id_posto) + '&select=nome,especificacao,quantidade,estado', false);
+      resp.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      resp.send();
+      if (resp.status === 200) {
+        var materiais = JSON.parse(resp.responseText);
+        if (materiais && materiais.length > 0) {
+          recebimentoDados.materiais = materiais;
+          recebimentoDados.materialComProblema = materiais.filter(function(m) {
+            return m.estado && m.estado !== 'Bom';
+          });
         }
       }
     } catch(e) {}
+
     if (recebimentoDados.materiais.length === 0) {
-      statusEl.innerHTML = '<div style="color:var(--text2)">Nenhum material cadastrado</div>';
+      statusEl.innerHTML = '<div style="color:var(--text2)">Nenhum material cadastrado para este posto</div>';
       return;
     }
-    var html = '<div style="margin-bottom:8px;font-weight:600">Itens:</div>';
+
+    var html = '<div style="margin-bottom:8px;font-weight:600">Itens do Material Carga:</div>';
     recebimentoDados.materiais.forEach(function(m) {
-      var cor = m.estado === 'Bom' ? 'var(--success)' : (m.estado === 'Regular' ? 'var(--warning)' : 'var(--danger)');
+      var cor = m.estado === 'Bom' ? '#15803d' : (m.estado === 'Regular' ? '#b45309' : '#b91c1c');
       html += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">' +
         '<span>' + escapeHtml(m.nome) + (m.especificacao ? ' (' + escapeHtml(m.especificacao) + ')' : '') + ' × ' + m.quantidade + '</span>' +
-        '<span style="color:' + cor + ';font-weight:600">' + escapeHtml(m.estado || 'Bom') + '</span></div>';
+        '<span style="color:' + cor + ';font-weight:600">' + escapeHtml(m.estado || 'Bom') + '</span>' +
+      '</div>';
     });
     statusEl.innerHTML = html;
   }
@@ -1118,39 +711,65 @@
     var nomeInput = document.getElementById('rec-recebeu-nome');
     var reInput = document.getElementById('rec-recebeu-re');
     var debounceTimer = null;
+
     buscaInput.value = '';
     nomeInput.value = '';
     reInput.value = '';
     dropdown.style.display = 'none';
+
     buscaInput.oninput = function() {
       clearTimeout(debounceTimer);
       var val = buscaInput.value.trim().toLowerCase();
-      if (val.length < 2) { dropdown.style.display = 'none'; return; }
+      if (val.length < 2) {
+        dropdown.style.display = 'none';
+        return;
+      }
       debounceTimer = setTimeout(function() {
-        var funcs = _colabPosto.filter(function(e) {
+        var lista = window._colabPosto || [];
+        var funcionarios = lista.filter(function(e) {
           return (e.nome || '').toLowerCase().includes(val) || (e.re || '').toLowerCase().includes(val);
         }).slice(0, 10);
-        if (funcs.length === 0) {
-          dropdown.innerHTML = '<div style="padding:8px 12px;color:var(--text2);font-size:13px">Nenhum colaborador encontrado</div>';
+
+        if (funcionarios.length === 0) {
+          dropdown.innerHTML = '<div style="padding:8px 12px;color:var(--text2);font-size:13px">Nenhum colaborador encontrado para este posto</div>';
           dropdown.style.display = 'block';
           return;
         }
-        dropdown.innerHTML = funcs.map(function(f) {
+
+        var html = funcionarios.map(function(f) {
           return '<div style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px" ' +
             'onmouseover="this.style.background=\'#f0f9ff\'" onmouseout="this.style.background=\'transparent\'" ' +
             'onclick="selecionarRecebeu(\'' + escapeHtml(f.nome).replace(/'/g, "\\'") + '\', \'' + escapeHtml(f.re || '').replace(/'/g, "\\'") + '\')">' +
             '<div style="font-weight:600">' + escapeHtml(f.nome) + '</div>' +
-            '<div style="font-size:11px;color:var(--text2)">RE: ' + escapeHtml(f.re || '-') + '</div></div>';
+            '<div style="font-size:11px;color:var(--text2)">RE: ' + escapeHtml(f.re || '-') + '</div>' +
+          '</div>';
         }).join('');
+        dropdown.innerHTML = html;
         dropdown.style.display = 'block';
       }, 180);
     };
-    buscaInput.onfocus = function() { if (buscaInput.value.trim().length >= 2) buscaInput.oninput(); };
+
+    buscaInput.onfocus = function() {
+      if (buscaInput.value.trim().length >= 2) {
+        buscaInput.oninput();
+      }
+    };
+
     document.addEventListener('click', function(e) {
-      if (!buscaInput.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display = 'none';
+      if (!buscaInput.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
     });
-    nomeInput.oninput = function() { buscaInput.value = ''; dropdown.style.display = 'none'; gerarTextoRecebimento(); };
-    reInput.oninput = function() { gerarTextoRecebimento(); };
+
+    nomeInput.oninput = function() {
+      buscaInput.value = '';
+      dropdown.style.display = 'none';
+      gerarTextoRecebimento();
+    };
+
+    reInput.oninput = function() {
+      gerarTextoRecebimento();
+    };
   }
 
   window.selecionarRecebeu = function(nome, re) {
@@ -1170,20 +789,26 @@
     var cargoRecebeu = document.getElementById('rec-cargo-recebeu').value || '';
     var tipoRecebeu = document.getElementById('rec-tipo-recebeu').value || '';
     var horario = document.getElementById('rec-horario').value || '';
+
     if (!nome || !funcao || !tipo || !re || !recebeu || !cargoRecebeu || !tipoRecebeu || !horario) {
       document.getElementById('rec-texto').value = 'Preencha todos os campos para gerar o texto.';
       return;
     }
+
     var condicao = 'em totais condições de uso';
     if (recebimentoDados.materialComProblema.length > 0) {
-      var itens = recebimentoDados.materialComProblema.map(function(m) { return m.nome + ' (' + m.estado + ')'; }).join(', ');
+      var itens = recebimentoDados.materialComProblema.map(function(m) {
+        return m.nome + ' (' + m.estado + ')';
+      }).join(', ');
       condicao = 'não estava de acordo — ' + itens;
     }
+
     var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', recebi o posto de ' + recebeu + ', ' + cargoRecebeu + ', ' + tipoRecebeu + ' às ' + horario + ' ciente das normas em vigor, das determinações e material carga ' + condicao + ', bem como estou ciente das ocorrências registradas no período anterior.';
+
     document.getElementById('rec-texto').value = texto;
   }
 
-  ['rec-funcao','rec-tipo','rec-cargo-recebeu','rec-tipo-recebeu','rec-horario','rec-recebeu-nome','rec-recebeu-re'].forEach(function(id) {
+  ['rec-funcao', 'rec-tipo', 'rec-cargo-recebeu', 'rec-tipo-recebeu', 'rec-horario', 'rec-recebeu-nome', 'rec-recebeu-re'].forEach(function(id) {
     document.getElementById(id).addEventListener('input', gerarTextoRecebimento);
   });
 
@@ -1196,394 +821,72 @@
     var horario = document.getElementById('rec-horario').value;
     var erroEl = document.getElementById('rec-erro');
     erroEl.style.display = 'none';
-    if (!funcao) { showErro(erroEl, 'Informe a função.'); return; }
-    if (!tipo) { showErro(erroEl, 'Selecione o tipo.'); return; }
-    if (!recebeu) { showErro(erroEl, 'Informe de quem passou.'); return; }
-    if (!cargoRecebeu) { showErro(erroEl, 'Informe o cargo.'); return; }
+
+    if (!funcao) { showErro(erroEl, 'Informe a função do colaborador.'); return; }
+    if (!tipo) { showErro(erroEl, 'Selecione o tipo (EFETIVO/COBERTURA).'); return; }
+    if (!recebeu) { showErro(erroEl, 'Informe de quem passou o serviço.'); return; }
+    if (!cargoRecebeu) { showErro(erroEl, 'Informe o cargo de quem passou.'); return; }
     if (!tipoRecebeu) { showErro(erroEl, 'Selecione o tipo de quem passou.'); return; }
-    if (!horario) { showErro(erroEl, 'Informe o horário.'); return; }
-    recebimentoTexto = document.getElementById('rec-texto').value;
-    salvarSessao();
-    carregarDashboard();
+    if (!horario) { showErro(erroEl, 'Informe o horário da passagem.'); return; }
+
+    var textoRecebimento = document.getElementById('rec-texto').value;
+    document.getElementById('rec-texto-confirmado').textContent = textoRecebimento;
+    document.getElementById('rec-texto-confirmado').style.display = 'block';
+    quillEditor.setText('');
+    quillEditor.enable(true);
+    showScreen('form-screen');
+    quillEditor.focus();
   };
 
-  // ─── DASHBOARD ──────────────────────────────────────────────────────────
-  async function carregarDashboard() {
-    showScreen('loading-screen');
-    document.getElementById('app-header').style.display = 'flex';
-    updateHeaderUser();
-    try {
-      // Carregar ocorrências do posto
-      if (escalaAtual) {
-        var resp = await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-          body: JSON.stringify({ action: 'listar', id_posto: escalaAtual.id_posto })
-        });
-        var body = await resp.json();
-        ocorrenciasDashboard = body.ocorrencias || [];
-      }
-      renderDashboard();
-      showScreen('dashboard-screen');
-    } catch (err) {
-      ocorrenciasDashboard = [];
-      renderDashboard();
-      showScreen('dashboard-screen');
-    }
-  }
-
-  var dashPage = 1;
-  var dashPerPage = 10;
-
-  function renderDashboard() {
-    var filtered = getFilteredOcorrencias();
-    var total = filtered.length;
-    var normais = filtered.filter(function(o) { return o.urgencia === 'NAO_URGENTE' || o.urgencia === 'POUCO_URGENTE'; }).length;
-    var urgentes = filtered.filter(function(o) { return o.urgencia === 'URGENTE' || o.urgencia === 'MUITO_URGENTE'; }).length;
-    var criticas = filtered.filter(function(o) { return o.urgencia === 'EMERGENCIA'; }).length;
-    var abertas = filtered.filter(function(o) { return o.status === 'ABERTA'; }).length;
-    var finalizadas = filtered.filter(function(o) { return o.status === 'FINALIZADA'; }).length;
-
-    document.getElementById('dash-total').textContent = total;
-    document.getElementById('dash-abertas-count').textContent = abertas;
-    document.getElementById('dash-encerradas-count').textContent = finalizadas;
-
-    var maxUrg = Math.max(normais, urgentes, criticas, 1);
-    document.getElementById('dash-urgencia-bars').innerHTML =
-      '<div class="urg-bar-row"><span class="urg-bar-label">Normais</span><div class="urg-bar-track"><div class="urg-bar-fill" style="width:' + (normais / maxUrg * 100) + '%;background:var(--primary)"></div></div><span class="urg-bar-count">' + normais + '</span></div>' +
-      '<div class="urg-bar-row"><span class="urg-bar-label">Urgentes</span><div class="urg-bar-track"><div class="urg-bar-fill" style="width:' + (urgentes / maxUrg * 100) + '%;background:var(--warning)"></div></div><span class="urg-bar-count">' + urgentes + '</span></div>' +
-      '<div class="urg-bar-row"><span class="urg-bar-label">Críticas</span><div class="urg-bar-track"><div class="urg-bar-fill" style="width:' + (criticas / maxUrg * 100) + '%;background:var(--danger)"></div></div><span class="urg-bar-count">' + criticas + '</span></div>';
-
-    var listEl = document.getElementById('dash-occ-list');
-    var pagEl = document.getElementById('dash-pagination');
-    if (filtered.length === 0) {
-      listEl.innerHTML = '<div class="occ-empty"><div class="occ-empty-icon">📋</div><p>Nenhuma ocorrência encontrada</p></div>';
-      pagEl.innerHTML = '';
-      return;
-    }
-
-    var totalPages = Math.ceil(filtered.length / dashPerPage);
-    if (dashPage > totalPages) dashPage = totalPages;
-    var start = (dashPage - 1) * dashPerPage;
-    var pageItems = filtered.slice(start, start + dashPerPage);
-
-    listEl.innerHTML = pageItems.map(renderOccCard).join('');
-
-    var pagHtml = '';
-    if (totalPages > 1) {
-      pagHtml += '<button class="dash-page-btn" onclick="dashPage=1;renderDashboard()" ' + (dashPage === 1 ? 'disabled' : '') + '>&laquo;</button>';
-      pagHtml += '<button class="dash-page-btn" onclick="dashPage=Math.max(1,dashPage-1);renderDashboard()" ' + (dashPage === 1 ? 'disabled' : '') + '>&lsaquo;</button>';
-      for (var i = 1; i <= totalPages; i++) {
-        if (totalPages > 7 && i > 3 && i < totalPages - 2 && Math.abs(i - dashPage) > 1) {
-          if (i === 4 || i === totalPages - 3) pagHtml += '<span style="padding:6px;color:var(--text3)">...</span>';
-          continue;
-        }
-        pagHtml += '<button class="dash-page-btn' + (i === dashPage ? ' active' : '') + '" onclick="dashPage=' + i + ';renderDashboard()">' + i + '</button>';
-      }
-      pagHtml += '<button class="dash-page-btn" onclick="dashPage=Math.min(' + totalPages + ',dashPage+1);renderDashboard()" ' + (dashPage === totalPages ? 'disabled' : '') + '>&rsaquo;</button>';
-      pagHtml += '<button class="dash-page-btn" onclick="dashPage=' + totalPages + ';renderDashboard()" ' + (dashPage === totalPages ? 'disabled' : '') + '>&raquo;</button>';
-    }
-    pagEl.innerHTML = pagHtml;
-  }
-
-  function renderOccCard(occ) {
-    var urgClass = ({'NAO_URGENTE':'normal','POUCO_URGENTE':'pouco-urgente','URGENTE':'urgente','MUITO_URGENTE':'muito-urgente','EMERGENCIA':'emergencia'})[occ.urgencia] || 'normal';
-    var urgLabel = ({'NAO_URGENTE':'NÃO URGENTE','POUCO_URGENTE':'POUCO URGENTE','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO URGENTE','EMERGENCIA':'EMERGÊNCIA'})[occ.urgencia] || occ.urgencia;
-    var urgLabelShort = ({'NAO_URGENTE':'NÃO','POUCO_URGENTE':'POUCO','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO','EMERGENCIA':'EMERGÊNCIA'})[occ.urgencia] || occ.urgencia;
-    var statusClass = occ.status === 'ABERTA' ? 'aberta' : 'finalizada';
-    var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Encerrada';
-
-    var d = new Date(occ.inicio);
-    var dataInicio = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-
-    var termStr = '-';
-    if (occ.termino) {
-      var dt = new Date(occ.termino);
-      termStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + ' ' + String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-    }
-
-    var desc = escapeHtml(occ.descritivo || '');
-    var descTrunc = desc.length > 80 ? desc.substring(0, 80) + '...' : desc;
-
-    return '<div class="occ-card" onclick="verDetalhe(\'' + occ.id + '\')">' +
-      '<div class="occ-card-stripe ' + urgClass + '"></div>' +
-      '<div class="occ-card-main">' +
-
-        '<div class="occ-card-header">' +
-          '<div class="occ-card-icon"><svg viewBox="0 0 512 512" width="20" height="20" fill="currentColor"><path d="M256 8a248 248 0 1 0 0 496 248 248 0 0 0 0-496zm0 90c21 0 38 17 38 38s-17 38-38 38-38-17-38-38 17-38 38-38zm44 137l-17 136c0 6-5 11-11 11h-32c-7 0-12-5-11-11l-17-136c-1-6 4-11 11-11h56c7 0 12 5 11 11z"/></svg></div>' +
-          '<div style="flex:1">' +
-            '<div class="occ-card-title">' + escapeHtml(occ.categoria_nome || 'Ocorrência') + '</div>' +
-            '<div class="occ-card-protocolo">' + escapeHtml(occ.protocolo) + '</div>' +
-          '</div>' +
-          '<span class="occ-card-status-badge ' + statusClass + '">' + statusLabel + '</span>' +
-        '</div>' +
-
-        '<div class="occ-card-meta occ-card-desktop">' +
-          '<div><div class="occ-card-field-label">Urgência</div><div class="occ-card-field-value"><span class="occ-card-badge ' + urgClass + '">' + urgLabel + '</span></div></div>' +
-          '<div><div class="occ-card-field-label">Início</div><div class="occ-card-field-value">' + dataInicio + '</div></div>' +
-          '<div><div class="occ-card-field-label">Término</div><div class="occ-card-field-value">' + termStr + '</div></div>' +
-          '<div><div class="occ-card-field-label">Local</div><div class="occ-card-field-value">' + escapeHtml(occ.local || '-') + '</div></div>' +
-        '</div>' +
-
-        '<div class="occ-card-meta occ-card-mobile">' +
-          '<div><div class="occ-card-field-label">Urgência</div><div class="occ-card-field-value"><span class="occ-card-badge ' + urgClass + '">' + urgLabelShort + '</span></div></div>' +
-          '<div><div class="occ-card-field-label">Início</div><div class="occ-card-field-value">' + dataInicio + '</div></div>' +
-          '<div><div class="occ-card-field-label">Local</div><div class="occ-card-field-value">' + escapeHtml(occ.local || '-') + '</div></div>' +
-        '</div>' +
-        '<div class="occ-card-meta occ-card-mobile">' +
-          '<div><div class="occ-card-field-label">Término</div><div class="occ-card-field-value">' + termStr + '</div></div>' +
-          '<div><div class="occ-card-field-label">Status</div><div class="occ-card-field-value"><span class="occ-card-status-badge ' + statusClass + '">' + statusLabel + '</span></div></div>' +
-          '<div></div>' +
-        '</div>' +
-
-        '<div class="occ-card-footer">' +
-          '<div class="occ-card-desc"><strong>Descrição:</strong> ' + descTrunc + '</div>' +
-          '<div class="occ-card-status">' + statusLabel + '</div>' +
-        '</div>' +
-
-      '</div>' +
-    '</div>';
-  }
-
-  function getFilteredOcorrencias() {
-    var busca = (document.getElementById('dash-busca').value || '').toLowerCase();
-    var filtroStatus = document.getElementById('dash-filtro-status').value;
-    var filtroUrg = document.getElementById('dash-filtro-urgencia').value;
-    var filtroCat = document.getElementById('dash-filtro-categoria').value;
-    return ocorrenciasDashboard.filter(function(o) {
-      if (filtroStatus && o.status !== filtroStatus) return false;
-      if (filtroUrg && o.urgencia !== filtroUrg) return false;
-      if (filtroCat && o.categoria_nome !== filtroCat) return false;
-      if (busca) {
-        var txt = (o.protocolo + ' ' + o.colaborador + ' ' + o.descritivo + ' ' + o.local + ' ' + o.categoria_nome).toLowerCase();
-        if (txt.indexOf(busca) === -1) return false;
-      }
-      return true;
-    });
-  }
-
-  window.filtrarDashboard = function() { dashPage = 1; renderDashboard(); };
-
-  window.gerarPdfLivro = function() {
-    var filtered = getFilteredOcorrencias();
-    if (filtered.length === 0) { alert('Nenhuma ocorrência para gerar PDF.'); return; }
-
-    var rows = filtered.map(function(occ) {
-      var d = new Date(occ.inicio);
-      var dataInicio = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-      var termStr = '-';
-      if (occ.termino) {
-        var dt = new Date(occ.termino);
-        termStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + ' ' + String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-      }
-      var urgLabel = ({'NAO_URGENTE':'Não Urgente','POUCO_URGENTE':'Pouco Urgente','URGENTE':'Urgente','MUITO_URGENTE':'Muito Urgente','EMERGENCIA':'Emergência'})[occ.urgencia] || occ.urgencia;
-      var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Encerrada';
-      return '<tr><td>' + (occ.protocolo || '') + '</td><td>' + dataInicio + '</td><td>' + termStr + '</td><td>' + (occ.colaborador || '') + '</td><td>' + (occ.categoria_nome || '') + '</td><td>' + urgLabel + '</td><td>' + (occ.local || '') + '</td><td>' + statusLabel + '</td><td>' + (occ.descritivo || '') + '</td></tr>';
-    }).join('');
-
-    var html = '<table><thead><tr><th>Protocolo</th><th>Início</th><th>Término</th><th>Colaborador</th><th>Categoria</th><th>Urgência</th><th>Local</th><th>Status</th><th>Descrição</th></tr></thead><tbody>' + rows + '</tbody></table>';
-
-    var printWindow = window.open('', '_blank');
-    printWindow.document.write('<html><head><title>Livro de Ocorrências</title><style>body{font-family:sans-serif;font-size:11px;padding:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;font-size:10px}th{background:#f0f0f0;font-weight:700}tr:nth-child(even){background:#f9f9f9}</style></head><body>');
-    printWindow.document.write('<h2 style="text-align:center">Livro de Ocorrências Eletrônico</h2>');
-    printWindow.document.write('<p style="text-align:center;color:#666">Total: ' + filtered.length + ' ocorrência(s)</p>');
-    printWindow.document.write(html);
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.print();
+  window.voltarRecebimento = function() {
+    showScreen('recebimento-screen');
   };
 
-  // ─── DETALHE ────────────────────────────────────────────────────────────
-  window.verDetalhe = function(id) {
-    var occ = null;
-    for (var i = 0; i < ocorrenciasDashboard.length; i++) {
-      if (String(ocorrenciasDashboard[i].id) === String(id)) { occ = ocorrenciasDashboard[i]; break; }
-    }
-    if (!occ) return;
-    var d = new Date(occ.inicio);
-    var dataFmt = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
-    var horaFmt = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-    var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Finalizada';
-    var urgLabel = ({'NAO_URGENTE':'Não Urgente','POUCO_URGENTE':'Pouco Urgente','URGENTE':'Urgente','MUITO_URGENTE':'Muito Urgente','EMERGENCIA':'Emergência'})[occ.urgencia] || occ.urgencia;
-    var catLabel = occ.categoria_nome || '-';
-
-    var html = '<div class="detalhe-section">' +
-      '<div class="detalhe-section-title">Informações</div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Protocolo</div><div class="detalhe-value" style="font-family:monospace;font-weight:700">' + escapeHtml(occ.protocolo) + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Data</div><div class="detalhe-value">' + dataFmt + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Hora</div><div class="detalhe-value">' + horaFmt + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Colaborador</div><div class="detalhe-value">' + escapeHtml(occ.colaborador || '-') + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Categoria</div><div class="detalhe-value">' + escapeHtml(catLabel) + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Urgência</div><div class="detalhe-value">' + urgLabel + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Local</div><div class="detalhe-value">' + escapeHtml(occ.local || '-') + (occ.local_descricao ? ' — ' + escapeHtml(occ.local_descricao) : '') + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Status</div><div class="detalhe-value"><span class="occ-badge ' + (occ.status === 'ABERTA' ? 'aberta' : 'finalizada') + '">' + statusLabel + '</span></div></div>' +
-      (occ.outros_envolvidos ? '<div class="detalhe-field"><div class="detalhe-label">Envolvidos</div><div class="detalhe-value">' + escapeHtml(occ.outros_envolvidos) + '</div></div>' : '') +
-      '</div>';
-
-    html += '<div class="detalhe-section"><div class="detalhe-section-title">Descritivo</div><div class="detalhe-box">' + (occ.descritivo || '<em>Sem descritivo</em>') + '</div></div>';
-
-    if (occ.danos && occ.descricao_dano) {
-      html += '<div class="detalhe-section"><div class="detalhe-section-title" style="color:var(--danger)">Danos</div><div class="detalhe-box danger">' + escapeHtml(occ.descricao_dano) + '</div></div>';
-    }
-
-    if (occ.assinatura) {
-      html += '<div class="detalhe-section"><div class="detalhe-section-title">Assinatura</div><div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px;display:inline-block"><img src="' + occ.assinatura + '" alt="Assinatura" style="max-width:300px;max-height:150px;display:block"/></div></div>';
-    }
-
-    document.getElementById('detalhe-body').innerHTML = html;
-
-    // Footer actions
-    var footerHtml = '<button class="btn btn-outline" onclick="voltarDashboard()" style="flex:1">← Voltar</button>';
-    if (occ.status === 'ABERTA') {
-      footerHtml = '<button class="btn btn-outline" onclick="voltarDashboard()" style="flex:1">← Voltar</button>' +
-        '<button class="btn btn-success" onclick="atualizarStatus(\'' + occ.id + '\', \'FINALIZADA\')" style="flex:1">✅ Finalizar</button>';
-    }
-    document.getElementById('detalhe-footer').innerHTML = footerHtml;
-
-    showScreen('detalhe-screen');
+  // ─── ENVIAR OCORRÊNCIA ────────────────────────────────────────────────
+  window.enviarOcorrencia = async function() {
+    var relatoText = quillEditor.getText().trim();
+    if (!relatoText) { alert('Descreva a ocorrência antes de registrar.'); return; }
+    if (!escalaAtual || !usuarioLogado) { alert('Sessão expirada. Faça login novamente.'); return; }
+    showAssinarScreen();
   };
 
-  window.fecharDetalhe = function() { voltarDashboard(); };
-
-  window.atualizarStatus = async function(id, status) {
-    try {
-      var resp = await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-        body: JSON.stringify({ action: 'atualizar-status', id: id, status: status })
-      });
-      var body = await resp.json();
-      if (body.ok) {
-        await carregarDashboard();
-      }
-    } catch (err) {
-      alert('Erro ao atualizar status.');
-    }
-  };
-
-  // ─── CADASTRO ───────────────────────────────────────────────────────────
-  window.abrirCadastro = function() {
-    document.getElementById('cad-inicio').value = new Date().toISOString().slice(0, 16);
-    document.getElementById('cad-urgencia').value = 'NAO_URGENTE';
-    document.getElementById('cad-categoria-id').value = '';
-    document.getElementById('cad-local').value = '';
-    document.getElementById('cad-local-desc').value = '';
-    document.getElementById('cad-descritivo').value = '';
-    document.getElementById('cad-envolvidos').value = '';
-    document.getElementById('cad-danos').checked = false;
-    document.getElementById('cad-danos-section').classList.add('hidden');
-    document.getElementById('cad-desc-dano').value = '';
-    document.getElementById('cad-erro').style.display = 'none';
-    showScreen('cadastro-screen');
-  };
-
-  window.cancelarCadastro = function() { voltarDashboard(); };
-
-  window.toggleDanos = function() {
-    var checked = document.getElementById('cad-danos').checked;
-    document.getElementById('cad-danos-section').classList.toggle('hidden', !checked);
-  };
-
-  window.salvarOcorrencia = async function() {
-    var erroEl = document.getElementById('cad-erro');
-    erroEl.style.display = 'none';
-    var inicio = document.getElementById('cad-inicio').value;
-    var urgencia = document.getElementById('cad-urgencia').value;
-    var catId = document.getElementById('cad-categoria-id').value;
-    var catOption = document.getElementById('cad-categoria-id').options[document.getElementById('cad-categoria-id').selectedIndex];
-    var catNome = catOption ? catOption.textContent : '';
-    var local = document.getElementById('cad-local').value.trim();
-    var localDesc = document.getElementById('cad-local-desc').value.trim();
-    var descritivo = document.getElementById('cad-descritivo').value.trim();
-    var envolvidos = document.getElementById('cad-envolvidos').value.trim();
-    var danos = document.getElementById('cad-danos').checked;
-    var descDano = document.getElementById('cad-desc-dano').value.trim();
-    if (!inicio) { showErro(erroEl, 'Informe a data/hora de início.'); return; }
-    if (!catId) { showErro(erroEl, 'Selecione uma categoria.'); return; }
-    if (!local) { showErro(erroEl, 'Informe o local.'); return; }
-    if (!descritivo) { showErro(erroEl, 'Informe o descritivo da ocorrência.'); return; }
-    if (danos && !descDano) { showErro(erroEl, 'Descreva os danos causados.'); return; }
-
-    var body = {
-      action: 'salvar',
-      id_posto: escalaAtual.id_posto,
-      id_acesso: usuarioLogado.id,
-      colaborador: usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')',
-      inicio: new Date(inicio).toISOString(),
-      urgencia: urgencia,
-      categoria_id: null,
-      categoria_nome: catId,
-      local: local.toUpperCase(),
-      local_descricao: localDesc ? localDesc.toUpperCase() : null,
-      descritivo: descritivo.toUpperCase(),
-      outros_envolvidos: envolvidos ? envolvidos.toUpperCase() : null,
-      danos: danos,
-      descricao_dano: descDano ? descDano.toUpperCase() : null,
-      recebimento: null,
-      passagem: null,
-      assinatura: null
-    };
-
-    try {
-      var resp = await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-        body: JSON.stringify(body)
-      });
-      var result = await resp.json();
-      if (!result.ok) {
-        showErro(erroEl, result.error || 'Erro ao salvar ocorrência.');
-        return;
-      }
-      document.getElementById('sucesso-protocolo').textContent = result.protocolo || '';
-      showScreen('sucesso-screen');
-    } catch (err) {
-      showErro(erroEl, 'Erro ao conectar. Tente novamente.');
-    }
-  };
-
-  window.voltarCadastro = function() { window._passagemTexto = null; showScreen('cadastro-screen'); };
-  window.voltarDashboard = function() { window._passagemTexto = null; carregarDashboard(); };
-
-  window.abrirNovoLivro = function() {
-    limparSessao();
-    carregarLivros();
-  };
-
-  // ─── ASSINATURA ─────────────────────────────────────────────────────────
+  // ─── ASSINATURA ──────────────────────────────────────────────────────
   var assinaturaCanvas = null;
   var assinaturaCtx = null;
   var assinaturaDesenhando = false;
   var assinaturaTemPixels = false;
   var assinaturaAtual = null;
 
-  function showAssinarScreen() {
-    document.getElementById('assinar-resumo').innerHTML = '<strong>Protocolo:</strong> ' + escapeHtml(window._occProtocoloParaAssinar || '');
-    initAssinatura();
-    showScreen('assinar-screen');
-  }
-
   function initAssinatura() {
     assinaturaCanvas = document.getElementById('assinatura-canvas');
     assinaturaCtx = assinaturaCanvas.getContext('2d');
     assinaturaTemPixels = false;
     assinaturaAtual = null;
+
     assinaturaCtx.strokeStyle = '#000';
     assinaturaCtx.lineWidth = 4;
     assinaturaCtx.lineCap = 'round';
     assinaturaCtx.lineJoin = 'round';
     assinaturaCtx.fillStyle = '#fff';
     assinaturaCtx.fillRect(0, 0, assinaturaCanvas.width, assinaturaCanvas.height);
-    assinaturaCanvas.onpointerdown = onAssinaturaStart;
-    assinaturaCanvas.onpointermove = onAssinaturaMove;
-    assinaturaCanvas.onpointerup = onAssinaturaEnd;
-    assinaturaCanvas.onpointerleave = onAssinaturaEnd;
+
+    assinaturaCanvas.addEventListener('pointerdown', onAssinaturaStart);
+    assinaturaCanvas.addEventListener('pointermove', onAssinaturaMove);
+    assinaturaCanvas.addEventListener('pointerup', onAssinaturaEnd);
+    assinaturaCanvas.addEventListener('pointerleave', onAssinaturaEnd);
+    assinaturaCanvas.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
+
     document.getElementById('assinar-erro').style.display = 'none';
   }
 
   function getCanvasPos(e) {
     var rect = assinaturaCanvas.getBoundingClientRect();
-    return { x: (e.clientX - rect.left) * (assinaturaCanvas.width / rect.width), y: (e.clientY - rect.top) * (assinaturaCanvas.height / rect.height) };
+    var scaleX = assinaturaCanvas.width / rect.width;
+    var scaleY = assinaturaCanvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
   }
 
   function onAssinaturaStart(e) {
@@ -1606,7 +909,9 @@
     assinaturaTemPixels = true;
   }
 
-  function onAssinaturaEnd() { assinaturaDesenhando = false; }
+  function onAssinaturaEnd(e) {
+    assinaturaDesenhando = false;
+  }
 
   window.limparAssinatura = function() {
     if (!assinaturaCtx) return;
@@ -1617,7 +922,7 @@
     document.getElementById('assinar-erro').style.display = 'none';
   };
 
-  window.confirmarAssinatura = async function() {
+  window.confirmarAssinatura = function() {
     if (!assinaturaTemPixels) {
       var erroEl = document.getElementById('assinar-erro');
       erroEl.textContent = 'Por favor, assine antes de confirmar.';
@@ -1625,171 +930,79 @@
       return;
     }
     assinaturaAtual = assinaturaCanvas.toDataURL('image/png');
-    if (window._passagemTexto) {
-      // Passagem: save to gss_passagens_servico, then logout
-      try {
-        await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-          body: JSON.stringify({
-            action: 'salvar-passagem',
-            id_posto: escalaAtual ? escalaAtual.id_posto : null,
-            id_acesso: usuarioLogado ? usuarioLogado.id : null,
-            colaborador: usuarioLogado ? usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')' : '',
-            recebimento: recebimentoTexto || null,
-            texto: window._passagemTexto,
-            assinatura: assinaturaAtual
-          })
-        });
-      } catch (e) { /* continue even if save fails */ }
-      showScreen('fechado-screen');
-    } else {
-      atualizarOcorrenciaAssinatura();
-    }
+    enviarOcorrenciaComAssinatura();
   };
 
-  async function atualizarOcorrenciaAssinatura() {
-    var id = window._occIdParaAssinar;
-    if (!id) { voltarDashboard(); return; }
-    try {
-      var resp = await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-        body: JSON.stringify({ action: 'atualizar-assinatura', id: id, assinatura: assinaturaAtual })
-      });
-      var result = await resp.json();
-      document.getElementById('sucesso-protocolo').textContent = window._occProtocoloParaAssinar || '';
-      showScreen('sucesso-screen');
-    } catch (err) {
-      document.getElementById('sucesso-protocolo').textContent = window._occProtocoloParaAssinar || '';
-      showScreen('sucesso-screen');
-    }
-  }
-
-  // ─── FECHAR LIVRO (PASSAGEM) ────────────────────────────────────────────
-  window.fecharLivro = function() {
-    var abertas = ocorrenciasDashboard.filter(function(o) { return o.status === 'ABERTA'; });
-    if (abertas.length > 0) {
-      if (!confirm('Há ' + abertas.length + ' ocorrência(s) em aberto. Deseja fechar mesmo assim?')) return;
-    }
-    var psgBar = document.getElementById('psg-user-bar');
-    psgBar.innerHTML = '<span>👤 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
-    document.getElementById('psg-nome').value = usuarioLogado.nome || '';
-    document.getElementById('psg-re').value = usuarioLogado.re || '';
-    document.getElementById('psg-funcao').value = '';
-    document.getElementById('psg-tipo').value = '';
-    document.getElementById('psg-receptor-nome').value = '';
-    document.getElementById('psg-receptor-re').value = '';
-    document.getElementById('psg-cargo-receptor').value = '';
-    document.getElementById('psg-tipo-receptor').value = '';
-    document.getElementById('psg-horario').value = '';
-    document.getElementById('psg-texto').value = '';
-    document.getElementById('psg-erro').style.display = 'none';
-    var nomePosto = escalaAtual ? escalaAtual.id_posto : '';
-    document.getElementById('psg-posto-badge').textContent = '📋 Livro — ' + nomePosto;
-    carregarColaboradoresPosto();
-    configurarBuscaReceptor();
-    gerarTextoPassagem();
-    showScreen('passagem-screen');
+  window.voltarFormulario = function() {
+    showScreen('form-screen');
   };
 
-  function configurarBuscaReceptor() {
-    var input = document.getElementById('psg-busca-receptor');
-    var dropdown = document.getElementById('psg-dropdown-receptor');
-    input.oninput = function() {
-      var termo = input.value.trim().toLowerCase();
-      if (termo.length < 2) { dropdown.style.display = 'none'; return; }
-      var filtrados = _colabPosto.filter(function(c) {
-        return (c.nome && c.nome.toLowerCase().indexOf(termo) !== -1) || (c.re && c.re.toLowerCase().indexOf(termo) !== -1);
-      }).slice(0, 10);
-      if (filtrados.length === 0) { dropdown.style.display = 'none'; return; }
-      dropdown.innerHTML = filtrados.map(function(c) {
-        return '<div style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:13px" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'#fff\'" onclick="selecionarReceptor(\'' + (c.nome || '').replace(/'/g, "\\'") + '\', \'' + (c.re || '').replace(/'/g, "\\'") + '\')">' +
-          '<div style="font-weight:500">' + escapeHtml(c.nome) + '</div>' +
-          '<div style="font-size:11px;color:#64748b">RE: ' + escapeHtml(c.re || '') + '</div></div>';
-      }).join('');
-      dropdown.style.display = 'block';
-    };
-    input.onfocus = function() { if (input.value.trim().length >= 2) input.oninput(); };
-    document.addEventListener('click', function(e) {
-      if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display = 'none';
-    });
-  }
-
-  window.selecionarReceptor = function(nome, re) {
-    document.getElementById('psg-receptor-nome').value = nome;
-    document.getElementById('psg-receptor-re').value = re || '';
-    document.getElementById('psg-busca-receptor').value = '';
-    document.getElementById('psg-dropdown-receptor').style.display = 'none';
-    gerarTextoPassagem();
-  };
-
-  function gerarTextoPassagem() {
-    var nome = document.getElementById('psg-nome').value || '';
-    var funcao = document.getElementById('psg-funcao').value || '';
-    var tipo = document.getElementById('psg-tipo').value || '';
-    var re = document.getElementById('psg-re').value || '';
-    var receptor = document.getElementById('psg-receptor-nome').value || '';
-    var cargoReceptor = document.getElementById('psg-cargo-receptor').value || '';
-    var tipoReceptor = document.getElementById('psg-tipo-receptor').value || '';
-    var horario = document.getElementById('psg-horario').value || '';
-    if (!nome || !funcao || !tipo || !re || !receptor || !cargoReceptor || !tipoReceptor || !horario) {
-      document.getElementById('psg-texto').value = 'Preencha todos os campos para gerar o texto.';
-      return;
-    }
-    var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', passo o posto para ' + receptor + ', ' + cargoReceptor + ', ' + tipoReceptor + ' às ' + horario + ' juntamente com as normas em vigor, determinações e material carga em Total Condições de Uso, bem como as ocorrências registradas no meu período de trabalho.';
-    document.getElementById('psg-texto').value = texto;
-  }
-
-  ['psg-funcao','psg-tipo','psg-cargo-receptor','psg-tipo-receptor','psg-horario','psg-receptor-nome','psg-receptor-re'].forEach(function(id) {
-    document.getElementById(id).addEventListener('input', gerarTextoPassagem);
-  });
-
-  window.confirmarPassagem = function() {
-    var funcao = document.getElementById('psg-funcao').value.trim();
-    var tipo = document.getElementById('psg-tipo').value;
-    var receptor = document.getElementById('psg-receptor-nome').value.trim();
-    var cargoReceptor = document.getElementById('psg-cargo-receptor').value.trim();
-    var tipoReceptor = document.getElementById('psg-tipo-receptor').value;
-    var horario = document.getElementById('psg-horario').value;
-    var erroEl = document.getElementById('psg-erro');
-    erroEl.style.display = 'none';
-    if (!funcao) { showErro(erroEl, 'Informe a função.'); return; }
-    if (!tipo) { showErro(erroEl, 'Selecione o tipo.'); return; }
-    if (!receptor) { showErro(erroEl, 'Informe para quem vai passar.'); return; }
-    if (!cargoReceptor) { showErro(erroEl, 'Informe o cargo.'); return; }
-    if (!tipoReceptor) { showErro(erroEl, 'Selecione o tipo.'); return; }
-    if (!horario) { showErro(erroEl, 'Informe o horário.'); return; }
-    // Store passagem data and show signature screen
-    window._passagemTexto = document.getElementById('psg-texto').value;
-    document.getElementById('assinar-resumo').innerHTML = '<strong>Passagem de Serviço</strong><br/>Confirme com sua assinatura para fechar o livro.';
+  function showAssinarScreen() {
+    var resumo = document.getElementById('assinar-resumo');
+    var textoRec = document.getElementById('rec-texto-confirmado').textContent || '';
+    var relatoText = quillEditor.getText().trim();
+    var fullText = textoRec ? textoRec + '\n\n---\n\n' + relatoText : relatoText;
+    var truncado = fullText.length > 200 ? fullText.slice(0, 200) + '...' : fullText;
+    resumo.innerHTML = '<strong>Relato:</strong> ' + escapeHtml(truncado);
     initAssinatura();
     showScreen('assinar-screen');
-  };
+  }
 
-  // ─── LOGOUT ─────────────────────────────────────────────────────────────
+  async function enviarOcorrenciaComAssinatura() {
+    var textoRec = document.getElementById('rec-texto-confirmado').textContent || '';
+    var relatoOcorrencia = quillEditor.root.innerHTML.trim();
+
+    var body = {
+      id_posto: escalaAtual.id_posto,
+      id_acesso: usuarioLogado.id,
+      colaborador: usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')',
+      relato: relatoOcorrencia,
+      recebimento: textoRec || '',
+      assinatura: assinaturaAtual
+    };
+
+    try {
+      var resp = await fetch(SUPABASE_URL + '/rest/v1/gss_ocorrencias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+        body: JSON.stringify(body)
+      });
+
+      if (!resp.ok) throw new Error('Erro ao registrar');
+
+      showScreen('sucesso-screen');
+    } catch (err) {
+      alert('Erro ao registrar ocorrência. Tente novamente.');
+    }
+  }
+
+  // ─── LOGOUT ───────────────────────────────────────────────────────────────
   window.fazerLogout = function() {
     usuarioLogado = null;
     escalaAtual = null;
-    recebimentoHabilitadoAtual = false;
-    window._escalasAtivos = [];
-    ocorrenciasDashboard = [];
-    limparSessao();
+    window._escalasDisponiveis = [];
     document.getElementById('login-input').value = '';
     document.getElementById('senha-input').value = '';
     document.getElementById('senha-input').type = 'password';
     document.getElementById('login-erro').style.display = 'none';
-    document.getElementById('app-header').style.display = 'none';
-    showScreen('login-screen');
-    document.getElementById('login-input').focus();
+    init();
   };
 
-  // ─── ENTER KEY HANDLERS ────────────────────────────────────────────────
+  // ─── ENTER KEY HANDLERS ───────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('senha-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') window.fazerLogin(); });
-    document.getElementById('login-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('senha-input').focus(); });
-    document.getElementById('confirmar-senha-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') window.trocarSenha(); });
-    document.getElementById('nova-senha-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('confirmar-senha-input').focus(); });
+    document.getElementById('senha-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') window.fazerLogin();
+    });
+    document.getElementById('login-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('senha-input').focus();
+    });
+    document.getElementById('confirmar-senha-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') window.trocarSenha();
+    });
+    document.getElementById('nova-senha-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('confirmar-senha-input').focus();
+    });
+
     init();
   });
 
