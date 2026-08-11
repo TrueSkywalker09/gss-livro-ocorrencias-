@@ -19,6 +19,9 @@
     }
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;margin:0}
     .hidden{display:none !important}
+    svg.icon{flex-shrink:0;vertical-align:-3px}
+    .icon-inline{display:inline-flex;align-items:center;gap:7px}
+    button.icon-inline,a.icon-inline{justify-content:center}
 
     /* ─── HEADER ─── */
     .app-header{position:sticky;top:0;left:0;right:0;height:56px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;align-items:center;padding:0 16px;z-index:100;gap:12px}
@@ -26,10 +29,9 @@
     .app-header .logo-icon{width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800}
     .app-header .logo-text{font-size:14px;font-weight:700;color:var(--text);line-height:1.2}
     .app-header .logo-text span{display:block;font-size:11px;color:var(--text2);font-weight:400}
-    .app-header .hamburger{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text);padding:4px;display:none}
-    .app-header .user-info{margin-left:auto;font-size:13px;font-weight:600;color:var(--text);text-transform:uppercase}
-    .app-header .btn-back{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text);padding:4px 8px;border-radius:var(--radius-sm);display:none}
+    .app-header .btn-back{background:none;border:none;cursor:pointer;color:var(--text);padding:6px;border-radius:var(--radius-sm);display:none;align-items:center;justify-content:center}
     .app-header .btn-back:hover{background:var(--bg)}
+    .app-header .user-info{margin-left:auto;font-size:13px;font-weight:600;color:var(--text);text-transform:uppercase}
 
     /* ─── MAIN LAYOUT ─── */
     .app-body{margin-top:56px;min-height:calc(100vh - 56px)}
@@ -50,7 +52,7 @@
     .login-field input:focus{outline:none;border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(30,94,255,.12)}
     .pw-wrap{position:relative;display:flex;align-items:center}
     .pw-wrap input{padding-right:38px !important}
-    .pw-eye{position:absolute;right:10px;cursor:pointer;color:var(--text3);font-size:16px;user-select:none}
+    .pw-eye{position:absolute;right:10px;cursor:pointer;color:var(--text3);display:flex;align-items:center;user-select:none}
     .pw-eye:hover{color:var(--text2)}
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 20px;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;transition:all .15s}
     .btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-hover)}
@@ -62,9 +64,10 @@
 
     /* ─── FORMS ─── */
     .form-field{margin-bottom:16px}
-    .form-field label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+    .form-field label{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+    .form-field label svg{color:var(--text2)}
     .form-field label .required{color:var(--danger)}
-    .form-field input,.form-field textarea,.form-field select{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);background:var(--card);transition:border-color .15s}
+    .form-field input,.form-field textarea,.form-field select{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);background:var(--card);transition:border-color .15s;font-family:inherit}
     .form-field input.uppercase,.form-field textarea.uppercase{text-transform:uppercase}
     .form-field input:focus,.form-field textarea:focus,.form-field select:focus{outline:none;border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(30,94,255,.12)}
     .form-field textarea{min-height:120px;resize:vertical;line-height:1.6}
@@ -84,39 +87,50 @@
     .trocar-senha-screen{align-items:center;justify-content:center;min-height:100vh;width:100%;padding:20px}
 
     /* ─── LIVROS ─── */
-    .livros-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:600px;margin:0 auto}
+    .livros-screen{flex-direction:column;min-height:100vh;width:100%;padding:24px 20px;max-width:960px;margin:0 auto}
     .livros-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:24px;margin-bottom:16px}
-    .livro-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:all .15s}
-    .livro-item:hover{border-color:var(--primary);box-shadow:0 2px 12px rgba(30,94,255,.15)}
-    .livro-item h3{font-size:15px;font-weight:700;margin-bottom:4px}
-    .livro-item .periodo{font-size:12px;color:var(--text2);margin-bottom:8px}
-    .livro-item .abrir{font-size:13px;font-weight:700;color:var(--primary)}
-    .no-livro{text-align:center;padding:40px 20px;color:var(--text2)}
-    .no-livro-icon{font-size:48px;margin-bottom:12px}
+    .livros-header{text-align:center;margin-bottom:18px}
+    .livros-header h1{font-size:20px;font-weight:800;margin-bottom:4px}
+    .livros-header p{font-size:13px;color:var(--text2)}
+    .livros-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:18px}
+    .livro-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:18px;cursor:pointer;transition:all .15s;display:flex;gap:14px;align-items:flex-start;position:relative}
+    .livro-item:hover{border-color:var(--primary);box-shadow:var(--shadow-md);transform:translateY(-2px)}
+    .livro-item-icon{width:44px;height:44px;border-radius:10px;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .livro-item-body{flex:1;min-width:0}
+    .livro-item h3{font-size:15px;font-weight:700;margin-bottom:6px;color:var(--text);padding-right:56px}
+    .livro-item .cc-tag{font-size:10px;font-weight:700;color:var(--text2);background:var(--bg);border:1px solid var(--border);padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:8px}
+    .livro-item .periodo{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:5px;margin-bottom:12px}
+    .livro-item .abrir{font-size:12px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:4px}
+    .livro-item .hoje-badge{position:absolute;top:16px;right:16px;background:var(--success-bg);color:var(--success);border:1px solid var(--success-border);font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;display:flex;align-items:center;gap:3px}
+    .no-livro{grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--text2)}
+    .no-livro-icon{margin-bottom:12px;color:var(--text3);display:flex;justify-content:center}
 
     /* ─── RECEBIMENTO ─── */
     .recebimento-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:700px;margin:0 auto}
     .section-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
-    .section-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px}
+    .section-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+    .section-title svg{color:var(--primary)}
     .field-row{display:flex;gap:12px}
     .field-row .form-field{flex:1}
     .field-row .form-field:last-child{flex:0 0 auto}
-    .alert{padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:14px}
+    .alert{padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
     .alert-error{background:var(--danger-bg);border:1px solid var(--danger-border);color:var(--danger)}
     .alert-success{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success)}
-    .posto-badge{display:inline-block;background:var(--primary-light);color:var(--primary);padding:4px 10px;border-radius:var(--radius-sm);font-size:12px;font-weight:700;margin-bottom:16px}
+    .posto-badge{display:inline-flex;align-items:center;gap:6px;background:var(--primary-light);color:var(--primary);padding:4px 10px;border-radius:var(--radius-sm);font-size:12px;font-weight:700;margin-bottom:16px}
     .user-bar{background:var(--primary-light);border:1px solid #c7d2fe;border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:16px;font-size:12px;color:var(--primary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
+    .user-bar span{display:inline-flex;align-items:center;gap:5px}
 
     /* ─── DASHBOARD ─── */
-    .dashboard-screen{width:100%;min-height:calc(100vh - 56px);padding:20px}
-    .dashboard-badge{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:24px;max-width:400px;margin:0 auto 24px;box-shadow:var(--shadow)}
-    .dashboard-badge .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-    .dashboard-badge .card-title{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);letter-spacing:.5px}
-    .dashboard-badge .card-badge{background:var(--primary-light);color:var(--primary);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
-    .dashboard-badge .stats-number{font-size:36px;font-weight:800;color:var(--text);line-height:1;margin-bottom:16px}
-    .dashboard-content{max-width:900px;margin:0 auto}
-    .donut-container{display:flex;flex-direction:column;align-items:center;margin-bottom:16px}
-    .donut-legend{display:flex;flex-direction:column;gap:8px;width:100%}
+    .dashboard-screen{width:100%;min-height:calc(100vh - 56px);padding:20px;display:flex;align-items:flex-start;gap:20px;max-width:1400px;margin:0 auto}
+    .dashboard-sidebar{width:300px;flex-shrink:0;display:flex;flex-direction:column;gap:16px;position:sticky;top:76px}
+    .dashboard-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow)}
+    .dashboard-card .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .dashboard-card .card-title{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);letter-spacing:.5px}
+    .dashboard-card .card-badge{background:var(--primary-light);color:var(--primary);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .dashboard-card .stats-number{font-size:36px;font-weight:800;color:var(--text);line-height:1;margin-bottom:16px}
+    .dashboard-main{flex:1;min-width:0}
+    .donut-container{display:flex;flex-direction:column;align-items:center;margin-bottom:4px}
+    .donut-legend{display:flex;flex-direction:column;gap:8px;width:100%;margin-top:14px}
     .legend-item{display:flex;align-items:center;gap:8px;font-size:13px}
     .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
     .legend-label{flex:1;color:var(--text2)}
@@ -132,8 +146,8 @@
     .search-input{flex:1;min-width:200px;position:relative}
     .search-input input{width:100%;padding:10px 14px 10px 36px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--card)}
     .search-input input:focus{outline:none;border-color:var(--border-focus)}
-    .search-input .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px}
-    .filter-select{padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--card);min-width:130px}
+    .search-input .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);display:flex}
+    .filter-select{padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--card);min-width:130px;font-family:inherit}
     .filter-select:focus{outline:none;border-color:var(--border-focus)}
     .btn-nova{white-space:nowrap;padding:10px 16px;font-size:13px;font-weight:700;border-radius:var(--radius-sm);width:auto}
 
@@ -144,23 +158,28 @@
     .occ-card-stripe{width:6px;flex-shrink:0;margin:-16px 0 -16px -16px;margin-right:12px;border-radius:var(--radius) 0 0 var(--radius)}
     .occ-card-stripe.normal{background:#e5e7eb}
     .occ-card-stripe.pouco-urgente{background:#38bdf8}
-    .occ-card-stripe.urgente{background:#f59e0b}
-    .occ-card-stripe.muito-urgente{background:#e11d48}
-    .occ-card-stripe.emergencia{background:#b91c1c}
+    .occ-card-stripe.urgente{background:#f97316}
+    .occ-card-stripe.muito-urgente{background:#dc2626}
+    .occ-card-stripe.emergencia{background:var(--danger)}
     .occ-card-main{flex:1;min-width:0;padding:16px}
     .occ-card-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
-    .occ-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#f1f5f9;color:#64748b}
+    .occ-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .occ-card-icon.normal{background:#f1f5f9;color:#64748b}
+    .occ-card-icon.pouco-urgente{background:#e0f2fe;color:#0369a1}
+    .occ-card-icon.urgente{background:#f97316;color:#fff}
+    .occ-card-icon.muito-urgente{background:#dc2626;color:#fff}
+    .occ-card-icon.emergencia{background:var(--danger);color:#fff}
     .occ-card-title{font-size:15px;font-weight:700;color:#1e293b}
     .occ-card-protocolo{font-size:11px;color:#94a3b8;font-family:'SF Mono',monospace;margin-top:1px}
     .occ-card-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
     .occ-card-field-label{font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;margin-bottom:2px}
     .occ-card-field-value{font-size:12px;color:#334155;font-weight:500}
     .occ-card-badge{display:inline-flex;padding:3px 8px;border-radius:9999px;font-size:10px;font-weight:600}
-    .occ-card-badge.nao-urgente{background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0}
+    .occ-card-badge.normal{background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0}
     .occ-card-badge.pouco-urgente{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd}
-    .occ-card-badge.urgente{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
-    .occ-card-badge.muito-urgente{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
-    .occ-card-badge.emergencia{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+    .occ-card-badge.urgente{background:#f97316;color:#fff;border:1px solid #f97316}
+    .occ-card-badge.muito-urgente{background:#dc2626;color:#fff;border:1px solid #dc2626}
+    .occ-card-badge.emergencia{background:var(--danger);color:#fff;border:1px solid var(--danger)}
     .occ-card-footer{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid #f1f5f9}
     .occ-card-desc{font-size:12px;color:#64748b;line-height:1.5;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:12px}
     .occ-card-dano{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;flex-shrink:0}
@@ -169,7 +188,7 @@
     .occ-card-status{font-size:11px;font-weight:600;color:#64748b;flex-shrink:0}
     .occ-card-mobile{display:none}
     .occ-empty{text-align:center;padding:40px 20px;color:var(--text2)}
-    .occ-empty-icon{font-size:40px;margin-bottom:8px}
+    .occ-empty-icon{margin-bottom:8px;color:var(--text3)}
     @media(max-width:1023px){
       .occ-card-desktop{display:none!important}
       .occ-card-mobile{display:block}
@@ -180,7 +199,6 @@
     .cadastro-screen{flex-direction:column;min-height:100vh;width:100%;max-width:700px;margin:0 auto;padding:20px}
     .form-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);overflow:hidden}
     .form-card-header{background:var(--primary);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:10px}
-    .form-card-header .icon{font-size:20px}
     .form-card-header .title{font-size:16px;font-weight:700}
     .form-card-body{padding:20px}
     .form-card-footer{padding:16px 20px;border-top:1px solid var(--border);display:flex;gap:12px}
@@ -199,37 +217,74 @@
     .assinatura-canvas-wrap canvas{width:100%;height:280px;touch-action:none;cursor:crosshair;display:block}
 
     /* ─── DETALHE ─── */
-    .detalhe-screen{flex-direction:column;min-height:100vh;width:100%;max-width:700px;margin:0 auto;padding:20px}
-    .detalhe-field{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9}
-    .detalhe-label{font-size:11px;font-weight:700;color:var(--primary);min-width:120px;text-transform:uppercase;letter-spacing:.3px}
-    .detalhe-value{font-size:13px;color:var(--text);flex:1}
+    .detalhe-screen{flex-direction:column;min-height:100vh;width:100%;max-width:760px;margin:0 auto;padding:20px}
+    .detalhe-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);overflow:hidden}
+    .detalhe-header{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-hover) 100%);color:#fff;padding:20px 24px}
+    .detalhe-header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+    .detalhe-header h2{font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px}
+    .detalhe-header .subtitle{font-size:12px;opacity:.85;margin-top:4px;padding-left:26px}
+    .detalhe-header-badges{display:flex;gap:8px;flex-wrap:wrap}
+    .detalhe-badge-pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;background:#fff;white-space:nowrap;height:fit-content}
+    .detalhe-badge-pill.cat{color:var(--primary)}
+    .detalhe-badge-pill.urg-normal{color:#64748b}
+    .detalhe-badge-pill.urg-pouco-urgente{color:#0369a1}
+    .detalhe-badge-pill.urg-urgente{background:#f97316;color:#fff}
+    .detalhe-badge-pill.urg-muito-urgente{background:#dc2626;color:#fff}
+    .detalhe-badge-pill.urg-emergencia{background:var(--danger);color:#fff}
+    .detalhe-badge-pill.status-aberta{color:var(--primary)}
+    .detalhe-badge-pill.status-finalizada{color:var(--success)}
+    .detalhe-body{padding:20px 24px}
+    .detalhe-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+    .detalhe-grid-item{display:flex;flex-direction:column;gap:5px}
+    .detalhe-grid-item.span-2{grid-column:1/-1}
+    .dgi-label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.3px}
+    .dgi-label svg{color:var(--primary)}
+    .dgi-value{font-size:14px;font-weight:600;color:var(--text)}
+    .detalhe-protocolo-box{background:var(--success-bg);border:1px solid var(--success-border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:20px}
+    .detalhe-protocolo-box .num{font-size:17px;font-weight:800;color:var(--success);font-family:'SF Mono',monospace}
+    .detalhe-protocolo-box .sys{font-size:10px;color:var(--text2);margin-top:3px}
     .detalhe-section{margin-bottom:20px}
-    .detalhe-section-title{font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1.5px solid var(--border);letter-spacing:.5px}
+    .detalhe-section:last-child{margin-bottom:0}
+    .detalhe-section-title{font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1.5px solid var(--border);letter-spacing:.5px;display:flex;align-items:center;gap:7px}
     .detalhe-box{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;color:#475569;line-height:1.6}
     .detalhe-box.danger{background:var(--danger-bg);border:1px solid var(--danger-border);color:var(--danger)}
+    .detalhe-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:12px}
+    .detalhe-footer .btn{flex:1}
 
     /* ─── SUCESSO ─── */
     .sucesso-screen{align-items:center;justify-content:center;min-height:100vh;width:100%;padding:20px}
     .sucesso-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:40px 32px;text-align:center;max-width:400px;width:100%}
-    .sucesso-icon{font-size:56px;margin-bottom:12px}
+    .sucesso-icon{color:var(--success);margin-bottom:12px;display:flex;justify-content:center}
     .sucesso-card h2{font-size:20px;font-weight:800;color:var(--success);margin-bottom:8px}
     .sucesso-card p{font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6}
     .sucesso-card .btn{margin-bottom:10px}
 
     /* ─── RESPONSIVE ─── */
+    @media(max-width:960px){
+      .dashboard-screen{flex-direction:column}
+      .dashboard-sidebar{width:100%;position:static;flex-direction:row;flex-wrap:wrap}
+      .dashboard-sidebar .dashboard-card{flex:1;min-width:260px}
+    }
     @media(max-width:768px){
-      .app-header .hamburger{display:block}
-      .app-header .btn-back{display:block}
+      .app-header .btn-back{display:flex}
       .form-grid{grid-template-columns:1fr}
+      .detalhe-grid{grid-template-columns:1fr}
       .filter-bar{flex-direction:column}
       .search-input{min-width:100%}
       .filter-select{width:100%}
       .btn-nova{width:100%}
       .livros-screen,.recebimento-screen,.cadastro-screen,.passagem-screen,.assinar-screen,.detalhe-screen{padding:16px}
+      .dashboard-screen{padding:16px}
+    }
+    @media(max-width:600px){
+      .dashboard-sidebar{flex-direction:column}
     }
     @media(max-width:480px){
       .form-card-body{padding:16px}
       .form-card-footer{padding:12px 16px;flex-direction:column}
+      .detalhe-body{padding:16px}
+      .detalhe-header{padding:16px}
+      .detalhe-footer{padding:12px 16px;flex-direction:column}
       .field-row{flex-direction:column;gap:0}
       .occ-meta{flex-direction:column;gap:4px}
     }
@@ -239,8 +294,7 @@
 
 <!-- ════════════ HEADER ════════════ -->
 <header class="app-header" id="app-header">
-  <button class="btn-back" id="btn-header-back" onclick="headerBack()">←</button>
-  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <button class="btn-back" id="btn-header-back" onclick="headerBack()" aria-label="Voltar"></button>
   <a class="logo" href="#">
     <div class="logo-icon">G</div>
     <div class="logo-text">GSS<span>Livro de Ocorrências</span></div>
@@ -253,7 +307,7 @@
   <div class="login-box">
     <div class="login-logo"><img src="logo-gss.png" alt="GSS"/></div>
     <div class="login-titulo">Livro de Ocorrências</div>
-    <div class="login-sub">GSS RJ ─ Acesso Restrito</div>
+    <div class="login-sub">GSS RJ — Acesso Restrito</div>
     <div class="login-err" id="login-erro"></div>
     <div class="login-field">
       <label>Login</label>
@@ -263,7 +317,7 @@
       <label>Senha</label>
       <div class="pw-wrap">
         <input type="password" id="senha-input" placeholder="••••••" autocomplete="current-password"/>
-        <span class="pw-eye" onclick="togglePw()">👁</span>
+        <span class="pw-eye" id="pw-eye-toggle" onclick="togglePw()" aria-label="Mostrar senha"></span>
       </div>
     </div>
     <button class="btn btn-primary" id="btn-login" onclick="fazerLogin()">Entrar →</button>
@@ -301,16 +355,14 @@
 
 <!-- ════════════ LIVROS ════════════ -->
 <div class="screen livros-screen" id="livros-screen">
-  <div class="livros-card">
-    <div style="text-align:center;margin-bottom:16px">
-      <h1 style="font-size:18px;font-weight:800;margin-bottom:4px">Livros Disponáveis</h1>
-      <p style="font-size:13px;color:var(--text2)">Selecione o livro de ocorrência</p>
-    </div>
-    <div id="livros-user-info" class="user-bar" style="display:none"></div>
-    <div id="livros-lista"></div>
-    <div style="margin-top:16px">
-      <button class="btn btn-outline" onclick="fazerLogout()">← Sair</button>
-    </div>
+  <div class="livros-header">
+    <h1>Livros Disponíveis</h1>
+    <p>Selecione o livro de ocorrência</p>
+  </div>
+  <div id="livros-user-info" class="user-bar" style="display:none"></div>
+  <div class="livros-grid" id="livros-lista"></div>
+  <div style="margin-top:22px;text-align:center">
+    <button class="btn btn-outline icon-inline" onclick="fazerLogout()" style="width:auto;padding:10px 22px" id="livros-btn-sair"></button>
   </div>
 </div>
 
@@ -325,7 +377,7 @@
     <div id="rec-posto-badge" class="posto-badge"></div>
 
     <div class="section-card">
-      <div class="section-title">Colaborador</div>
+      <div class="section-title" id="rec-sec-colaborador"></div>
       <div class="form-field">
         <label>Nome do Colaborador</label>
         <input type="text" id="rec-nome" readonly style="background:#f8fafc"/>
@@ -347,7 +399,7 @@
     </div>
 
     <div class="section-card">
-      <div class="section-title">Passagem de Serviço</div>
+      <div class="section-title" id="rec-sec-passagem"></div>
       <div class="form-field">
         <label>Recebido de <span class="required">*</span></label>
         <div style="position:relative">
@@ -381,43 +433,44 @@
     </div>
 
     <div class="section-card">
-      <div class="section-title">Texto de Recebimento</div>
+      <div class="section-title" id="rec-sec-texto"></div>
       <div class="form-field">
         <textarea id="rec-texto" rows="5" readonly style="background:#f8fafc;font-size:13px;line-height:1.6"></textarea>
       </div>
       <div id="rec-erro" class="alert alert-error" style="display:none"></div>
       <button class="btn btn-primary" onclick="confirmarRecebimento()">Continuar para Dashboard →</button>
-      <div style="margin-top:10px"><button class="btn btn-outline" onclick="voltarLivros()">← Voltar aos Livros</button></div>
+      <div style="margin-top:10px"><button class="btn btn-outline icon-inline" onclick="voltarLivros()" id="rec-btn-voltar"></button></div>
     </div>
   </div>
 </div>
 
 <!-- ════════════ DASHBOARD ════════════ -->
 <div class="screen dashboard-screen" id="dashboard-screen">
-  <!-- Badge flutuante -->
-  <div class="dashboard-badge" id="dashboard-badge">
-    <div class="card-header">
-      <span class="card-title">Total Ocorrências</span>
-      <span class="card-badge" id="dash-filtro-badge">Todos</span>
+  <div class="dashboard-sidebar">
+    <div class="dashboard-card" id="dashboard-badge">
+      <div class="card-header">
+        <span class="card-title">Total Ocorrências</span>
+        <span class="card-badge" id="dash-filtro-badge">Todos</span>
+      </div>
+      <div class="stats-number" id="dash-total">0</div>
+      <div class="donut-container">
+        <svg id="dash-donut" width="120" height="120" viewBox="0 0 120 120"></svg>
+        <div class="donut-legend" id="dash-legend"></div>
+      </div>
     </div>
-    <div class="stats-number" id="dash-total">0</div>
-    <div class="donut-container">
-      <svg id="dash-donut" width="120" height="120" viewBox="0 0 120 120"></svg>
-      <div class="donut-legend" id="dash-legend"></div>
-    </div>
-    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px">
+    <div class="dashboard-card">
+      <div class="card-title" style="margin-bottom:14px">Status</div>
       <div id="dash-status"></div>
-    </div>
-    <div style="margin-top:12px">
-      <button class="btn btn-outline" onclick="fecharLivro()" style="width:100%;font-size:13px;padding:10px">🚪 Fechar Livro</button>
+      <div style="margin-top:14px">
+        <button class="btn btn-outline icon-inline" onclick="fecharLivro()" style="font-size:13px;padding:10px" id="dash-btn-fechar"></button>
+      </div>
     </div>
   </div>
-  <!-- Conte├║do -->
-  <div class="dashboard-content">
+  <div class="dashboard-main">
     <div class="filter-bar">
       <div class="search-input">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="dash-busca" placeholder="Buscar Ocorrências..." oninput="filtrarDashboard()"/>
+        <span class="search-icon" id="dash-search-icon"></span>
+        <input type="text" id="dash-busca" placeholder="Buscar ocorrências..." oninput="filtrarDashboard()"/>
       </div>
       <select class="filter-select" id="dash-filtro-status" onchange="filtrarDashboard()">
         <option value="">Status</option>
@@ -441,7 +494,7 @@
         <option value="SISTEMAS E TÉCNICOS">Sistemas e Técnicos</option>
         <option value="TESTES E CHECKLISTS">Testes e Checklists</option>
       </select>
-      <button class="btn btn-primary btn-nova" onclick="abrirCadastro()">+ Nova Ocorrência</button>
+      <button class="btn btn-primary btn-nova icon-inline" onclick="abrirCadastro()" id="dash-btn-nova"></button>
     </div>
     <div class="occ-list" id="dash-occ-list"></div>
   </div>
@@ -451,18 +504,17 @@
 <div class="screen cadastro-screen" id="cadastro-screen">
   <div class="form-card">
     <div class="form-card-header">
-      <span class="icon">📄</span>
-      <span class="title">Dados da Ocorrência</span>
+      <span class="title icon-inline" id="cad-header-title"></span>
     </div>
     <div class="form-card-body">
       <div id="cad-erro" class="alert alert-error" style="display:none"></div>
       <div class="form-grid">
         <div class="form-field">
-          <label>Início <span class="required">*</span></label>
+          <label id="cad-label-inicio">Início <span class="required">*</span></label>
           <input type="datetime-local" id="cad-inicio"/>
         </div>
         <div class="form-field">
-          <label>Urgência <span class="required">*</span></label>
+          <label id="cad-label-urgencia">Urgência <span class="required">*</span></label>
           <select id="cad-urgencia">
             <option value="NAO_URGENTE">NÃO URGENTE</option>
             <option value="POUCO_URGENTE">POUCO URGENTE</option>
@@ -474,7 +526,7 @@
       </div>
       <div class="form-grid">
         <div class="form-field">
-          <label>Categoria <span class="required">*</span></label>
+          <label id="cad-label-categoria">Categoria <span class="required">*</span></label>
           <select id="cad-categoria-id">
             <option value="">Selecione...</option>
             <option value="PATRIMONIAL">PATRIMONIAL</option>
@@ -486,21 +538,21 @@
           </select>
         </div>
         <div class="form-field">
-          <label>Local <span class="required">*</span></label>
+          <label id="cad-label-local">Local <span class="required">*</span></label>
           <input type="text" id="cad-local" placeholder="Ex: PORTARIA PRINCIPAL" class="uppercase"/>
         </div>
       </div>
       <div class="form-field">
-        <label>Local - Descrição Adicional</label>
+        <label id="cad-label-local-desc">Local — Descrição Adicional</label>
         <input type="text" id="cad-local-desc" placeholder="Ex: TORRE A - ELEVADOR 02" class="uppercase"/>
       </div>
       <div class="form-field">
-        <label>Descritivo da Ocorrência <span class="required">*</span></label>
+        <label id="cad-label-descritivo">Descritivo da Ocorrência <span class="required">*</span></label>
         <textarea id="cad-descritivo" placeholder="Detalhe o que ocorreu..." class="uppercase"></textarea>
       </div>
       <div class="form-field">
-        <label>Outros Envolvidos</label>
-        <input type="text" id="cad-envolvidos" placeholder="Ex: JOÃO SILVA (SìNDICO), MARIA SANTOS (MORADORA)" class="uppercase"/>
+        <label id="cad-label-envolvidos">Outros Envolvidos</label>
+        <input type="text" id="cad-envolvidos" placeholder="Ex: JOÃO SILVA (SÍNDICO), MARIA SANTOS (MORADORA)" class="uppercase"/>
       </div>
       <div class="checkbox-field">
         <input type="checkbox" id="cad-danos" onchange="toggleDanos()"/>
@@ -508,14 +560,14 @@
       </div>
       <div class="conditional-section hidden" id="cad-danos-section">
         <div class="form-field" style="margin-bottom:0">
-          <label>Descrição do Dano / Prejuázo <span class="required">*</span></label>
+          <label id="cad-label-desc-dano">Descrição do Dano / Prejuízo <span class="required">*</span></label>
           <textarea id="cad-desc-dano" placeholder="Descreva os danos causados..." style="min-height:80px" class="uppercase"></textarea>
         </div>
       </div>
     </div>
     <div class="form-card-footer">
       <button class="btn btn-outline" onclick="cancelarCadastro()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarOcorrencia()">💾 Salvar Ocorrência</button>
+      <button class="btn btn-primary icon-inline" onclick="salvarOcorrencia()" id="cad-btn-salvar"></button>
     </div>
   </div>
 </div>
@@ -531,7 +583,7 @@
     <div id="psg-posto-badge" class="posto-badge"></div>
 
     <div class="section-card">
-      <div class="section-title">Colaborador</div>
+      <div class="section-title" id="psg-sec-colaborador"></div>
       <div class="form-field">
         <label>Nome do Colaborador</label>
         <input type="text" id="psg-nome" readonly style="background:#f8fafc"/>
@@ -553,7 +605,7 @@
     </div>
 
     <div class="section-card">
-      <div class="section-title">Passagem de Serviço</div>
+      <div class="section-title" id="psg-sec-passagem"></div>
       <div class="form-field">
         <label>Passar para <span class="required">*</span></label>
         <div style="position:relative">
@@ -583,13 +635,13 @@
     </div>
 
     <div class="section-card">
-      <div class="section-title">Texto de Passagem</div>
+      <div class="section-title" id="psg-sec-texto"></div>
       <div class="form-field">
         <textarea id="psg-texto" rows="5" readonly style="background:#f8fafc;font-size:13px;line-height:1.6"></textarea>
       </div>
       <div id="psg-erro" class="alert alert-error" style="display:none"></div>
-      <button class="btn btn-primary" onclick="confirmarPassagem()">🚪 Confirmar e Sair</button>
-      <div style="margin-top:10px"><button class="btn btn-outline" onclick="voltarDashboard()">← Voltar ao Dashboard</button></div>
+      <button class="btn btn-primary icon-inline" onclick="confirmarPassagem()" id="psg-btn-confirmar"></button>
+      <div style="margin-top:10px"><button class="btn btn-outline icon-inline" onclick="voltarDashboard()" id="psg-btn-voltar"></button></div>
     </div>
   </div>
 </div>
@@ -611,13 +663,13 @@
     </div>
     <div id="assinar-erro" class="alert alert-error" style="display:none"></div>
     <div style="margin-top:12px">
-      <button class="btn btn-outline" onclick="limparAssinatura()" style="width:auto;padding:8px 14px;font-size:12px">🧹 Limpar</button>
+      <button class="btn btn-outline icon-inline" onclick="limparAssinatura()" style="width:auto;padding:8px 14px;font-size:12px" id="assinar-btn-limpar"></button>
     </div>
     <div style="margin-top:14px">
-      <button class="btn btn-primary" onclick="confirmarAssinatura()">✅ Confirmar Assinatura</button>
+      <button class="btn btn-primary icon-inline" onclick="confirmarAssinatura()" id="assinar-btn-confirmar"></button>
     </div>
     <div style="margin-top:10px">
-      <button class="btn btn-outline" onclick="voltarCadastro()">← Voltar ao Formulário</button>
+      <button class="btn btn-outline icon-inline" onclick="voltarCadastro()" id="assinar-btn-voltar"></button>
     </div>
   </div>
 </div>
@@ -625,34 +677,31 @@
 <!-- ════════════ SUCESSO ════════════ -->
 <div class="screen sucesso-screen" id="sucesso-screen">
   <div class="sucesso-card">
-    <div class="sucesso-icon">✅</div>
+    <div class="sucesso-icon" id="sucesso-icon"></div>
     <h2>Ocorrência Registrada!</h2>
     <p>Sua ocorrência foi registrada com sucesso.<br/>Protocolo: <strong id="sucesso-protocolo"></strong></p>
-    <button class="btn btn-primary" onclick="voltarDashboard()">📋 Voltar ao Dashboard</button>
-    <button class="btn btn-outline" onclick="abrirCadastro()">+ Nova Ocorrência</button>
+    <button class="btn btn-primary icon-inline" onclick="voltarDashboard()" id="sucesso-btn-dashboard"></button>
+    <button class="btn btn-outline icon-inline" onclick="abrirCadastro()" id="sucesso-btn-nova"></button>
   </div>
 </div>
 
 <!-- ════════════ LIVRO FECHADO ════════════ -->
 <div class="screen fechado-screen" id="fechado-screen">
   <div class="sucesso-card">
-    <div class="sucesso-icon">✅</div>
+    <div class="sucesso-icon" id="fechado-icon"></div>
     <h2>Livro Fechado!</h2>
     <p>Sua passagem de serviço foi registrada com sucesso.</p>
-    <button class="btn btn-primary" onclick="abrirNovoLivro()">📋 Abrir Novo Livro</button>
-    <button class="btn btn-outline" onclick="fazerLogout()" style="margin-top:8px">🚪 Sair (Logout)</button>
+    <button class="btn btn-primary icon-inline" onclick="abrirNovoLivro()" id="fechado-btn-novo"></button>
+    <button class="btn btn-outline icon-inline" onclick="fazerLogout()" style="margin-top:8px" id="fechado-btn-sair"></button>
   </div>
 </div>
 
 <!-- ════════════ DETALHE ════════════ -->
 <div class="screen detalhe-screen" id="detalhe-screen">
-  <div class="form-card">
-    <div class="form-card-header">
-      <span class="icon">📋</span>
-      <span class="title">Detalhes da Ocorrência</span>
-    </div>
-    <div class="form-card-body" id="detalhe-body"></div>
-    <div class="form-card-footer" id="detalhe-footer"></div>
+  <div class="detalhe-card">
+    <div class="detalhe-header" id="detalhe-header"></div>
+    <div class="detalhe-body" id="detalhe-body"></div>
+    <div class="detalhe-footer" id="detalhe-footer"></div>
   </div>
 </div>
 
@@ -663,6 +712,39 @@
   var SUPABASE_URL = 'https://xyfllrcdrcvjimzwbfsm.supabase.co';
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5ZmxscmNkcmN2amltendiZnNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzQ4NzUsImV4cCI6MjA5Nzg1MDg3NX0.nHgqNJnfWQW5BTfEWQTK92LRPLqNadiC-xios5zN4_A';
   var SUPABASE_EDGE = SUPABASE_URL + '/functions/v1';
+
+  // ─── ÍCONES (Feather Icons — mesmo padrão visual usado no GSS Desktop) ──
+  var ICONS = {
+    'menu': '<line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>',
+    'arrow-left': '<line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline>',
+    'search': '<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>',
+    'eye': '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>',
+    'eye-off': '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>',
+    'calendar': '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>',
+    'clock': '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>',
+    'alert-triangle': '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>',
+    'file-text': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline>',
+    'map-pin': '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>',
+    'user': '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>',
+    'users': '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
+    'check': '<polyline points="20 6 9 17 4 12"></polyline>',
+    'check-circle': '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>',
+    'x': '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>',
+    'inbox': '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>',
+    'save': '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline>',
+    'log-out': '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>',
+    'rotate-ccw': '<polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>',
+    'plus': '<line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>',
+    'clipboard': '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="2" ry="2"></rect>',
+    'edit': '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>'
+  };
+
+  function icon(name, size) {
+    size = size || 16;
+    var body = ICONS[name];
+    if (!body) return '';
+    return '<svg class="icon" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+  }
 
   // ─── STATE ──────────────────────────────────────────────────────────────
   var usuarioLogado = null;
@@ -744,9 +826,16 @@
       updateHeaderUser();
       // Show back button on non-main screens
       if (['cadastro-screen','passagem-screen','assinar-screen','detalhe-screen'].indexOf(id) !== -1) {
-        document.getElementById('btn-header-back').style.display = 'block';
+        document.getElementById('btn-header-back').style.display = 'flex';
       }
     }
+
+    // Cada tela troca via display:none/flex (sem navegação real de página), então o
+    // navegador mantém a posição de rolagem anterior. Sem isto, ao abrir uma tela mais
+    // curta depois de rolar bastante no Dashboard, a página abre "no meio", parecendo
+    // que o conteúdo anterior ainda está ali embaixo. Resetar o scroll faz cada tela
+    // abrir sempre do topo, como uma página nova.
+    window.scrollTo(0, 0);
   }
 
   function updateHeaderUser() {
@@ -755,8 +844,8 @@
   }
 
   function showErro(el, msg) {
-    el.textContent = msg;
-    el.style.display = 'block';
+    el.innerHTML = icon('alert-triangle', 14) + '<span>' + escapeHtml(msg) + '</span>';
+    el.style.display = 'flex';
   }
 
   function escapeHtml(str) {
@@ -779,6 +868,44 @@
     var hh = String(now.getHours()).padStart(2, '0');
     var mm = String(now.getMinutes()).padStart(2, '0');
     return '#' + y + m + d + '/' + hh + mm + '/' + idPosto;
+  }
+
+  // ─── ÍCONES ESTÁTICOS (preenchidos uma vez no DOMContentLoaded) ────────
+  function initStaticIcons() {
+    document.getElementById('btn-header-back').innerHTML = icon('arrow-left', 18);
+    document.getElementById('pw-eye-toggle').innerHTML = icon('eye', 17);
+    document.getElementById('livros-btn-sair').innerHTML = icon('log-out', 15) + '<span>Sair</span>';
+    document.getElementById('rec-sec-colaborador').innerHTML = icon('user', 15) + '<span>Colaborador</span>';
+    document.getElementById('rec-sec-passagem').innerHTML = icon('users', 15) + '<span>Passagem de Serviço</span>';
+    document.getElementById('rec-sec-texto').innerHTML = icon('file-text', 15) + '<span>Texto de Recebimento</span>';
+    document.getElementById('rec-btn-voltar').innerHTML = icon('arrow-left', 15) + '<span>Voltar aos Livros</span>';
+    document.getElementById('dash-search-icon').innerHTML = icon('search', 15);
+    document.getElementById('dash-btn-fechar').innerHTML = icon('log-out', 15) + '<span>Fechar Livro</span>';
+    document.getElementById('dash-btn-nova').innerHTML = icon('plus', 15) + '<span>Nova Ocorrência</span>';
+    document.getElementById('cad-header-title').innerHTML = icon('file-text', 18) + '<span>Dados da Ocorrência</span>';
+    document.getElementById('cad-label-inicio').innerHTML = icon('calendar', 13) + ' Início <span class="required">*</span>';
+    document.getElementById('cad-label-urgencia').innerHTML = icon('alert-triangle', 13) + ' Urgência <span class="required">*</span>';
+    document.getElementById('cad-label-categoria').innerHTML = icon('file-text', 13) + ' Categoria <span class="required">*</span>';
+    document.getElementById('cad-label-local').innerHTML = icon('map-pin', 13) + ' Local <span class="required">*</span>';
+    document.getElementById('cad-label-local-desc').innerHTML = icon('map-pin', 13) + ' Local — Descrição Adicional';
+    document.getElementById('cad-label-descritivo').innerHTML = icon('file-text', 13) + ' Descritivo da Ocorrência <span class="required">*</span>';
+    document.getElementById('cad-label-envolvidos').innerHTML = icon('users', 13) + ' Outros Envolvidos';
+    document.getElementById('cad-label-desc-dano').innerHTML = icon('alert-triangle', 13) + ' Descrição do Dano / Prejuízo <span class="required">*</span>';
+    document.getElementById('cad-btn-salvar').innerHTML = icon('save', 15) + '<span>Salvar Ocorrência</span>';
+    document.getElementById('psg-sec-colaborador').innerHTML = icon('user', 15) + '<span>Colaborador</span>';
+    document.getElementById('psg-sec-passagem').innerHTML = icon('users', 15) + '<span>Passagem de Serviço</span>';
+    document.getElementById('psg-sec-texto').innerHTML = icon('file-text', 15) + '<span>Texto de Passagem</span>';
+    document.getElementById('psg-btn-confirmar').innerHTML = icon('log-out', 15) + '<span>Confirmar e Sair</span>';
+    document.getElementById('psg-btn-voltar').innerHTML = icon('arrow-left', 15) + '<span>Voltar ao Dashboard</span>';
+    document.getElementById('assinar-btn-limpar').innerHTML = icon('rotate-ccw', 14) + '<span>Limpar</span>';
+    document.getElementById('assinar-btn-confirmar').innerHTML = icon('check-circle', 15) + '<span>Confirmar Assinatura</span>';
+    document.getElementById('assinar-btn-voltar').innerHTML = icon('arrow-left', 15) + '<span>Voltar ao Formulário</span>';
+    document.getElementById('sucesso-icon').innerHTML = icon('check-circle', 56);
+    document.getElementById('sucesso-btn-dashboard').innerHTML = icon('clipboard', 15) + '<span>Voltar ao Dashboard</span>';
+    document.getElementById('sucesso-btn-nova').innerHTML = icon('plus', 15) + '<span>Nova Ocorrência</span>';
+    document.getElementById('fechado-icon').innerHTML = icon('check-circle', 56);
+    document.getElementById('fechado-btn-novo').innerHTML = icon('clipboard', 15) + '<span>Abrir Novo Livro</span>';
+    document.getElementById('fechado-btn-sair').innerHTML = icon('log-out', 15) + '<span>Sair (Logout)</span>';
   }
 
   // ─── INIT ───────────────────────────────────────────────────────────────
@@ -808,8 +935,15 @@
     else if (id === 'detalhe-screen') voltarDashboard();
   };
 
-  // ─── TOGGLE SIDEBAR (MOBILE) ───────────────────────────────────────────
   // ─── LOGIN ──────────────────────────────────────────────────────────────
+  var senhaVisivel = false;
+  window.togglePw = function() {
+    senhaVisivel = !senhaVisivel;
+    var input = document.getElementById('senha-input');
+    input.type = senhaVisivel ? 'text' : 'password';
+    document.getElementById('pw-eye-toggle').innerHTML = icon(senhaVisivel ? 'eye-off' : 'eye', 17);
+  };
+
   window.fazerLogin = async function() {
     var login = (document.getElementById('login-input').value || '').trim();
     var senha = (document.getElementById('senha-input').value || '').trim();
@@ -833,7 +967,7 @@
       var user = body.user;
       if (user.habilitado === false) {
         showScreen('login-screen');
-        showErro(erroEl, 'Seu acesso foi desabilitado. Contacte o administrador.');
+        showErro(erroEl, 'Seu acesso foi desabilitado. Contate o administrador.');
         return;
       }
       usuarioLogado = user;
@@ -852,7 +986,7 @@
   // ─── TROCAR SENHA ──────────────────────────────────────────────────────
   function showTrocarSenha(user) {
     var infoEl = document.getElementById('trocar-user-info');
-    infoEl.innerHTML = 'Olí <strong>' + escapeHtml(user.nome) + '</strong>! Defina uma nova senha.';
+    infoEl.innerHTML = 'Olá <strong>' + escapeHtml(user.nome) + '</strong>! Defina uma nova senha.';
     infoEl.style.display = 'flex';
     showScreen('trocar-senha-screen');
     document.getElementById('nova-senha-input').focus();
@@ -911,12 +1045,12 @@
 
   function showNoLivros(user) {
     var infoEl = document.getElementById('livros-user-info');
-    infoEl.innerHTML = 'Olí <strong>' + escapeHtml(user.nome) + '</strong>';
+    infoEl.innerHTML = '<span>' + icon('user', 13) + 'Olá <strong>' + escapeHtml(user.nome) + '</strong></span>';
     infoEl.style.display = 'flex';
     document.getElementById('livros-lista').innerHTML =
-      '<div class="no-livro"><div class="no-livro-icon">📭</div>' +
-      '<h3 style="font-size:16px;font-weight:700;margin-bottom:8px">Nenhum Livro Disponável</h3>' +
-      '<p style="font-size:13px;color:var(--text2)">Você não possui livro cadastrado.<br/>Contacte o administrador.</p></div>';
+      '<div class="no-livro"><div class="no-livro-icon">' + icon('inbox', 44) + '</div>' +
+      '<h3 style="font-size:16px;font-weight:700;margin-bottom:8px">Nenhum Livro Disponível</h3>' +
+      '<p style="font-size:13px;color:var(--text2)">Você não possui livro cadastrado.<br/>Contate o administrador.</p></div>';
     showScreen('livros-screen');
   }
 
@@ -928,7 +1062,8 @@
     todosDisponiveis.forEach(function(l) {
       if (!seen[l.id_posto]) { seen[l.id_posto] = true; livrosDisponiveis.push(l); }
     });
-    infoEl.innerHTML = 'Olí <strong>' + escapeHtml(user.nome) + '</strong> ─ ' + livrosDisponiveis.length + ' livro(s) disponável(is)';
+    infoEl.innerHTML = '<span>' + icon('user', 13) + 'Olá <strong>' + escapeHtml(user.nome) + '</strong></span>' +
+      '<span>' + livrosDisponiveis.length + ' livro(s) disponível(is)</span>';
     infoEl.style.display = 'flex';
 
     function renderLivro(esc) {
@@ -945,17 +1080,22 @@
           }
         }
       } catch(e) {}
-      var titulo = nomePosto !== esc.id_posto ? nomePosto + ' (' + esc.id_posto + ')' : esc.id_posto;
+      var hojeBadge = esc.eh_hoje ? '<span class="hoje-badge">' + icon('check-circle', 11) + 'Hoje</span>' : '';
       return '<div class="livro-item" onclick="abrirLivro(\'' + esc.id + '\')">' +
-        '<h3>📋 Livro ─ ' + escapeHtml(titulo) + '</h3>' +
-        '<div class="periodo">Acesso: ' + fmtData(esc.data_inicio) + ' → ' + fmtData(esc.data_fim) + '</div>' +
-        '<div class="abrir">Abrir Livro →</div></div>';
+        hojeBadge +
+        '<div class="livro-item-icon">' + icon('clipboard', 20) + '</div>' +
+        '<div class="livro-item-body">' +
+          '<h3>' + escapeHtml(nomePosto) + '</h3>' +
+          '<span class="cc-tag">CC ' + escapeHtml(esc.id_posto) + '</span>' +
+          '<div class="periodo">' + icon('calendar', 12) + fmtData(esc.data_inicio) + ' — ' + fmtData(esc.data_fim) + '</div>' +
+          '<div class="abrir">Abrir Livro →</div>' +
+        '</div></div>';
     }
 
     window._escalasAtivos = livrosDisponiveis;
     document.getElementById('livros-lista').innerHTML = livrosDisponiveis.length > 0
       ? livrosDisponiveis.map(renderLivro).join('')
-      : '<div class="no-livro"><div class="no-livro-icon">📋</div><p style="font-size:13px;color:var(--text2)">Nenhum livro disponável no momento.</p></div>';
+      : '<div class="no-livro"><div class="no-livro-icon">' + icon('clipboard', 36) + '</div><p style="font-size:13px;color:var(--text2)">Nenhum livro disponível no momento.</p></div>';
     showScreen('livros-screen');
   }
 
@@ -1001,7 +1141,7 @@
   // ─── RECEBIMENTO ────────────────────────────────────────────────────────
   window.iniciarRecebimento = function() {
     var recBar = document.getElementById('rec-user-bar');
-    recBar.innerHTML = '<span>👑 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
+    recBar.innerHTML = '<span>' + icon('user', 13) + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
     document.getElementById('rec-nome').value = usuarioLogado.nome || '';
     document.getElementById('rec-re').value = usuarioLogado.re || '';
     document.getElementById('rec-funcao').value = '';
@@ -1025,7 +1165,7 @@
         if (d && d.length > 0 && d[0].nome) nomePosto = d[0].nome + ' (' + (d[0].cc || escalaAtual.id_posto) + ')';
       }
     } catch(e) {}
-    document.getElementById('rec-posto-badge').textContent = '📋 Livro ─ ' + nomePosto;
+    document.getElementById('rec-posto-badge').innerHTML = icon('clipboard', 13) + '<span>Livro — ' + escapeHtml(nomePosto) + '</span>';
 
     carregarColaboradoresPosto();
     carregarMaterialCarga();
@@ -1074,7 +1214,7 @@
     recebimentoDados.materiais.forEach(function(m) {
       var cor = m.estado === 'Bom' ? 'var(--success)' : (m.estado === 'Regular' ? 'var(--warning)' : 'var(--danger)');
       html += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">' +
-        '<span>' + escapeHtml(m.nome) + (m.especificacao ? ' (' + escapeHtml(m.especificacao) + ')' : '') + ' ù ' + m.quantidade + '</span>' +
+        '<span>' + escapeHtml(m.nome) + (m.especificacao ? ' (' + escapeHtml(m.especificacao) + ')' : '') + ' × ' + m.quantidade + '</span>' +
         '<span style="color:' + cor + ';font-weight:600">' + escapeHtml(m.estado || 'Bom') + '</span></div>';
     });
     statusEl.innerHTML = html;
@@ -1142,12 +1282,12 @@
       document.getElementById('rec-texto').value = 'Preencha todos os campos para gerar o texto.';
       return;
     }
-    var condicao = 'em totais condiçÁes de uso';
+    var condicao = 'em totais condições de uso';
     if (recebimentoDados.materialComProblema.length > 0) {
       var itens = recebimentoDados.materialComProblema.map(function(m) { return m.nome + ' (' + m.estado + ')'; }).join(', ');
-      condicao = 'não estava de acordo ─ ' + itens;
+      condicao = 'não estava de acordo — ' + itens;
     }
-    var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', recebi o posto de ' + recebeu + ', ' + cargoRecebeu + ', ' + tipoRecebeu + ' ás ' + horario + ' ciente das normas em vigor, das determinaçÁes e material carga ' + condicao + ', bem como estou ciente das ocorrências registradas no peráodo anterior.';
+    var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', recebi o posto de ' + recebeu + ', ' + cargoRecebeu + ', ' + tipoRecebeu + ' às ' + horario + ' ciente das normas em vigor, das determinações e material carga ' + condicao + ', bem como estou ciente das ocorrências registradas no período anterior.';
     document.getElementById('rec-texto').value = texto;
   }
 
@@ -1219,7 +1359,7 @@
     document.getElementById('dash-legend').innerHTML =
       '<div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div><span class="legend-label">Normais</span><span class="legend-count">' + normais + '</span></div>' +
       '<div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div><span class="legend-label">Urgentes</span><span class="legend-count">' + urgentes + '</span></div>' +
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div><span class="legend-label">Cráticas</span><span class="legend-count">' + criticas + '</span></div>';
+      '<div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div><span class="legend-label">Críticas</span><span class="legend-count">' + criticas + '</span></div>';
 
     // Status
     document.getElementById('dash-status').innerHTML =
@@ -1229,7 +1369,7 @@
     // Cards
     var listEl = document.getElementById('dash-occ-list');
     if (filtered.length === 0) {
-      listEl.innerHTML = '<div class="occ-empty"><div class="occ-empty-icon">📋</div><p>Nenhuma ocorrência encontrada</p></div>';
+      listEl.innerHTML = '<div class="occ-empty"><div class="occ-empty-icon">' + icon('inbox', 36) + '</div><p>Nenhuma ocorrência encontrada</p></div>';
       return;
     }
     listEl.innerHTML = filtered.map(renderOccCard).join('');
@@ -1254,15 +1394,15 @@
     var descTrunc = desc.length > 60 ? desc.substring(0, 60) + '...' : desc;
 
     var danoHtml = occ.danos
-      ? '<div class="occ-card-dano sim"><svg viewBox="0 0 512 512" width="12" height="12" fill="currentColor"><path d="M504 256c0 137-111 248-248 248S8 393 8 256 119 8 256 8s248 111 248 248zm-248 50c-25 0-46 21-46 46s21 46 46 46 46-21 46-46-21-46-46-46zm-44-165l7 136c0 6 5 11 12 11h49c7 0 12-5 11-11l7-136c0-7-6-12-12-12h-63c-7 0-12 5-12 12z"/></svg>SIM</div>'
-      : '<div class="occ-card-dano nao"><svg viewBox="0 0 512 512" width="12" height="12" fill="currentColor"><path d="M504 256c0 137-111 248-248 248S8 393 8 256 119 8 256 8s248 111 248 248zm-248 50c-25 0-46 21-46 46s21 46 46 46 46-21 46-46-21-46-46-46zm-44-165l7 136c0 6 5 11 12 11h49c7 0 12-5 11-11l7-136c0-7-6-12-12-12h-63c-7 0-12 5-12 12z"/></svg>NÃO</div>';
+      ? '<div class="occ-card-dano sim">' + icon('alert-triangle', 12) + 'SIM</div>'
+      : '<div class="occ-card-dano nao">' + icon('check-circle', 12) + 'NÃO</div>';
 
     return '<div class="occ-card" onclick="verDetalhe(\'' + occ.id + '\')">' +
       '<div class="occ-card-stripe ' + urgClass + '"></div>' +
       '<div class="occ-card-main">' +
 
         '<div class="occ-card-header">' +
-          '<div class="occ-card-icon"><svg viewBox="0 0 512 512" width="20" height="20" fill="currentColor"><path d="M256 8a248 248 0 1 0 0 496 248 248 0 0 0 0-496zm0 90c21 0 38 17 38 38s-17 38-38 38-38-17-38-38 17-38 38-38zm44 137l-17 136c0 6-5 11-11 11h-32c-7 0-12-5-11-11l-17-136c-1-6 4-11 11-11h56c7 0 12 5 11 11z"/></svg></div>' +
+          '<div class="occ-card-icon ' + urgClass + '">' + icon('alert-triangle', 20) + '</div>' +
           '<div>' +
             '<div class="occ-card-title">' + escapeHtml(occ.categoria_nome || 'Ocorrência') + '</div>' +
             '<div class="occ-card-protocolo">' + escapeHtml(occ.protocolo) + '</div>' +
@@ -1279,7 +1419,7 @@
         '<div class="occ-card-meta occ-card-mobile">' +
           '<div><div class="occ-card-field-label">Urgência</div><div class="occ-card-field-value"><span class="occ-card-badge ' + urgClass + '">' + urgLabelShort + '</span></div></div>' +
           '<div><div class="occ-card-field-label">Início</div><div class="occ-card-field-value">' + dataInicio + '</div></div>' +
-          '<div><div class="occ-card-field-label">Progresso</div><div class="occ-card-field-value">1/1</div></div>' +
+          '<div><div class="occ-card-field-label">Status</div><div class="occ-card-field-value">' + statusLabel + '</div></div>' +
         '</div>' +
         '<div class="occ-card-meta occ-card-mobile">' +
           '<div><div class="occ-card-field-label">Local</div><div class="occ-card-field-value">' + escapeHtml(occ.local || '-') + '</div></div>' +
@@ -1369,40 +1509,61 @@
     var d = new Date(occ.inicio);
     var dataFmt = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
     var horaFmt = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-    var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Finalizada';
+    var statusAberta = occ.status === 'ABERTA';
+    var statusLabel = statusAberta ? 'Aberta' : 'Finalizada';
+    var urgClass = ({'NAO_URGENTE':'normal','POUCO_URGENTE':'pouco-urgente','URGENTE':'urgente','MUITO_URGENTE':'muito-urgente','EMERGENCIA':'emergencia'})[occ.urgencia] || 'normal';
     var urgLabel = ({'NAO_URGENTE':'Não Urgente','POUCO_URGENTE':'Pouco Urgente','URGENTE':'Urgente','MUITO_URGENTE':'Muito Urgente','EMERGENCIA':'Emergência'})[occ.urgencia] || occ.urgencia;
     var catLabel = occ.categoria_nome || '-';
 
-    var html = '<div class="detalhe-section">' +
-      '<div class="detalhe-section-title">InformaçÁes</div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Protocolo</div><div class="detalhe-value" style="font-family:monospace;font-weight:700">' + escapeHtml(occ.protocolo) + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Data</div><div class="detalhe-value">' + dataFmt + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Hora</div><div class="detalhe-value">' + horaFmt + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Colaborador</div><div class="detalhe-value">' + escapeHtml(occ.colaborador || '-') + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Categoria</div><div class="detalhe-value">' + escapeHtml(catLabel) + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Urgência</div><div class="detalhe-value">' + urgLabel + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Local</div><div class="detalhe-value">' + escapeHtml(occ.local || '-') + (occ.local_descricao ? ' ─ ' + escapeHtml(occ.local_descricao) : '') + '</div></div>' +
-      '<div class="detalhe-field"><div class="detalhe-label">Status</div><div class="detalhe-value"><span class="occ-badge ' + (occ.status === 'ABERTA' ? 'aberta' : 'finalizada') + '">' + statusLabel + '</span></div></div>' +
-      (occ.outros_envolvidos ? '<div class="detalhe-field"><div class="detalhe-label">Envolvidos</div><div class="detalhe-value">' + escapeHtml(occ.outros_envolvidos) + '</div></div>' : '') +
-      '</div>';
+    // Header
+    var headerHtml = '<div class="detalhe-header-top">' +
+      '<div><h2>' + icon('file-text', 18) + '<span>' + escapeHtml(catLabel) + '</span></h2>' +
+      '<div class="subtitle">Protocolo ' + escapeHtml(occ.protocolo) + '</div></div>' +
+      '<div class="detalhe-header-badges">' +
+        '<span class="detalhe-badge-pill urg-' + urgClass + '">' + urgLabel + '</span>' +
+        '<span class="detalhe-badge-pill status-' + (statusAberta ? 'aberta' : 'finalizada') + '">' + statusLabel + '</span>' +
+      '</div></div>';
+    document.getElementById('detalhe-header').innerHTML = headerHtml;
 
-    html += '<div class="detalhe-section"><div class="detalhe-section-title">Descritivo</div><div class="detalhe-box">' + (occ.descritivo || '<em>Sem descritivo</em>') + '</div></div>';
+    // Grid de campos
+    var gridItems = [
+      { icon: 'calendar', label: 'Data', value: dataFmt },
+      { icon: 'clock', label: 'Horário', value: horaFmt },
+      { icon: 'user', label: 'Colaborador', value: escapeHtml(occ.colaborador || '-') },
+      { icon: 'map-pin', label: 'Local', value: escapeHtml(occ.local || '-') }
+    ];
+    if (occ.local_descricao) {
+      gridItems.push({ icon: 'map-pin', label: 'Descrição do Local', value: escapeHtml(occ.local_descricao), span2: true });
+    }
+    var gridHtml = '<div class="detalhe-grid">' + gridItems.map(function(g) {
+      return '<div class="detalhe-grid-item' + (g.span2 ? ' span-2' : '') + '"><div class="dgi-label">' + icon(g.icon, 12) + '<span>' + g.label + '</span></div><div class="dgi-value">' + g.value + '</div></div>';
+    }).join('') + '</div>';
+
+    // Caixa de protocolo em destaque
+    var protocoloHtml = '<div class="detalhe-protocolo-box"><div class="num">' + escapeHtml(occ.protocolo) + '</div><div class="sys">ID do Sistema: ' + escapeHtml(occ.id) + '</div></div>';
+
+    var bodyHtml = gridHtml + protocoloHtml;
+
+    bodyHtml += '<div class="detalhe-section"><div class="detalhe-section-title">' + icon('file-text', 13) + '<span>Descrição da Ocorrência</span></div><div class="detalhe-box">' + (occ.descritivo || '<em>Sem descritivo</em>') + '</div></div>';
+
+    if (occ.outros_envolvidos) {
+      bodyHtml += '<div class="detalhe-section"><div class="detalhe-section-title">' + icon('users', 13) + '<span>Envolvidos</span></div><div class="detalhe-box">' + escapeHtml(occ.outros_envolvidos) + '</div></div>';
+    }
 
     if (occ.danos && occ.descricao_dano) {
-      html += '<div class="detalhe-section"><div class="detalhe-section-title" style="color:var(--danger)">Danos</div><div class="detalhe-box danger">' + escapeHtml(occ.descricao_dano) + '</div></div>';
+      bodyHtml += '<div class="detalhe-section"><div class="detalhe-section-title" style="color:var(--danger)">' + icon('alert-triangle', 13) + '<span>Danos</span></div><div class="detalhe-box danger">' + escapeHtml(occ.descricao_dano) + '</div></div>';
     }
 
     if (occ.assinatura) {
-      html += '<div class="detalhe-section"><div class="detalhe-section-title">Assinatura</div><div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px;display:inline-block"><img src="' + occ.assinatura + '" alt="Assinatura" style="max-width:300px;max-height:150px;display:block"/></div></div>';
+      bodyHtml += '<div class="detalhe-section"><div class="detalhe-section-title">' + icon('edit', 13) + '<span>Assinatura</span></div><div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px;display:inline-block"><img src="' + occ.assinatura + '" alt="Assinatura" style="max-width:300px;max-height:150px;display:block"/></div></div>';
     }
 
-    document.getElementById('detalhe-body').innerHTML = html;
+    document.getElementById('detalhe-body').innerHTML = bodyHtml;
 
     // Footer actions
-    var footerHtml = '<button class="btn btn-outline" onclick="voltarDashboard()" style="flex:1">← Voltar</button>';
-    if (occ.status === 'ABERTA') {
-      footerHtml = '<button class="btn btn-outline" onclick="voltarDashboard()" style="flex:1">← Voltar</button>' +
-        '<button class="btn btn-success" onclick="atualizarStatus(\'' + occ.id + '\', \'FINALIZADA\')" style="flex:1">✅ Finalizar</button>';
+    var footerHtml = '<button class="btn btn-outline icon-inline" onclick="voltarDashboard()">' + icon('arrow-left', 15) + '<span>Voltar</span></button>';
+    if (statusAberta) {
+      footerHtml += '<button class="btn btn-success icon-inline" onclick="atualizarStatus(\'' + occ.id + '\', \'FINALIZADA\')">' + icon('check-circle', 15) + '<span>Finalizar</span></button>';
     }
     document.getElementById('detalhe-footer').innerHTML = footerHtml;
 
@@ -1464,7 +1625,7 @@
     var envolvidos = document.getElementById('cad-envolvidos').value.trim();
     var danos = document.getElementById('cad-danos').checked;
     var descDano = document.getElementById('cad-desc-dano').value.trim();
-    if (!inicio) { showErro(erroEl, 'Informe a data/hora de inácio.'); return; }
+    if (!inicio) { showErro(erroEl, 'Informe a data/hora de início.'); return; }
     if (!catId) { showErro(erroEl, 'Selecione uma categoria.'); return; }
     if (!local) { showErro(erroEl, 'Informe o local.'); return; }
     if (!descritivo) { showErro(erroEl, 'Informe o descritivo da ocorrência.'); return; }
@@ -1586,8 +1747,7 @@
   window.confirmarAssinatura = async function() {
     if (!assinaturaTemPixels) {
       var erroEl = document.getElementById('assinar-erro');
-      erroEl.textContent = 'Por favor, assine antes de confirmar.';
-      erroEl.style.display = 'block';
+      showErro(erroEl, 'Por favor, assine antes de confirmar.');
       return;
     }
     assinaturaAtual = assinaturaCanvas.toDataURL('image/png');
@@ -1636,10 +1796,10 @@
   window.fecharLivro = function() {
     var abertas = ocorrenciasDashboard.filter(function(o) { return o.status === 'ABERTA'; });
     if (abertas.length > 0) {
-      if (!confirm('Hí ' + abertas.length + ' ocorrência(s) em aberto. Deseja fechar mesmo assim?')) return;
+      if (!confirm('Há ' + abertas.length + ' ocorrência(s) em aberto. Deseja fechar mesmo assim?')) return;
     }
     var psgBar = document.getElementById('psg-user-bar');
-    psgBar.innerHTML = '<span>👑 ' + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
+    psgBar.innerHTML = '<span>' + icon('user', 13) + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
     document.getElementById('psg-nome').value = usuarioLogado.nome || '';
     document.getElementById('psg-re').value = usuarioLogado.re || '';
     document.getElementById('psg-funcao').value = '';
@@ -1652,7 +1812,7 @@
     document.getElementById('psg-texto').value = '';
     document.getElementById('psg-erro').style.display = 'none';
     var nomePosto = escalaAtual ? escalaAtual.id_posto : '';
-    document.getElementById('psg-posto-badge').textContent = '📋 Livro ─ ' + nomePosto;
+    document.getElementById('psg-posto-badge').innerHTML = icon('clipboard', 13) + '<span>Livro — ' + escapeHtml(nomePosto) + '</span>';
     carregarColaboradoresPosto();
     configurarBuscaReceptor();
     gerarTextoPassagem();
@@ -1703,7 +1863,7 @@
       document.getElementById('psg-texto').value = 'Preencha todos os campos para gerar o texto.';
       return;
     }
-    var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', passo o posto para ' + receptor + ', ' + cargoReceptor + ', ' + tipoReceptor + ' ás ' + horario + ' juntamente com as normas em vigor, determinaçÁes e material carga em Total CondiçÁes de Uso, bem como as ocorrências registradas no meu peráodo de trabalho.';
+    var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', passo o posto para ' + receptor + ', ' + cargoReceptor + ', ' + tipoReceptor + ' às ' + horario + ' juntamente com as normas em vigor, determinações e material carga em Total Condições de Uso, bem como as ocorrências registradas no meu período de trabalho.';
     document.getElementById('psg-texto').value = texto;
   }
 
@@ -1744,6 +1904,8 @@
     document.getElementById('login-input').value = '';
     document.getElementById('senha-input').value = '';
     document.getElementById('senha-input').type = 'password';
+    senhaVisivel = false;
+    document.getElementById('pw-eye-toggle').innerHTML = icon('eye', 17);
     document.getElementById('login-erro').style.display = 'none';
     document.getElementById('app-header').style.display = 'none';
     showScreen('login-screen');
@@ -1752,6 +1914,7 @@
 
   // ─── ENTER KEY HANDLERS ────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function() {
+    initStaticIcons();
     document.getElementById('senha-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') window.fazerLogin(); });
     document.getElementById('login-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('senha-input').focus(); });
     document.getElementById('confirmar-senha-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') window.trocarSenha(); });
