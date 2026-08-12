@@ -105,6 +105,16 @@
     .no-livro{grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--text2)}
     .no-livro-icon{margin-bottom:12px;color:var(--text3);display:flex;justify-content:center}
 
+    /* ─── CONTROLE DE ACESSO ─── */
+    .acesso-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;display:flex;gap:14px;align-items:center;margin-bottom:12px}
+    .acesso-item-icon{width:40px;height:40px;border-radius:10px;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .acesso-item-body{flex:1;min-width:0}
+    .acesso-item-nome{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}
+    .acesso-item-meta{font-size:12px;color:var(--text2);display:flex;flex-wrap:wrap;gap:4px 12px}
+    .acesso-item-actions{flex-shrink:0}
+    .acesso-item-copiar{background:transparent;border:1.5px solid var(--border);color:var(--primary);font-size:12px;font-weight:700;padding:8px 14px;border-radius:var(--radius-sm);cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+    .acesso-item-copiar:hover{background:var(--primary-light)}
+
     /* ─── RECEBIMENTO ─── */
     .recebimento-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:700px;margin:0 auto}
     .section-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
@@ -156,11 +166,6 @@
     .occ-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);transition:all .15s;cursor:pointer;display:flex;overflow:hidden}
     .occ-card:hover{box-shadow:var(--shadow-md)}
     .occ-card-stripe{width:6px;flex-shrink:0;margin:-16px 0 -16px -16px;margin-right:12px;border-radius:var(--radius) 0 0 var(--radius)}
-    .occ-card-stripe.normal{background:#e5e7eb}
-    .occ-card-stripe.pouco-urgente{background:#38bdf8}
-    .occ-card-stripe.urgente{background:#f97316}
-    .occ-card-stripe.muito-urgente{background:#dc2626}
-    .occ-card-stripe.emergencia{background:var(--danger)}
     .occ-card-main{flex:1;min-width:0;padding:16px}
     .occ-card-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
     .occ-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -466,6 +471,9 @@
       <div style="margin-top:14px">
         <button class="btn btn-outline icon-inline" onclick="fecharLivro()" style="font-size:13px;padding:10px" id="dash-btn-fechar"></button>
       </div>
+      <div style="margin-top:10px" id="dash-btn-acessos-wrap" class="hidden">
+        <button class="btn btn-outline icon-inline" onclick="abrirAcessos()" style="font-size:13px;padding:10px" id="dash-btn-acessos"></button>
+      </div>
     </div>
   </div>
   <div class="dashboard-main">
@@ -570,6 +578,53 @@
     <div class="form-card-footer">
       <button class="btn btn-outline" onclick="cancelarCadastro()">Cancelar</button>
       <button class="btn btn-primary icon-inline" onclick="salvarOcorrencia()" id="cad-btn-salvar"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ CONTROLE DE ACESSO (LISTA) ════════════ -->
+<div class="screen livros-screen" id="acessos-screen">
+  <div style="text-align:center;margin-bottom:20px">
+    <h1 style="font-size:20px;font-weight:800;margin-bottom:4px">Controle de Acesso ao Local</h1>
+    <p style="font-size:13px;color:var(--text2)">Pessoas que acessaram o local neste livro</p>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+    <button class="btn btn-primary icon-inline" style="width:auto;padding:10px 18px" onclick="abrirCadastroAcesso()" id="acessos-btn-novo"></button>
+  </div>
+  <div id="acessos-lista"></div>
+  <div style="margin-top:12px;max-width:300px">
+    <button class="btn btn-outline icon-inline" onclick="voltarDashboard()" id="acessos-btn-voltar"></button>
+  </div>
+</div>
+
+<!-- ════════════ CONTROLE DE ACESSO (CADASTRO) ════════════ -->
+<div class="screen cadastro-screen" id="cadastro-acesso-screen">
+  <div class="form-card">
+    <div class="form-card-header">
+      <span class="title icon-inline" id="acesso-cad-header-title"></span>
+    </div>
+    <div class="form-card-body">
+      <div id="acesso-cad-erro" class="alert alert-error" style="display:none"></div>
+      <div class="form-field">
+        <label id="acesso-cad-label-horario">Horário <span class="required">*</span></label>
+        <input type="datetime-local" id="acesso-cad-horario"/>
+      </div>
+      <div class="form-field">
+        <label id="acesso-cad-label-nome">Nome <span class="required">*</span></label>
+        <input type="text" id="acesso-cad-nome" placeholder="Nome completo" class="uppercase"/>
+      </div>
+      <div class="form-field">
+        <label id="acesso-cad-label-empresa">Empresa <span class="required">*</span></label>
+        <input type="text" id="acesso-cad-empresa" placeholder="Empresa" class="uppercase"/>
+      </div>
+      <div class="form-field">
+        <label id="acesso-cad-label-documento">CPF ou Matrícula/RE <span class="required">*</span></label>
+        <input type="text" id="acesso-cad-documento" placeholder="CPF ou Matrícula/RE"/>
+      </div>
+    </div>
+    <div class="form-card-footer">
+      <button class="btn btn-outline" onclick="cancelarCadastroAcesso()">Cancelar</button>
+      <button class="btn btn-primary icon-inline" onclick="salvarAcesso()" id="acesso-cad-btn-salvar"></button>
     </div>
   </div>
 </div>
@@ -738,7 +793,8 @@
     'rotate-ccw': '<polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>',
     'plus': '<line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>',
     'clipboard': '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="2" ry="2"></rect>',
-    'edit': '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>'
+    'edit': '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>',
+    'briefcase': '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>'
   };
 
   function icon(name, size) {
@@ -752,8 +808,10 @@
   var usuarioLogado = null;
   var escalaAtual = null;
   var recebimentoHabilitadoAtual = false;
+  var controleAcessoHabilitadoAtual = false;
   var abaLivrosAtiva = 'ativos';
   var ocorrenciasDashboard = [];
+  var acessosLocalDashboard = [];
   var _colabPosto = [];
   var recebimentoDados = { materiais: [], materialComProblema: [] };
   var recebimentoTexto = null;
@@ -768,6 +826,7 @@
       localStorage.setItem(SESSION_KEY, JSON.stringify({
         usuario: usuarioLogado,
         recebimentoHabilitado: recebimentoHabilitadoAtual,
+        controleAcessoHabilitado: controleAcessoHabilitadoAtual,
         recebimentoTexto: recebimentoTexto,
         timestamp: Date.now()
       }));
@@ -784,6 +843,7 @@
       if (session && book && (Date.now() - session.timestamp) < SESSION_MAX_AGE) {
         usuarioLogado = session.usuario;
         recebimentoHabilitadoAtual = session.recebimentoHabilitado;
+        controleAcessoHabilitadoAtual = session.controleAcessoHabilitado === true;
         recebimentoTexto = session.recebimentoTexto || null;
         escalaAtual = book;
         return true;
@@ -823,11 +883,11 @@
     if (el) el.classList.add('active');
 
     // Show header for logged-in screens
-    if (['trocar-senha-screen','livros-screen','recebimento-screen','dashboard-screen','cadastro-screen','passagem-screen','assinar-screen','sucesso-screen','detalhe-screen','fechado-screen'].indexOf(id) !== -1) {
+    if (['trocar-senha-screen','livros-screen','recebimento-screen','dashboard-screen','cadastro-screen','passagem-screen','assinar-screen','sucesso-screen','detalhe-screen','fechado-screen','acessos-screen','cadastro-acesso-screen'].indexOf(id) !== -1) {
       document.getElementById('app-header').style.display = 'flex';
       updateHeaderUser();
       // Show back button on non-main screens
-      if (['cadastro-screen','passagem-screen','assinar-screen','detalhe-screen'].indexOf(id) !== -1) {
+      if (['cadastro-screen','passagem-screen','assinar-screen','detalhe-screen','acessos-screen','cadastro-acesso-screen'].indexOf(id) !== -1) {
         document.getElementById('btn-header-back').style.display = 'flex';
       }
     }
@@ -862,6 +922,16 @@
     return p[2] + '/' + p[1] + '/' + p[0];
   }
 
+  function agoraLocalInputStr() {
+    var d = new Date();
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var dd = String(d.getDate()).padStart(2, '0');
+    var hh = String(d.getHours()).padStart(2, '0');
+    var mm = String(d.getMinutes()).padStart(2, '0');
+    return y + '-' + m + '-' + dd + 'T' + hh + ':' + mm;
+  }
+
   function gerarProtocolo(idPosto) {
     var now = new Date();
     var y = now.getFullYear();
@@ -883,7 +953,16 @@
     document.getElementById('rec-btn-voltar').innerHTML = icon('arrow-left', 15) + '<span>Voltar aos Livros</span>';
     document.getElementById('dash-search-icon').innerHTML = icon('search', 15);
     document.getElementById('dash-btn-fechar').innerHTML = icon('log-out', 15) + '<span>Fechar Livro</span>';
+    document.getElementById('dash-btn-acessos').innerHTML = icon('users', 15) + '<span>Controle de Acesso</span>';
     document.getElementById('dash-btn-nova').innerHTML = icon('plus', 15) + '<span>Nova Ocorrência</span>';
+    document.getElementById('acessos-btn-novo').innerHTML = icon('plus', 15) + '<span>Novo Acesso</span>';
+    document.getElementById('acessos-btn-voltar').innerHTML = icon('arrow-left', 15) + '<span>Voltar ao Dashboard</span>';
+    document.getElementById('acesso-cad-header-title').innerHTML = icon('users', 18) + '<span>Registro de Acesso</span>';
+    document.getElementById('acesso-cad-label-horario').innerHTML = icon('calendar', 13) + ' Horário <span class="required">*</span>';
+    document.getElementById('acesso-cad-label-nome').innerHTML = icon('user', 13) + ' Nome <span class="required">*</span>';
+    document.getElementById('acesso-cad-label-empresa').innerHTML = icon('briefcase', 13) + ' Empresa <span class="required">*</span>';
+    document.getElementById('acesso-cad-label-documento').innerHTML = icon('file-text', 13) + ' CPF ou Matrícula/RE <span class="required">*</span>';
+    document.getElementById('acesso-cad-btn-salvar').innerHTML = icon('save', 15) + '<span>Salvar Acesso</span>';
     document.getElementById('cad-header-title').innerHTML = icon('file-text', 18) + '<span>Dados da Ocorrência</span>';
     document.getElementById('cad-label-inicio').innerHTML = icon('calendar', 13) + ' Início <span class="required">*</span>';
     document.getElementById('cad-label-urgencia').innerHTML = icon('alert-triangle', 13) + ' Urgência <span class="required">*</span>';
@@ -935,6 +1014,8 @@
     else if (id === 'assinar-screen') voltarCadastro();
     else if (id === 'passagem-screen') voltarDashboard();
     else if (id === 'detalhe-screen') voltarDashboard();
+    else if (id === 'acessos-screen') voltarDashboard();
+    else if (id === 'cadastro-acesso-screen') abrirAcessos();
   };
 
   // ─── LOGIN ──────────────────────────────────────────────────────────────
@@ -1113,13 +1194,14 @@
     var recebimentoHabilitado = false;
     try {
       var r = new XMLHttpRequest();
-      r.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(escala.id_posto) + '&select=nome,cc,recebimento_servico', false);
+      r.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(escala.id_posto) + '&select=nome,cc,recebimento_servico,controle_acesso', false);
       r.setRequestHeader('apikey', SUPABASE_ANON_KEY);
       r.send();
       if (r.status === 200) {
         var d = JSON.parse(r.responseText);
         if (d && d.length > 0) {
           recebimentoHabilitado = d[0].recebimento_servico === true;
+          controleAcessoHabilitadoAtual = d[0].controle_acesso === true;
         }
       }
     } catch(e) {}
@@ -1322,6 +1404,7 @@
     showScreen('loading-screen');
     document.getElementById('app-header').style.display = 'flex';
     updateHeaderUser();
+    document.getElementById('dash-btn-acessos-wrap').classList.toggle('hidden', !controleAcessoHabilitadoAtual);
     try {
       // Carregar ocorrências do posto
       if (escalaAtual) {
@@ -1332,6 +1415,16 @@
         });
         var body = await resp.json();
         ocorrenciasDashboard = body.ocorrencias || [];
+
+        if (controleAcessoHabilitadoAtual) {
+          var respAc = await fetch(SUPABASE_EDGE + '/acessos-local', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+            body: JSON.stringify({ action: 'listar', id_posto: escalaAtual.id_posto })
+          });
+          var bodyAc = await respAc.json();
+          acessosLocalDashboard = bodyAc.acessos || [];
+        }
       }
       renderDashboard();
       showScreen('dashboard-screen');
@@ -1377,8 +1470,18 @@
     listEl.innerHTML = filtered.map(renderOccCard).join('');
   }
 
+  var CAT_COR = {
+    'PATRIMONIAL': '#8b5cf6',
+    'OPERACIONAL': '#0ea5e9',
+    'CONTROLE DE ACESSO': '#f59e0b',
+    'BOMBEIRO CIVIL': '#dc2626',
+    'SISTEMAS E TÉCNICOS': '#14b8a6',
+    'TESTES E CHECKLISTS': '#64748b'
+  };
+
   function renderOccCard(occ) {
     var urgClass = ({'NAO_URGENTE':'normal','POUCO_URGENTE':'pouco-urgente','URGENTE':'urgente','MUITO_URGENTE':'muito-urgente','EMERGENCIA':'emergencia'})[occ.urgencia] || 'normal';
+    var catCor = CAT_COR[occ.categoria_nome] || '#94a3b8';
     var urgLabel = ({'NAO_URGENTE':'NÃO URGENTE','POUCO_URGENTE':'POUCO URGENTE','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO URGENTE','EMERGENCIA':'EMERGÊNCIA'})[occ.urgencia] || occ.urgencia;
     var urgLabelShort = ({'NAO_URGENTE':'NÃO','POUCO_URGENTE':'POUCO','URGENTE':'URGENTE','MUITO_URGENTE':'MUITO','EMERGENCIA':'EMERGÊNCIA'})[occ.urgencia] || occ.urgencia;
     var statusLabel = occ.status === 'ABERTA' ? 'Aberta' : 'Encerrada';
@@ -1403,7 +1506,7 @@
     var statusValueHtml = '<span class="occ-card-badge ' + (occ.status === 'ABERTA' ? 'status-aberta' : 'status-fechada') + '">' + statusLabel + '</span>';
 
     return '<div class="occ-card" onclick="verDetalhe(\'' + occ.id + '\')">' +
-      '<div class="occ-card-stripe ' + urgClass + '"></div>' +
+      '<div class="occ-card-stripe" style="background:' + catCor + '"></div>' +
       '<div class="occ-card-main">' +
 
         '<div class="occ-card-header">' +
@@ -1595,7 +1698,7 @@
 
   // ─── CADASTRO ───────────────────────────────────────────────────────────
   window.abrirCadastro = function() {
-    document.getElementById('cad-inicio').value = new Date().toISOString().slice(0, 16);
+    document.getElementById('cad-inicio').value = agoraLocalInputStr();
     document.getElementById('cad-urgencia').value = 'NAO_URGENTE';
     document.getElementById('cad-categoria-id').value = '';
     document.getElementById('cad-local').value = '';
@@ -1676,6 +1779,109 @@
 
   window.voltarCadastro = function() { window._passagemTexto = null; showScreen('cadastro-screen'); };
   window.voltarDashboard = function() { window._passagemTexto = null; carregarDashboard(); };
+
+  // ─── CONTROLE DE ACESSO AO LOCAL ────────────────────────────────────────
+  window.abrirAcessos = function() {
+    renderAcessosLista();
+    showScreen('acessos-screen');
+  };
+
+  function renderAcessosLista() {
+    var lista = (acessosLocalDashboard || []).slice().sort(function(a, b) {
+      return new Date(b.horario) - new Date(a.horario);
+    });
+    var listEl = document.getElementById('acessos-lista');
+    if (lista.length === 0) {
+      listEl.innerHTML = '<div class="no-livro"><div class="no-livro-icon">' + icon('users', 36) + '</div><p style="font-size:13px;color:var(--text2)">Nenhum acesso registrado ainda.</p></div>';
+      return;
+    }
+    listEl.innerHTML = lista.map(renderAcessoItem).join('');
+  }
+
+  function renderAcessoItem(a) {
+    var d = new Date(a.horario);
+    var horaFmt = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    return '<div class="acesso-item">' +
+      '<div class="acesso-item-icon">' + icon('user', 18) + '</div>' +
+      '<div class="acesso-item-body">' +
+        '<div class="acesso-item-nome">' + escapeHtml(a.nome) + '</div>' +
+        '<div class="acesso-item-meta">' +
+          '<span>' + icon('calendar', 12) + ' ' + horaFmt + '</span>' +
+          '<span>' + icon('briefcase', 12) + ' ' + escapeHtml(a.empresa) + '</span>' +
+          '<span>' + icon('file-text', 12) + ' ' + escapeHtml(a.documento) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="acesso-item-actions">' +
+        '<button class="acesso-item-copiar" onclick="copiarAcesso(\'' + a.id + '\')">' + icon('clipboard', 13) + '<span>Copiar</span></button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  window.abrirCadastroAcesso = function(copiarDeId) {
+    document.getElementById('acesso-cad-horario').value = agoraLocalInputStr();
+    document.getElementById('acesso-cad-erro').style.display = 'none';
+
+    var origem = null;
+    if (copiarDeId) {
+      origem = (acessosLocalDashboard || []).find(function(x) { return String(x.id) === String(copiarDeId); }) || null;
+    }
+    document.getElementById('acesso-cad-nome').value = origem ? origem.nome : '';
+    document.getElementById('acesso-cad-empresa').value = origem ? origem.empresa : '';
+    document.getElementById('acesso-cad-documento').value = origem ? origem.documento : '';
+
+    showScreen('cadastro-acesso-screen');
+  };
+
+  window.copiarAcesso = function(id) { abrirCadastroAcesso(id); };
+
+  window.cancelarCadastroAcesso = function() { abrirAcessos(); };
+
+  window.salvarAcesso = async function() {
+    var erroEl = document.getElementById('acesso-cad-erro');
+    erroEl.style.display = 'none';
+    var horario = document.getElementById('acesso-cad-horario').value;
+    var nome = document.getElementById('acesso-cad-nome').value.trim();
+    var empresa = document.getElementById('acesso-cad-empresa').value.trim();
+    var documento = document.getElementById('acesso-cad-documento').value.trim();
+    if (!horario) { showErro(erroEl, 'Informe o horário.'); return; }
+    if (!nome) { showErro(erroEl, 'Informe o nome.'); return; }
+    if (!empresa) { showErro(erroEl, 'Informe a empresa.'); return; }
+    if (!documento) { showErro(erroEl, 'Informe o CPF ou Matrícula/RE.'); return; }
+
+    var body = {
+      action: 'salvar',
+      id_posto: escalaAtual.id_posto,
+      id_acesso: usuarioLogado.id,
+      colaborador: usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')',
+      horario: new Date(horario).toISOString(),
+      nome: nome.toUpperCase(),
+      empresa: empresa.toUpperCase(),
+      documento: documento.toUpperCase()
+    };
+
+    try {
+      var resp = await fetch(SUPABASE_EDGE + '/acessos-local', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+        body: JSON.stringify(body)
+      });
+      var result = await resp.json();
+      if (!result.ok) {
+        showErro(erroEl, result.error || 'Erro ao salvar acesso.');
+        return;
+      }
+      var respList = await fetch(SUPABASE_EDGE + '/acessos-local', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+        body: JSON.stringify({ action: 'listar', id_posto: escalaAtual.id_posto })
+      });
+      var bodyList = await respList.json();
+      acessosLocalDashboard = bodyList.acessos || [];
+      abrirAcessos();
+    } catch (err) {
+      showErro(erroEl, 'Erro ao conectar. Tente novamente.');
+    }
+  };
 
   window.abrirNovoLivro = function() {
     limparSessao();
@@ -1903,8 +2109,10 @@
     usuarioLogado = null;
     escalaAtual = null;
     recebimentoHabilitadoAtual = false;
+    controleAcessoHabilitadoAtual = false;
     window._escalasAtivos = [];
     ocorrenciasDashboard = [];
+    acessosLocalDashboard = [];
     limparSessao();
     document.getElementById('login-input').value = '';
     document.getElementById('senha-input').value = '';
