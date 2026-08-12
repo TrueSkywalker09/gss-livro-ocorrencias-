@@ -164,14 +164,15 @@
     .occ-card-main{flex:1;min-width:0;padding:16px}
     .occ-card-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
     .occ-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .occ-card-icon.normal{background:#f1f5f9;color:#64748b}
-    .occ-card-icon.pouco-urgente{background:#e0f2fe;color:#0369a1}
-    .occ-card-icon.urgente{background:#f97316;color:#fff}
-    .occ-card-icon.muito-urgente{background:#dc2626;color:#fff}
-    .occ-card-icon.emergencia{background:var(--danger);color:#fff}
+    .occ-card-icon.normal{background:#f1f5f9;color:#64748b;box-shadow:0 2px 6px rgba(100,116,139,.25)}
+    .occ-card-icon.pouco-urgente{background:#e0f2fe;color:#0369a1;box-shadow:0 2px 6px rgba(3,105,161,.25)}
+    .occ-card-icon.urgente{background:#f97316;color:#fff;box-shadow:0 3px 8px rgba(249,115,22,.4)}
+    .occ-card-icon.muito-urgente{background:#dc2626;color:#fff;box-shadow:0 3px 8px rgba(220,38,38,.4)}
+    .occ-card-icon.emergencia{background:var(--danger);color:#fff;box-shadow:0 3px 8px rgba(185,28,28,.4)}
     .occ-card-title{font-size:15px;font-weight:700;color:#1e293b}
     .occ-card-protocolo{font-size:11px;color:#94a3b8;font-family:'SF Mono',monospace;margin-top:1px}
     .occ-card-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+    .occ-card-meta.occ-card-desktop{grid-template-columns:repeat(5,1fr)}
     .occ-card-field-label{font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;margin-bottom:2px}
     .occ-card-field-value{font-size:12px;color:#334155;font-weight:500}
     .occ-card-badge{display:inline-flex;padding:3px 8px;border-radius:9999px;font-size:10px;font-weight:600}
@@ -180,12 +181,13 @@
     .occ-card-badge.urgente{background:#f97316;color:#fff;border:1px solid #f97316}
     .occ-card-badge.muito-urgente{background:#dc2626;color:#fff;border:1px solid #dc2626}
     .occ-card-badge.emergencia{background:var(--danger);color:#fff;border:1px solid var(--danger)}
+    .occ-card-badge.status-aberta{background:var(--primary-light);color:var(--primary);border:1px solid #c7d2fe}
+    .occ-card-badge.status-fechada{background:var(--success-bg);color:var(--success);border:1px solid var(--success-border)}
     .occ-card-footer{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid #f1f5f9}
     .occ-card-desc{font-size:12px;color:#64748b;line-height:1.5;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:12px}
-    .occ-card-dano{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;flex-shrink:0}
-    .occ-card-dano.sim{color:#b45309}
+    .occ-card-dano{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;flex-shrink:0}
+    .occ-card-dano.sim{color:var(--danger)}
     .occ-card-dano.nao{color:#16a34a}
-    .occ-card-status{font-size:11px;font-weight:600;color:#64748b;flex-shrink:0}
     .occ-card-mobile{display:none}
     .occ-empty{text-align:center;padding:40px 20px;color:var(--text2)}
     .occ-empty-icon{margin-bottom:8px;color:var(--text3)}
@@ -1393,9 +1395,12 @@
     var desc = escapeHtml(occ.descritivo || '');
     var descTrunc = desc.length > 60 ? desc.substring(0, 60) + '...' : desc;
 
+    // Mesmo símbolo de atenção nos dois estados — só muda texto e cor (vermelho
+    // para dano, verde para sem dano), conforme pedido.
     var danoHtml = occ.danos
-      ? '<div class="occ-card-dano sim">' + icon('alert-triangle', 12) + 'SIM</div>'
-      : '<div class="occ-card-dano nao">' + icon('check-circle', 12) + 'NÃO</div>';
+      ? '<div class="occ-card-dano sim">' + icon('alert-triangle', 12) + 'DANO</div>'
+      : '<div class="occ-card-dano nao">' + icon('alert-triangle', 12) + 'SEM DANO</div>';
+    var statusValueHtml = '<span class="occ-card-badge ' + (occ.status === 'ABERTA' ? 'status-aberta' : 'status-fechada') + '">' + statusLabel + '</span>';
 
     return '<div class="occ-card" onclick="verDetalhe(\'' + occ.id + '\')">' +
       '<div class="occ-card-stripe ' + urgClass + '"></div>' +
@@ -1414,12 +1419,13 @@
           '<div><div class="occ-card-field-label">Início</div><div class="occ-card-field-value">' + dataInicio + '</div></div>' +
           '<div><div class="occ-card-field-label">Término</div><div class="occ-card-field-value">' + termStr + '</div></div>' +
           '<div><div class="occ-card-field-label">Local</div><div class="occ-card-field-value">' + escapeHtml(occ.local || '-') + '</div></div>' +
+          '<div><div class="occ-card-field-label">Status</div><div class="occ-card-field-value">' + statusValueHtml + '</div></div>' +
         '</div>' +
 
         '<div class="occ-card-meta occ-card-mobile">' +
           '<div><div class="occ-card-field-label">Urgência</div><div class="occ-card-field-value"><span class="occ-card-badge ' + urgClass + '">' + urgLabelShort + '</span></div></div>' +
           '<div><div class="occ-card-field-label">Início</div><div class="occ-card-field-value">' + dataInicio + '</div></div>' +
-          '<div><div class="occ-card-field-label">Status</div><div class="occ-card-field-value">' + statusLabel + '</div></div>' +
+          '<div><div class="occ-card-field-label">Status</div><div class="occ-card-field-value">' + statusValueHtml + '</div></div>' +
         '</div>' +
         '<div class="occ-card-meta occ-card-mobile">' +
           '<div><div class="occ-card-field-label">Local</div><div class="occ-card-field-value">' + escapeHtml(occ.local || '-') + '</div></div>' +
@@ -1430,7 +1436,6 @@
         '<div class="occ-card-footer">' +
           '<div class="occ-card-desc"><strong>Descrição:</strong> ' + descTrunc + '</div>' +
           danoHtml +
-          '<div class="occ-card-status">' + statusLabel + '</div>' +
         '</div>' +
 
       '</div>' +
