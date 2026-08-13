@@ -2163,6 +2163,15 @@
     if (abertas.length > 0) {
       if (!confirm('Há ' + abertas.length + ' ocorrência(s) em aberto. Deseja fechar mesmo assim?')) return;
     }
+
+    // Passagem de Serviço acompanha o toggle "Recebimento de Serviço" do
+    // posto (configurado no painel admin): se o posto não usa recebimento,
+    // também não exige o formulário de passagem ao fechar — fecha direto.
+    if (!recebimentoHabilitadoAtual) {
+      fecharLivroDireto();
+      return;
+    }
+
     var psgBar = document.getElementById('psg-user-bar');
     psgBar.innerHTML = '<span>' + icon('user', 13) + escapeHtml(usuarioLogado.nome) + '</span><span>RE: ' + escapeHtml(usuarioLogado.re || '-') + '</span>';
     document.getElementById('psg-nome').value = usuarioLogado.nome || '';
@@ -2183,6 +2192,25 @@
     gerarTextoPassagem();
     showScreen('passagem-screen');
   };
+
+  async function fecharLivroDireto() {
+    try {
+      await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+        body: JSON.stringify({
+          action: 'salvar-passagem',
+          id_posto: escalaAtual ? escalaAtual.id_posto : null,
+          id_acesso: usuarioLogado ? usuarioLogado.id : null,
+          colaborador: usuarioLogado ? usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')' : '',
+          recebimento: null,
+          texto: 'Plantão encerrado (posto sem passagem de serviço obrigatória).',
+          assinatura: null
+        })
+      });
+    } catch (e) { /* continue even if save fails */ }
+    showScreen('fechado-screen');
+  }
 
   function configurarBuscaReceptor() {
     var input = document.getElementById('psg-busca-receptor');
