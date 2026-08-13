@@ -26,7 +26,7 @@
     /* ─── HEADER ─── */
     .app-header{position:sticky;top:0;left:0;right:0;height:56px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;align-items:center;padding:0 16px;z-index:100;gap:12px}
     .app-header .logo{display:flex;align-items:center;gap:8px;text-decoration:none}
-    .app-header .logo-icon{width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800}
+    .app-header .logo-icon{width:32px;height:32px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800;padding:3px;box-sizing:border-box;box-shadow:0 0 0 1px var(--border)}
     .app-header .logo-text{font-size:14px;font-weight:700;color:var(--text);line-height:1.2}
     .app-header .logo-text span{display:block;font-size:11px;color:var(--text2);font-weight:400}
     .app-header .btn-back{background:none;border:none;cursor:pointer;color:var(--text);padding:6px;border-radius:var(--radius-sm);display:none;align-items:center;justify-content:center}
@@ -114,6 +114,13 @@
     .acesso-item-actions{flex-shrink:0}
     .acesso-item-copiar{background:transparent;border:1.5px solid var(--border);color:var(--primary);font-size:12px;font-weight:700;padding:8px 14px;border-radius:var(--radius-sm);cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
     .acesso-item-copiar:hover{background:var(--primary-light)}
+
+    /* ─── MATERIAL DE CARGA ─── */
+    .material-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:12px}
+    .material-item-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .material-item-select{width:auto;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--card);color:var(--text)}
+    .material-obs{margin-top:12px}
+    .material-obs textarea{width:100%;min-height:70px;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;resize:vertical}
 
     /* ─── RECEBIMENTO ─── */
     .recebimento-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:700px;margin:0 auto}
@@ -303,7 +310,7 @@
 <header class="app-header" id="app-header">
   <button class="btn-back" id="btn-header-back" onclick="headerBack()" aria-label="Voltar"></button>
   <a class="logo" href="#">
-    <div class="logo-icon">G</div>
+    <div class="logo-icon"><img src="logo-gss.png" alt="GSS" style="width:100%;height:100%;object-fit:contain"/></div>
     <div class="logo-text">GSS<span>Livro de Ocorrências</span></div>
   </a>
   <div class="user-info" id="header-user"></div>
@@ -370,6 +377,18 @@
   <div class="livros-grid" id="livros-lista"></div>
   <div style="margin-top:22px;text-align:center">
     <button class="btn btn-outline icon-inline" onclick="fazerLogout()" style="width:auto;padding:10px 22px" id="livros-btn-sair"></button>
+  </div>
+</div>
+
+<!-- ════════════ MATERIAL DE CARGA (AO ABRIR O LIVRO) ════════════ -->
+<div class="screen livros-screen" id="material-screen">
+  <div style="text-align:center;margin-bottom:20px">
+    <h1 style="font-size:20px;font-weight:800;margin-bottom:4px">Material de Carga do Posto</h1>
+    <p style="font-size:13px;color:var(--text2)">Confira o estado de cada item. Se alterar o status, é obrigatório informar uma observação.</p>
+  </div>
+  <div id="material-lista"></div>
+  <div style="margin-top:20px;max-width:300px">
+    <button class="btn btn-primary icon-inline" onclick="confirmarMaterialCarga()" id="material-btn-continuar"></button>
   </div>
 </div>
 
@@ -812,6 +831,7 @@
   var abaLivrosAtiva = 'ativos';
   var ocorrenciasDashboard = [];
   var acessosLocalDashboard = [];
+  var materiaisLivroAtual = [];
   var _colabPosto = [];
   var recebimentoDados = { materiais: [], materialComProblema: [] };
   var recebimentoTexto = null;
@@ -883,7 +903,7 @@
     if (el) el.classList.add('active');
 
     // Show header for logged-in screens
-    if (['trocar-senha-screen','livros-screen','recebimento-screen','dashboard-screen','cadastro-screen','passagem-screen','assinar-screen','sucesso-screen','detalhe-screen','fechado-screen','acessos-screen','cadastro-acesso-screen'].indexOf(id) !== -1) {
+    if (['trocar-senha-screen','livros-screen','recebimento-screen','material-screen','dashboard-screen','cadastro-screen','passagem-screen','assinar-screen','sucesso-screen','detalhe-screen','fechado-screen','acessos-screen','cadastro-acesso-screen'].indexOf(id) !== -1) {
       document.getElementById('app-header').style.display = 'flex';
       updateHeaderUser();
       // Show back button on non-main screens
@@ -922,8 +942,7 @@
     return p[2] + '/' + p[1] + '/' + p[0];
   }
 
-  function agoraLocalInputStr() {
-    var d = new Date();
+  function toLocalInputStr(d) {
     var y = d.getFullYear();
     var m = String(d.getMonth() + 1).padStart(2, '0');
     var dd = String(d.getDate()).padStart(2, '0');
@@ -931,6 +950,8 @@
     var mm = String(d.getMinutes()).padStart(2, '0');
     return y + '-' + m + '-' + dd + 'T' + hh + ':' + mm;
   }
+
+  function agoraLocalInputStr() { return toLocalInputStr(new Date()); }
 
   function gerarProtocolo(idPosto) {
     var now = new Date();
@@ -963,6 +984,7 @@
     document.getElementById('acesso-cad-label-empresa').innerHTML = icon('briefcase', 13) + ' Empresa <span class="required">*</span>';
     document.getElementById('acesso-cad-label-documento').innerHTML = icon('file-text', 13) + ' CPF ou Matrícula/RE <span class="required">*</span>';
     document.getElementById('acesso-cad-btn-salvar').innerHTML = icon('save', 15) + '<span>Salvar Acesso</span>';
+    document.getElementById('material-btn-continuar').innerHTML = icon('check-circle', 15) + '<span>Continuar</span>';
     document.getElementById('cad-header-title').innerHTML = icon('file-text', 18) + '<span>Dados da Ocorrência</span>';
     document.getElementById('cad-label-inicio').innerHTML = icon('calendar', 13) + ' Início <span class="required">*</span>';
     document.getElementById('cad-label-urgencia').innerHTML = icon('alert-triangle', 13) + ' Urgência <span class="required">*</span>';
@@ -1010,7 +1032,7 @@
     var active = document.querySelector('.screen.active');
     if (!active) return;
     var id = active.id;
-    if (id === 'cadastro-screen') voltarDashboard();
+    if (id === 'cadastro-screen') cancelarCadastro();
     else if (id === 'assinar-screen') voltarCadastro();
     else if (id === 'passagem-screen') voltarDashboard();
     else if (id === 'detalhe-screen') voltarDashboard();
@@ -1205,21 +1227,111 @@
         }
       }
     } catch(e) {}
+    recebimentoHabilitadoAtual = recebimentoHabilitado;
 
-    if (recebimentoHabilitado) {
-      recebimentoHabilitadoAtual = true;
+    materiaisLivroAtual = [];
+    try {
+      var rm = new XMLHttpRequest();
+      rm.open('GET', SUPABASE_URL + '/rest/v1/gss_material_carga?id_posto=eq.' + encodeURIComponent(escala.id_posto) + '&select=id,nome,especificacao,quantidade,estado,observacao', false);
+      rm.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      rm.send();
+      if (rm.status === 200) {
+        var mats = JSON.parse(rm.responseText);
+        if (mats && mats.length > 0) {
+          mats.forEach(function(m) { m._estadoOriginal = m.estado || 'Bom'; if (!m.estado) m.estado = 'Bom'; });
+          materiaisLivroAtual = mats;
+        }
+      }
+    } catch(e) {}
+
+    if (materiaisLivroAtual.length > 0) {
+      abrirMaterialCarga();
+    } else {
+      _continuarAposMaterial();
+    }
+  };
+
+  function _continuarAposMaterial() {
+    if (recebimentoHabilitadoAtual) {
       iniciarRecebimento();
     } else {
-      recebimentoHabilitadoAtual = false;
       salvarSessao();
       carregarDashboard();
     }
-  };
+  }
 
   window.voltarLivros = function() {
     escalaAtual = null;
     limparSessao();
     carregarLivros(usuarioLogado);
+  };
+
+  // ─── MATERIAL DE CARGA (checkpoint ao abrir o livro) ───────────────────
+  window.abrirMaterialCarga = function() {
+    renderMaterialLista();
+    showScreen('material-screen');
+  };
+
+  function renderMaterialLista() {
+    document.getElementById('material-lista').innerHTML = materiaisLivroAtual.map(renderMaterialItem).join('');
+  }
+
+  function renderMaterialItem(m) {
+    var opts = ['Bom', 'Regular', 'Ruim', 'Inativo'].map(function(op) {
+      return '<option value="' + op + '"' + (m.estado === op ? ' selected' : '') + '>' + op + '</option>';
+    }).join('');
+    var mudou = m.estado !== m._estadoOriginal;
+    return '<div class="material-item">' +
+      '<div class="material-item-row">' +
+        '<div>' +
+          '<div class="acesso-item-nome">' + escapeHtml(m.nome) + (m.especificacao ? ' — ' + escapeHtml(m.especificacao) : '') + '</div>' +
+          '<div class="acesso-item-meta"><span>Qtd: ' + (m.quantidade || 1) + '</span></div>' +
+        '</div>' +
+        '<select class="material-item-select" onchange="onMudarEstadoMaterial(\'' + m.id + '\', this.value)">' + opts + '</select>' +
+      '</div>' +
+      '<div class="material-obs' + (mudou ? '' : ' hidden') + '" id="material-obs-wrap-' + m.id + '">' +
+        '<textarea placeholder="O que não está conforme?" oninput="onObservacaoMaterial(\'' + m.id + '\', this.value)">' + escapeHtml(m.observacao || '') + '</textarea>' +
+      '</div>' +
+    '</div>';
+  }
+
+  window.onMudarEstadoMaterial = function(id, novoEstado) {
+    var m = materiaisLivroAtual.find(function(x) { return String(x.id) === String(id); });
+    if (!m) return;
+    m.estado = novoEstado;
+    var mudou = m.estado !== m._estadoOriginal;
+    document.getElementById('material-obs-wrap-' + id).classList.toggle('hidden', !mudou);
+  };
+
+  window.onObservacaoMaterial = function(id, valor) {
+    var m = materiaisLivroAtual.find(function(x) { return String(x.id) === String(id); });
+    if (m) m.observacao = valor;
+  };
+
+  window.confirmarMaterialCarga = function() {
+    var alterados = materiaisLivroAtual.filter(function(m) { return m.estado !== m._estadoOriginal; });
+    var semObservacao = alterados.filter(function(m) { return !(m.observacao && m.observacao.trim()); });
+    if (semObservacao.length > 0) {
+      alert('Informe a observação do que não está conforme para: ' + semObservacao.map(function(m) { return m.nome; }).join(', '));
+      return;
+    }
+    var erro = false;
+    alterados.forEach(function(m) {
+      try {
+        var r = new XMLHttpRequest();
+        r.open('PATCH', SUPABASE_URL + '/rest/v1/gss_material_carga?id=eq.' + encodeURIComponent(m.id), false);
+        r.setRequestHeader('Content-Type', 'application/json');
+        r.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+        r.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_ANON_KEY);
+        r.send(JSON.stringify({ estado: m.estado, observacao: m.observacao ? m.observacao.trim().toUpperCase() : null }));
+        if (r.status >= 400) erro = true;
+      } catch (e) { erro = true; }
+    });
+    if (erro) {
+      alert('Erro ao salvar as alterações de material. Tente novamente.');
+      return;
+    }
+    _continuarAposMaterial();
   };
 
   // ─── RECEBIMENTO ────────────────────────────────────────────────────────
@@ -1669,7 +1781,8 @@
     document.getElementById('detalhe-body').innerHTML = bodyHtml;
 
     // Footer actions
-    var footerHtml = '<button class="btn btn-outline icon-inline" onclick="voltarDashboard()">' + icon('arrow-left', 15) + '<span>Voltar</span></button>';
+    var footerHtml = '<button class="btn btn-outline icon-inline" onclick="voltarDashboard()">' + icon('arrow-left', 15) + '<span>Voltar</span></button>' +
+      '<button class="btn btn-outline icon-inline" onclick="abrirCadastro(\'' + occ.id + '\')">' + icon('edit', 15) + '<span>Editar</span></button>';
     if (statusAberta) {
       footerHtml += '<button class="btn btn-success icon-inline" onclick="atualizarStatus(\'' + occ.id + '\', \'FINALIZADA\')">' + icon('check-circle', 15) + '<span>Finalizar</span></button>';
     }
@@ -1697,22 +1810,36 @@
   };
 
   // ─── CADASTRO ───────────────────────────────────────────────────────────
-  window.abrirCadastro = function() {
-    document.getElementById('cad-inicio').value = agoraLocalInputStr();
-    document.getElementById('cad-urgencia').value = 'NAO_URGENTE';
-    document.getElementById('cad-categoria-id').value = '';
-    document.getElementById('cad-local').value = '';
-    document.getElementById('cad-local-desc').value = '';
-    document.getElementById('cad-descritivo').value = '';
-    document.getElementById('cad-envolvidos').value = '';
-    document.getElementById('cad-danos').checked = false;
-    document.getElementById('cad-danos-section').classList.add('hidden');
-    document.getElementById('cad-desc-dano').value = '';
+  // Sem editId: formulário de nova ocorrência. Com editId: reaproveita a
+  // mesma tela para corrigir uma ocorrência já registrada (aberta a partir
+  // do botão "Editar" na tela de detalhe).
+  window.abrirCadastro = function(editId) {
+    window._editandoOcorrenciaId = editId || null;
+    var occ = editId
+      ? (ocorrenciasDashboard || []).find(function(x) { return String(x.id) === String(editId); })
+      : null;
+
+    document.getElementById('cad-inicio').value = occ ? toLocalInputStr(new Date(occ.inicio)) : agoraLocalInputStr();
+    document.getElementById('cad-urgencia').value = occ ? occ.urgencia : 'NAO_URGENTE';
+    document.getElementById('cad-categoria-id').value = occ ? (occ.categoria_nome || '') : '';
+    document.getElementById('cad-local').value = occ ? (occ.local || '') : '';
+    document.getElementById('cad-local-desc').value = occ ? (occ.local_descricao || '') : '';
+    document.getElementById('cad-descritivo').value = occ ? (occ.descritivo || '') : '';
+    document.getElementById('cad-envolvidos').value = occ ? (occ.outros_envolvidos || '') : '';
+    document.getElementById('cad-danos').checked = !!(occ && occ.danos);
+    document.getElementById('cad-danos-section').classList.toggle('hidden', !(occ && occ.danos));
+    document.getElementById('cad-desc-dano').value = occ ? (occ.descricao_dano || '') : '';
     document.getElementById('cad-erro').style.display = 'none';
+    document.getElementById('cad-header-title').innerHTML = icon('file-text', 18) + '<span>' + (editId ? 'Editar Ocorrência' : 'Dados da Ocorrência') + '</span>';
+    document.getElementById('cad-btn-salvar').innerHTML = icon('save', 15) + '<span>' + (editId ? 'Salvar Alterações' : 'Salvar Ocorrência') + '</span>';
     showScreen('cadastro-screen');
   };
 
-  window.cancelarCadastro = function() { voltarDashboard(); };
+  window.cancelarCadastro = function() {
+    var editId = window._editandoOcorrenciaId;
+    window._editandoOcorrenciaId = null;
+    if (editId) { verDetalhe(editId); } else { voltarDashboard(); }
+  };
 
   window.toggleDanos = function() {
     var checked = document.getElementById('cad-danos').checked;
@@ -1739,25 +1866,40 @@
     if (!descritivo) { showErro(erroEl, 'Informe o descritivo da ocorrência.'); return; }
     if (danos && !descDano) { showErro(erroEl, 'Descreva os danos causados.'); return; }
 
-    var body = {
-      action: 'salvar',
-      id_posto: escalaAtual.id_posto,
-      id_acesso: usuarioLogado.id,
-      colaborador: usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')',
-      inicio: new Date(inicio).toISOString(),
-      urgencia: urgencia,
-      categoria_id: null,
-      categoria_nome: catId,
-      local: local.toUpperCase(),
-      local_descricao: localDesc ? localDesc.toUpperCase() : null,
-      descritivo: descritivo.toUpperCase(),
-      outros_envolvidos: envolvidos ? envolvidos.toUpperCase() : null,
-      danos: danos,
-      descricao_dano: descDano ? descDano.toUpperCase() : null,
-      recebimento: null,
-      passagem: null,
-      assinatura: null
-    };
+    var editId = window._editandoOcorrenciaId;
+    var body = editId
+      ? {
+          action: 'editar',
+          id: editId,
+          inicio: new Date(inicio).toISOString(),
+          urgencia: urgencia,
+          categoria_nome: catId,
+          local: local.toUpperCase(),
+          local_descricao: localDesc ? localDesc.toUpperCase() : null,
+          descritivo: descritivo.toUpperCase(),
+          outros_envolvidos: envolvidos ? envolvidos.toUpperCase() : null,
+          danos: danos,
+          descricao_dano: descDano ? descDano.toUpperCase() : null
+        }
+      : {
+          action: 'salvar',
+          id_posto: escalaAtual.id_posto,
+          id_acesso: usuarioLogado.id,
+          colaborador: usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')',
+          inicio: new Date(inicio).toISOString(),
+          urgencia: urgencia,
+          categoria_id: null,
+          categoria_nome: catId,
+          local: local.toUpperCase(),
+          local_descricao: localDesc ? localDesc.toUpperCase() : null,
+          descritivo: descritivo.toUpperCase(),
+          outros_envolvidos: envolvidos ? envolvidos.toUpperCase() : null,
+          danos: danos,
+          descricao_dano: descDano ? descDano.toUpperCase() : null,
+          recebimento: null,
+          passagem: null,
+          assinatura: null
+        };
 
     try {
       var resp = await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
@@ -1767,11 +1909,23 @@
       });
       var result = await resp.json();
       if (!result.ok) {
-        showErro(erroEl, result.error || 'Erro ao salvar ocorrência.');
+        showErro(erroEl, result.error || (editId ? 'Erro ao salvar alterações.' : 'Erro ao salvar ocorrência.'));
         return;
       }
-      document.getElementById('sucesso-protocolo').textContent = result.protocolo || '';
-      showScreen('sucesso-screen');
+      window._editandoOcorrenciaId = null;
+      if (editId) {
+        var respList = await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+          body: JSON.stringify({ action: 'listar', id_posto: escalaAtual.id_posto })
+        });
+        var bodyList = await respList.json();
+        ocorrenciasDashboard = bodyList.ocorrencias || [];
+        verDetalhe(editId);
+      } else {
+        document.getElementById('sucesso-protocolo').textContent = result.protocolo || '';
+        showScreen('sucesso-screen');
+      }
     } catch (err) {
       showErro(erroEl, 'Erro ao conectar. Tente novamente.');
     }
