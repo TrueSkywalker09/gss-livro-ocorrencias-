@@ -1794,6 +1794,11 @@
   window.fecharDetalhe = function() { voltarDashboard(); };
 
   window.atualizarStatus = async function(id, status) {
+    // Trava contra duplo-clique: sem isso, dois cliques rápidos no "Finalizar"
+    // disparam duas chamadas antes da tela recarregar, gerando (entre outras
+    // coisas) dois emails de notificação para a mesma ocorrência.
+    if (window._statusAtualizando) return;
+    window._statusAtualizando = true;
     try {
       var resp = await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
         method: 'POST',
@@ -1806,6 +1811,8 @@
       }
     } catch (err) {
       alert('Erro ao atualizar status.');
+    } finally {
+      window._statusAtualizando = false;
     }
   };
 
@@ -1901,6 +1908,13 @@
           assinatura: null
         };
 
+    // Trava contra duplo-clique: sem isso, cliques rápidos em "Salvar
+    // Ocorrência" (delay de rede) registram a mesma ocorrência duas vezes.
+    var btnSalvar = document.getElementById('cad-btn-salvar');
+    if (btnSalvar) {
+      if (btnSalvar.disabled) return;
+      btnSalvar.disabled = true;
+    }
     try {
       var resp = await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
         method: 'POST',
@@ -1928,6 +1942,8 @@
       }
     } catch (err) {
       showErro(erroEl, 'Erro ao conectar. Tente novamente.');
+    } finally {
+      if (btnSalvar) btnSalvar.disabled = false;
     }
   };
 
@@ -2115,27 +2131,39 @@
       showErro(erroEl, 'Por favor, assine antes de confirmar.');
       return;
     }
-    assinaturaAtual = assinaturaCanvas.toDataURL('image/png');
-    if (window._passagemTexto) {
-      // Passagem: save to gss_passagens_servico, then logout
-      try {
-        await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-          body: JSON.stringify({
-            action: 'salvar-passagem',
-            id_posto: escalaAtual ? escalaAtual.id_posto : null,
-            id_acesso: usuarioLogado ? usuarioLogado.id : null,
-            colaborador: usuarioLogado ? usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')' : '',
-            recebimento: recebimentoTexto || null,
-            texto: window._passagemTexto,
-            assinatura: assinaturaAtual
-          })
-        });
-      } catch (e) { /* continue even if save fails */ }
-      showScreen('fechado-screen');
-    } else {
-      atualizarOcorrenciaAssinatura();
+    // Trava contra duplo-clique: este botão tanto fecha o livro (salvar-
+    // passagem, que dispara o email de notificação) quanto assina uma
+    // ocorrência — cliques repetidos duplicavam o envio em ambos os casos.
+    var btnConfirmar = document.getElementById('assinar-btn-confirmar');
+    if (btnConfirmar) {
+      if (btnConfirmar.disabled) return;
+      btnConfirmar.disabled = true;
+    }
+    try {
+      assinaturaAtual = assinaturaCanvas.toDataURL('image/png');
+      if (window._passagemTexto) {
+        // Passagem: save to gss_passagens_servico, then logout
+        try {
+          await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+            body: JSON.stringify({
+              action: 'salvar-passagem',
+              id_posto: escalaAtual ? escalaAtual.id_posto : null,
+              id_acesso: usuarioLogado ? usuarioLogado.id : null,
+              colaborador: usuarioLogado ? usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')' : '',
+              recebimento: recebimentoTexto || null,
+              texto: window._passagemTexto,
+              assinatura: assinaturaAtual
+            })
+          });
+        } catch (e) { /* continue even if save fails */ }
+        showScreen('fechado-screen');
+      } else {
+        await atualizarOcorrenciaAssinatura();
+      }
+    } finally {
+      if (btnConfirmar) btnConfirmar.disabled = false;
     }
   };
 
@@ -2168,7 +2196,15 @@
     // posto (configurado no painel admin): se o posto não usa recebimento,
     // também não exige o formulário de passagem ao fechar — fecha direto.
     if (!recebimentoHabilitadoAtual) {
-      fecharLivroDireto();
+      // Pula o formulário de passagem (função/tipo/receptor etc — não se
+      // aplica a este posto), mas ainda exige a assinatura do colaborador
+      // antes de fechar. Reaproveita o mesmo mecanismo de confirmarPassagem:
+      // confirmarAssinatura() já sabe submeter salvar-passagem quando
+      // window._passagemTexto está definido.
+      window._passagemTexto = 'Plantão encerrado (posto sem passagem de serviço obrigatória).';
+      document.getElementById('assinar-resumo').innerHTML = '<strong>Encerramento do Plantão</strong><br/>Confirme com sua assinatura para fechar o livro.';
+      initAssinatura();
+      showScreen('assinar-screen');
       return;
     }
 
@@ -2192,25 +2228,6 @@
     gerarTextoPassagem();
     showScreen('passagem-screen');
   };
-
-  async function fecharLivroDireto() {
-    try {
-      await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-        body: JSON.stringify({
-          action: 'salvar-passagem',
-          id_posto: escalaAtual ? escalaAtual.id_posto : null,
-          id_acesso: usuarioLogado ? usuarioLogado.id : null,
-          colaborador: usuarioLogado ? usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')' : '',
-          recebimento: null,
-          texto: 'Plantão encerrado (posto sem passagem de serviço obrigatória).',
-          assinatura: null
-        })
-      });
-    } catch (e) { /* continue even if save fails */ }
-    showScreen('fechado-screen');
-  }
 
   function configurarBuscaReceptor() {
     var input = document.getElementById('psg-busca-receptor');
