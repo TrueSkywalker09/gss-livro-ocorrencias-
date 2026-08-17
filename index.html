@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<title>Requisições GSS</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; background:#f1f5f9; color:#0f172a; }
+  .screen { display:none; min-height:100vh; flex-direction:column; }
+  .screen.active { display:flex; }
+  .topbar { background:linear-gradient(135deg,#1e3a5f,#0369a1); color:#fff; padding:16px 20px; display:flex; align-items:center; gap:10px; box-shadow:0 2px 8px rgba(0,0,0,.15); }
+  .topbar .title { font-weight:800; font-size:16px; flex:1; }
+  .topbar button.icon-btn { background:rgba(255,255,255,.15); border:none; color:#fff; width:34px; height:34px; border-radius:8px; font-size:16px; cursor:pointer; }
+  .center-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .card { background:#fff; border-radius:14px; box-shadow:0 4px 20px rgba(0,0,0,.08); padding:28px 24px; width:100%; max-width:380px; }
+  .card h1 { font-size:19px; font-weight:800; margin-bottom:4px; color:#0f172a; }
+  .card .sub { font-size:13px; color:#64748b; margin-bottom:20px; }
+  .lbl { display:block; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; }
+  .field { margin-bottom:16px; }
+  input[type=text], input[type=password], input[type=number], select { width:100%; padding:12px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:15px; background:#fff; color:#0f172a; }
+  input:focus, select:focus { outline:none; border-color:#0369a1; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:13px 18px; border-radius:10px; font-weight:700; font-size:14px; border:none; cursor:pointer; width:100%; }
+  .btn-p { background:#0369a1; color:#fff; }
+  .btn-p:active { background:#025b8a; }
+  .btn-o { background:#fff; color:#0369a1; border:1.5px solid #0369a1; }
+  .btn-sm { width:auto; padding:8px 14px; font-size:12px; }
+  .err { background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; border-radius:8px; padding:10px 12px; font-size:13px; margin-bottom:14px; display:none; }
+  .menu-body { flex:1; padding:20px; max-width:480px; width:100%; margin:0 auto; }
+  .menu-item { display:flex; align-items:center; gap:14px; background:#fff; border-radius:12px; padding:18px; margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,.06); cursor:pointer; }
+  .menu-item.disabled { opacity:.5; cursor:not-allowed; }
+  .menu-item .ico { width:42px; height:42px; border-radius:10px; background:#e0f2fe; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+  .menu-item .txt .t { font-weight:700; font-size:14px; color:#0f172a; }
+  .menu-item .txt .d { font-size:12px; color:#94a3b8; margin-top:2px; }
+  .cat-header { background:#1e3a5f; color:#fff; font-weight:700; font-size:13px; padding:10px 14px; border-radius:8px; margin:18px 0 10px; text-transform:uppercase; letter-spacing:.4px; }
+  .mat-card { background:#fff; border-radius:12px; padding:14px; margin-bottom:10px; display:flex; gap:12px; align-items:center; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .mat-card img { width:56px; height:56px; object-fit:cover; border-radius:8px; background:#f1f5f9; flex-shrink:0; }
+  .mat-card .ph { width:56px; height:56px; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .mat-card .info { flex:1; }
+  .mat-card .nome { font-weight:700; font-size:13px; color:#0f172a; }
+  .mat-card .un { font-size:11px; color:#94a3b8; margin-top:2px; }
+  .mat-card input { width:80px; text-align:center; padding:9px 6px; }
+  .sig-wrap { background:#fff; border:1.5px dashed #cbd5e1; border-radius:10px; overflow:hidden; }
+  #sigCanvas { display:block; width:100%; height:180px; touch-action:none; }
+  .foot-fixed { position:sticky; bottom:0; background:#f1f5f9; padding:14px 20px 20px; box-shadow:0 -4px 12px rgba(0,0,0,.05); max-width:480px; width:100%; margin:0 auto; }
+  .loading { text-align:center; padding:60px 20px; color:#64748b; }
+  .success-wrap { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; }
+  .success-wrap .emoji { font-size:60px; margin-bottom:16px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="screen active" id="login-screen">
+  <div class="center-wrap">
+    <div class="card">
+      <h1>Requisições GSS</h1>
+      <div class="sub">Login do responsável de posto</div>
+      <div class="err" id="login-err"></div>
+      <div class="field"><label class="lbl">Login</label><input type="text" id="login-input" autocomplete="username"/></div>
+      <div class="field"><label class="lbl">Senha</label><input type="password" id="senha-input" autocomplete="current-password"/></div>
+      <button class="btn btn-p" onclick="fazerLogin()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TROCAR SENHA (primeiro acesso) -->
+<div class="screen" id="trocar-senha-screen">
+  <div class="center-wrap">
+    <div class="card">
+      <h1>Defina sua senha</h1>
+      <div class="sub">Este é seu primeiro acesso — escolha uma nova senha</div>
+      <div class="err" id="troca-err"></div>
+      <div class="field"><label class="lbl">Nova senha</label><input type="password" id="nova-senha-input"/></div>
+      <div class="field"><label class="lbl">Confirmar senha</label><input type="password" id="confirma-senha-input"/></div>
+      <button class="btn btn-p" onclick="trocarSenha()">Salvar e Continuar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MENU -->
+<div class="screen" id="menu-screen">
+  <div class="topbar">
+    <div class="title" id="menu-posto-nome">Requisições</div>
+    <button class="icon-btn" onclick="sair()" title="Sair">⏻</button>
+  </div>
+  <div class="menu-body">
+    <div class="menu-item" onclick="abrirRequisicaoMateriais()">
+      <div class="ico">🧴</div>
+      <div class="txt"><div class="t">Requisição de Materiais</div><div class="d">Solicitar materiais de limpeza e escritório</div></div>
+    </div>
+    <div class="menu-item disabled">
+      <div class="ico">👕</div>
+      <div class="txt"><div class="t">Requisição de Uniformes</div><div class="d">Em breve</div></div>
+    </div>
+    <div class="menu-item disabled">
+      <div class="ico">🦺</div>
+      <div class="txt"><div class="t">Formulário de EPI</div><div class="d">Em breve</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- REQUISIÇÃO DE MATERIAIS -->
+<div class="screen" id="req-materiais-screen">
+  <div class="topbar">
+    <button class="icon-btn" onclick="voltarMenu()" title="Voltar">←</button>
+    <div class="title">Requisição de Materiais</div>
+  </div>
+  <div class="menu-body" style="max-width:560px" id="req-materiais-body">
+    <div class="loading">Carregando catálogo...</div>
+  </div>
+  <div class="foot-fixed" style="max-width:560px" id="req-materiais-foot"></div>
+</div>
+
+<!-- ASSINATURA -->
+<div class="screen" id="assinatura-screen">
+  <div class="topbar">
+    <button class="icon-btn" onclick="voltarParaRequisicao()" title="Voltar">←</button>
+    <div class="title">Assinatura</div>
+  </div>
+  <div class="menu-body">
+    <div class="sub" style="margin-bottom:10px">Assine no campo abaixo para confirmar a requisição</div>
+    <div class="sig-wrap"><canvas id="sigCanvas"></canvas></div>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button class="btn btn-o btn-sm" onclick="limparAssinatura()">Limpar</button>
+    </div>
+  </div>
+  <div class="foot-fixed">
+    <div class="err" id="assinatura-err"></div>
+    <button class="btn btn-p" onclick="enviarRequisicao()" id="btn-enviar-req">Confirmar e Enviar</button>
+  </div>
+</div>
+
+<!-- SUCESSO -->
+<div class="screen" id="sucesso-screen">
+  <div class="success-wrap">
+    <div class="emoji">✅</div>
+    <h1>Requisição enviada!</h1>
+    <div class="sub" style="margin:10px 0 24px">Seu pedido foi registrado com sucesso.</div>
+    <button class="btn btn-p" style="max-width:260px" onclick="voltarMenu()">Voltar ao Menu</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var SUPABASE_URL = 'https://ihjtgyijvaszuwvvnnas.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloanRneWlqdmFzenV3dnZubmFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzYxMzYsImV4cCI6MjEwMjU1MjEzNn0.0vxDxbEsTqghZg-1yBwVWcvyZT0xH0TyQN2JXcEj6iU';
+  var SUPABASE_EDGE = SUPABASE_URL + '/functions/v1';
+
+  var SESSION_KEY = 'gss_req_session';
+  var SESSION_MAX_AGE = 8 * 60 * 60 * 1000; // 8 horas
+
+  var usuarioLogado = null;
+  var catalogo = [];       // itens do posto, agrupados por categoria
+  var quantidades = {};    // material_id -> quantidade
+  var sig = { canvas:null, ctx:null, drawing:false, empty:true };
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+  }
+
+  function headersJson() {
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY };
+  }
+
+  function salvarSessao() {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ usuario: usuarioLogado, timestamp: Date.now() }));
+  }
+
+  function restaurarSessao() {
+    try {
+      var raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return false;
+      var session = JSON.parse(raw);
+      if (session && session.usuario && (Date.now() - session.timestamp) < SESSION_MAX_AGE) {
+        usuarioLogado = session.usuario;
+        return true;
+      }
+    } catch (e) {}
+    localStorage.removeItem(SESSION_KEY);
+    return false;
+  }
+
+  window.sair = function() {
+    localStorage.removeItem(SESSION_KEY);
+    usuarioLogado = null;
+    showScreen('login-screen');
+  };
+
+  // ─── LOGIN ────────────────────────────────────────────────────────────
+  window.fazerLogin = async function() {
+    var login = document.getElementById('login-input').value.trim();
+    var senha = document.getElementById('senha-input').value;
+    var errEl = document.getElementById('login-err');
+    errEl.style.display = 'none';
+    if (!login || !senha) { errEl.textContent = 'Preencha login e senha.'; errEl.style.display = 'block'; return; }
+
+    try {
+      var resp = await fetch(SUPABASE_EDGE + '/auth-form', {
+        method: 'POST', headers: headersJson(),
+        body: JSON.stringify({ action: 'login', login: login, senha: senha })
+      });
+      var body = await resp.json();
+      if (!resp.ok || body.error) {
+        errEl.textContent = body.error || 'Erro ao entrar.';
+        errEl.style.display = 'block';
+        return;
+      }
+      usuarioLogado = body.user;
+      salvarSessao();
+      if (usuarioLogado.primeiro_acesso) {
+        showScreen('trocar-senha-screen');
+      } else {
+        entrarNoMenu();
+      }
+    } catch (e) {
+      errEl.textContent = 'Erro de conexão: ' + e.message;
+      errEl.style.display = 'block';
+    }
+  };
+
+  window.trocarSenha = async function() {
+    var nova = document.getElementById('nova-senha-input').value;
+    var conf = document.getElementById('confirma-senha-input').value;
+    var errEl = document.getElementById('troca-err');
+    errEl.style.display = 'none';
+    if (!nova || nova.length < 6) { errEl.textContent = 'A senha deve ter pelo menos 6 caracteres.'; errEl.style.display = 'block'; return; }
+    if (nova !== conf) { errEl.textContent = 'As senhas não coincidem.'; errEl.style.display = 'block'; return; }
+
+    try {
+      var resp = await fetch(SUPABASE_EDGE + '/auth-form', {
+        method: 'POST', headers: headersJson(),
+        body: JSON.stringify({ action: 'trocar-senha', id_acesso: usuarioLogado.id, nova_senha: nova })
+      });
+      var body = await resp.json();
+      if (!resp.ok || body.error) { errEl.textContent = body.error || 'Erro ao trocar senha.'; errEl.style.display = 'block'; return; }
+      usuarioLogado.primeiro_acesso = false;
+      salvarSessao();
+      entrarNoMenu();
+    } catch (e) {
+      errEl.textContent = 'Erro de conexão: ' + e.message;
+      errEl.style.display = 'block';
+    }
+  };
+
+  function entrarNoMenu() {
+    document.getElementById('menu-posto-nome').textContent = usuarioLogado.posto || 'Requisições';
+    showScreen('menu-screen');
+  }
+
+  window.voltarMenu = function() {
+    showScreen('menu-screen');
+  };
+
+  // ─── REQUISIÇÃO DE MATERIAIS ──────────────────────────────────────────
+  window.abrirRequisicaoMateriais = async function() {
+    showScreen('req-materiais-screen');
+    var bodyEl = document.getElementById('req-materiais-body');
+    var footEl = document.getElementById('req-materiais-foot');
+    bodyEl.innerHTML = '<div class="loading">Carregando catálogo...</div>';
+    footEl.innerHTML = '';
+    quantidades = {};
+
+    try {
+      var url = SUPABASE_URL + '/rest/v1/req_materiais_posto?select=*&posto=eq.' + encodeURIComponent(usuarioLogado.posto) + '&ativo=eq.true&order=categoria,descricao';
+      var resp = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
+      catalogo = await resp.json();
+    } catch (e) {
+      bodyEl.innerHTML = '<div class="err" style="display:block">Erro ao carregar catálogo: ' + e.message + '</div>';
+      return;
+    }
+
+    if (!catalogo || !catalogo.length) {
+      bodyEl.innerHTML = '<div class="loading">Nenhum material habilitado para este posto ainda. Fale com a administração.</div>';
+      return;
+    }
+
+    var porCategoria = {};
+    var ordem = [];
+    catalogo.forEach(function(m) {
+      var cat = m.categoria || 'Outros';
+      if (!porCategoria[cat]) { porCategoria[cat] = []; ordem.push(cat); }
+      porCategoria[cat].push(m);
+    });
+
+    var html = '';
+    ordem.forEach(function(cat) {
+      html += '<div class="cat-header">' + escapeHtml(cat) + '</div>';
+      porCategoria[cat].forEach(function(m) {
+        var fotoHtml = m.foto_url
+          ? '<img src="' + m.foto_url + '" alt=""/>'
+          : '<div class="ph">📦</div>';
+        html += '<div class="mat-card">' + fotoHtml +
+          '<div class="info"><div class="nome">' + escapeHtml(m.descricao) + '</div><div class="un">' + escapeHtml(m.unidade || '') + '</div></div>' +
+          '<input type="number" min="0" step="1" placeholder="0" oninput="setQtd(\'' + m.material_id + '\', this.value)"/>' +
+          '</div>';
+      });
+    });
+    bodyEl.innerHTML = html;
+    footEl.innerHTML = '<div class="err" id="req-materiais-err"></div><button class="btn btn-p" onclick="irParaAssinatura()">Continuar →</button>';
+  };
+
+  window.setQtd = function(materialId, val) {
+    var n = parseFloat(val);
+    if (!n || n <= 0) { delete quantidades[materialId]; return; }
+    quantidades[materialId] = n;
+  };
+
+  window.irParaAssinatura = function() {
+    var errEl = document.getElementById('req-materiais-err');
+    if (Object.keys(quantidades).length === 0) {
+      errEl.textContent = 'Informe a quantidade de pelo menos um material.';
+      return;
+    }
+    errEl.textContent = '';
+    showScreen('assinatura-screen');
+    initSignature();
+  };
+
+  window.voltarParaRequisicao = function() {
+    showScreen('req-materiais-screen');
+  };
+
+  // ─── ASSINATURA (canvas) ──────────────────────────────────────────────
+  function initSignature() {
+    var canvas = document.getElementById('sigCanvas');
+    var rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * (window.devicePixelRatio || 1);
+    canvas.height = rect.height * (window.devicePixelRatio || 1);
+    var ctx = canvas.getContext('2d');
+    ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#0f172a';
+    sig.canvas = canvas; sig.ctx = ctx; sig.drawing = false; sig.empty = true;
+
+    function pos(e) {
+      var r = canvas.getBoundingClientRect();
+      var p = e.touches ? e.touches[0] : e;
+      return { x: p.clientX - r.left, y: p.clientY - r.top };
+    }
+    function start(e) { e.preventDefault(); sig.drawing = true; sig.empty = false; var p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+    function move(e) { if (!sig.drawing) return; e.preventDefault(); var p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }
+    function end(e) { sig.drawing = false; }
+
+    canvas.onmousedown = start; canvas.onmousemove = move; canvas.onmouseup = end; canvas.onmouseleave = end;
+    canvas.ontouchstart = start; canvas.ontouchmove = move; canvas.ontouchend = end;
+  }
+
+  window.limparAssinatura = function() {
+    if (!sig.ctx) return;
+    sig.ctx.clearRect(0, 0, sig.canvas.width, sig.canvas.height);
+    sig.empty = true;
+  };
+
+  // ─── ENVIAR ───────────────────────────────────────────────────────────
+  window.enviarRequisicao = async function() {
+    var errEl = document.getElementById('assinatura-err');
+    errEl.style.display = 'none';
+    if (sig.empty) { errEl.textContent = 'Assine no campo acima antes de enviar.'; errEl.style.display = 'block'; return; }
+
+    var itens = Object.keys(quantidades).map(function(materialId) {
+      var m = catalogo.find(function(x) { return x.material_id === materialId; });
+      return { material_id: materialId, descricao: m ? m.descricao : '', quantidade: quantidades[materialId] };
+    });
+
+    var btn = document.getElementById('btn-enviar-req');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+
+    try {
+      var resp = await fetch(SUPABASE_EDGE + '/req-materiais', {
+        method: 'POST', headers: headersJson(),
+        body: JSON.stringify({
+          action: 'salvar',
+          id_acesso: usuarioLogado.id,
+          posto: usuarioLogado.posto,
+          colaborador_nome: usuarioLogado.nome,
+          itens: itens,
+          assinatura: sig.canvas.toDataURL('image/png')
+        })
+      });
+      var body = await resp.json();
+      btn.disabled = false; btn.textContent = 'Confirmar e Enviar';
+      if (!resp.ok || body.error) { errEl.textContent = body.error || 'Erro ao enviar.'; errEl.style.display = 'block'; return; }
+      showScreen('sucesso-screen');
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Confirmar e Enviar';
+      errEl.textContent = 'Erro de conexão: ' + e.message;
+      errEl.style.display = 'block';
+    }
+  };
+
+  function escapeHtml(s) {
+    return (s || '').toString().replace(/[&<>"']/g, function(c) {
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  // ─── INICIALIZAÇÃO ────────────────────────────────────────────────────
+  if (restaurarSessao()) {
+    entrarNoMenu();
+  }
+})();
+</script>
+</body>
+</html>
