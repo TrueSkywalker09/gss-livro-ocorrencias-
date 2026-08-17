@@ -14,7 +14,6 @@
   --danger:#b91c1c;--danger-bg:#fef2f2;--danger-border:#fecaca;
   --radius:10px;--radius-sm:6px;--radius-lg:14px;
   --shadow:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 12px rgba(0,0,0,.1);
-  --sidebar-w:250px;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .hidden{display:none !important}
@@ -58,28 +57,39 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 .trocar-senha-screen{align-items:center;justify-content:center;min-height:100vh;width:100%;padding:20px}
 .card-box{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:24px;max-width:400px;width:100%}
 
-/* ─── APP SHELL — mesma disposição do desktop/Electron: sidebar escura fixa + conteúdo ─── */
+/* ─── APP SHELL — mesmo mecanismo do sidebar do desktop/Electron: recolhido
+   (56px, só ícones) por padrão, expande (242px, revela rótulos) no hover ─── */
 .app-shell{display:none;min-height:100vh}
 .app-shell.active{display:flex}
-.app-sidebar{width:var(--sidebar-w);flex-shrink:0;background:linear-gradient(180deg,#0c1a2e 0%,#0f3460 100%);min-height:100vh;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:50}
-.app-sidebar-header{padding:20px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.1)}
-.app-sidebar-header img{width:32px;height:32px;border-radius:7px;background:#fff;padding:3px}
-.app-sidebar-header .txt{color:#fff;font-size:13px;font-weight:800;line-height:1.25}
-.app-sidebar-header .txt span{display:block;font-size:10px;font-weight:500;color:rgba(255,255,255,.55)}
-.app-nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:3px}
-.app-nav-item{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:9px;color:rgba(255,255,255,.75);font-size:13px;font-weight:600;cursor:pointer;border-left:3px solid transparent;transition:background .12s,color .12s}
-.app-nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
-.app-nav-item.active{background:rgba(14,165,233,.18);color:#fff;border-left-color:#0ea5e9}
+.app-sidebar{width:56px;flex-shrink:0;background:linear-gradient(180deg,#0c1a2e 0%,#0f3460 100%);min-height:100vh;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:50;overflow:hidden;transition:width .22s cubic-bezier(.4,0,.2,1)}
+.app-sidebar:hover{width:242px;box-shadow:4px 0 24px rgba(0,0,0,.35)}
+.app-sidebar-header{padding:10px 10px;min-height:57px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08);overflow:hidden;white-space:nowrap}
+.app-sidebar-header img{width:36px;height:36px;border-radius:10px;background:#fff;padding:2px;flex-shrink:0;object-fit:contain}
+.app-sidebar-header .txt{color:#fff;font-size:12.5px;font-weight:800;line-height:1.3;opacity:0;transition:opacity .15s;white-space:nowrap}
+.app-sidebar-header .txt span{display:block;font-size:10px;font-weight:400;color:rgba(255,255,255,.4);margin-top:1px}
+.app-sidebar:hover .app-sidebar-header .txt{opacity:1}
+.app-nav{flex:1;padding:8px 0 4px;overflow-y:auto;overflow-x:hidden}
+.app-nav-item{display:flex;align-items:center;gap:8px;padding:8px 0 8px 19px;color:rgba(255,255,255,.65);font-size:12.5px;font-weight:500;cursor:pointer;border-left:3px solid transparent;transition:background .12s,color .12s;white-space:nowrap;overflow:hidden}
+.app-nav-item:hover{background:rgba(255,255,255,.09);color:#fff}
+.app-nav-item.active{background:rgba(14,165,233,.18);color:#fff;font-weight:700;border-left-color:#0ea5e9}
 .app-nav-item.disabled{opacity:.4;cursor:default}
-.app-nav-item.disabled:hover{background:none;color:rgba(255,255,255,.75)}
-.app-nav-item .badge-em-breve{margin-left:auto;font-size:9px;font-weight:700;background:rgba(255,255,255,.12);padding:2px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:.4px}
-.app-sidebar-footer{padding:14px;border-top:1px solid rgba(255,255,255,.1)}
-.app-user{padding:8px 6px 12px;color:#fff}
-.app-user .nome{font-size:12.5px;font-weight:700}
-.app-user .posto{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px}
-.app-logout{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.08);border:none;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer}
-.app-logout:hover{background:rgba(255,255,255,.15)}
-.app-main{flex:1;margin-left:var(--sidebar-w);display:flex;flex-direction:column;min-height:100vh}
+.app-nav-item.disabled:hover{background:none;color:rgba(255,255,255,.65)}
+.app-nav-item .ico-wrap{flex-shrink:0;width:20px;display:flex;align-items:center;justify-content:center}
+.app-nav-item .lbl{opacity:0;transition:opacity .14s;flex:1;overflow:hidden;text-overflow:ellipsis}
+.app-sidebar:hover .app-nav-item .lbl{opacity:1}
+.app-nav-item .badge-em-breve{margin-left:auto;margin-right:12px;font-size:9px;font-weight:700;background:rgba(255,255,255,.12);padding:2px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:.4px;opacity:0;transition:opacity .14s;white-space:nowrap}
+.app-sidebar:hover .app-nav-item .badge-em-breve{opacity:1}
+.app-sidebar-footer{padding:8px 10px 12px;border-top:1px solid rgba(255,255,255,.08);overflow:hidden}
+.app-user{display:flex;align-items:center;gap:8px;margin-bottom:6px;white-space:nowrap}
+.app-avatar{width:32px;height:32px;border-radius:8px;background:#0ea5e9;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex-shrink:0}
+.app-user .info{overflow:hidden;opacity:0;transition:opacity .14s}
+.app-sidebar:hover .app-user .info{opacity:1}
+.app-user .nome{font-size:11.5px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app-user .posto{font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-logout{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;background:none;border:none;padding:3px 2px;opacity:0;transition:opacity .14s,color .15s;white-space:nowrap}
+.app-sidebar:hover .app-logout{opacity:1}
+.app-logout:hover{color:#fca5a5}
+.app-main{flex:1;margin-left:56px;display:flex;flex-direction:column;min-height:100vh}
 .app-topbar{height:56px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:10}
 .app-topbar .back-btn{background:none;border:none;cursor:pointer;color:var(--text2);display:flex;align-items:center;padding:6px;border-radius:7px}
 .app-topbar .back-btn:hover{background:var(--bg)}
@@ -111,13 +121,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 .success-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px}
 .success-wrap .ic{color:var(--success);margin-bottom:16px}
 
-@media (max-width:720px){
-  .app-sidebar{width:72px}
-  .app-sidebar-header .txt,.app-nav-item span.lbl,.app-user{display:none}
-  .app-nav-item{justify-content:center;padding:13px}
-  .app-logout span.lbl{display:none}
-  .app-logout{justify-content:center}
-  .app-main{margin-left:72px}
+@media (max-width:480px){
   .app-content{padding:16px}
 }
 </style>
@@ -188,8 +192,11 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     </nav>
     <div class="app-sidebar-footer">
       <div class="app-user">
-        <div class="nome" id="sidebar-user-nome"></div>
-        <div class="posto" id="sidebar-user-posto"></div>
+        <div class="app-avatar" id="sidebar-avatar"></div>
+        <div class="info">
+          <div class="nome" id="sidebar-user-nome"></div>
+          <div class="posto" id="sidebar-user-posto"></div>
+        </div>
       </div>
       <button class="app-logout" onclick="sair()" id="btn-logout"></button>
     </div>
@@ -243,10 +250,10 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   var senhaVisivel = false;
   var sig = { canvas: null, ctx: null, drawing: false, empty: true };
 
-  document.getElementById('nav-materiais').innerHTML = icon('package', 18) + '<span class="lbl">Requisição de Materiais</span>';
-  document.getElementById('nav-uniformes').innerHTML = icon('shirt', 18) + '<span class="lbl">Requisição de Uniformes</span><span class="badge-em-breve">Em breve</span>';
-  document.getElementById('nav-epi').innerHTML = icon('shield', 18) + '<span class="lbl">Formulário de EPI</span><span class="badge-em-breve">Em breve</span>';
-  document.getElementById('btn-logout').innerHTML = icon('log-out', 15) + '<span class="lbl">Sair</span>';
+  document.getElementById('nav-materiais').innerHTML = '<span class="ico-wrap">' + icon('package', 17) + '</span><span class="lbl">Requisição de Materiais</span>';
+  document.getElementById('nav-uniformes').innerHTML = '<span class="ico-wrap">' + icon('shirt', 17) + '</span><span class="lbl">Requisição de Uniformes</span><span class="badge-em-breve">Em breve</span>';
+  document.getElementById('nav-epi').innerHTML = '<span class="ico-wrap">' + icon('shield', 17) + '</span><span class="lbl">Formulário de EPI</span><span class="badge-em-breve">Em breve</span>';
+  document.getElementById('btn-logout').innerHTML = icon('log-out', 14) + '<span class="lbl">Sair</span>';
   document.getElementById('pw-eye-toggle').innerHTML = icon('eye', 17);
   document.getElementById('topbar-back').innerHTML = icon('arrow-left', 17);
 
@@ -353,6 +360,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     document.getElementById('app-shell').classList.add('active');
     document.getElementById('sidebar-user-nome').textContent = usuarioLogado.nome || '';
     document.getElementById('sidebar-user-posto').textContent = usuarioLogado.posto || '';
+    document.getElementById('sidebar-avatar').textContent = (usuarioLogado.nome || '?').trim().charAt(0).toUpperCase();
     irParaMateriais();
   }
 
