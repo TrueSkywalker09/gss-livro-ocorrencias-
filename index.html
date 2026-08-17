@@ -110,6 +110,11 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 .mat-card input{width:76px;text-align:center;padding:9px 6px;border:1.5px solid var(--border);border-radius:8px;font-size:14px}
 .mat-card input:focus{outline:none;border-color:var(--border-focus)}
 
+.avulso-form{background:var(--card);border:1.5px dashed var(--border);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px}
+.avulso-form input{padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;width:100%}
+.avulso-form input:focus{outline:none;border-color:var(--border-focus)}
+.avulso-form .btn{width:100%}
+
 .sig-wrap{background:#fff;border:1.5px dashed var(--border);border-radius:10px;overflow:hidden}
 #sigCanvas{display:block;width:100%;height:180px;touch-action:none}
 
@@ -234,7 +239,11 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     'alert-triangle': '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>',
     'edit': '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>',
     'rotate-ccw': '<polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>',
-    'inbox': '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>'
+    'inbox': '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>',
+    'plus': '<line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>',
+    'plus-circle': '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line>',
+    'shopping-bag': '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path>',
+    'x': '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>'
   };
 
   function icon(name, size) {
@@ -247,6 +256,8 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   var usuarioLogado = null;
   var catalogo = [];
   var quantidades = {};
+  var permiteOutros = false;
+  var itensAvulsos = [];
   var senhaVisivel = false;
   var sig = { canvas: null, ctx: null, drawing: false, empty: true };
 
@@ -382,6 +393,8 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     setNavAtivo('nav-materiais');
     setTopbar('Requisição de Materiais', false);
     quantidades = {};
+    itensAvulsos = [];
+    permiteOutros = false;
     var el = document.getElementById('app-content');
     el.innerHTML = '<div class="empty-state">Carregando catálogo...</div>';
 
@@ -394,14 +407,21 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
       return;
     }
 
-    if (!catalogo || !catalogo.length) {
+    try {
+      var urlCfg = SUPABASE_URL + '/rest/v1/req_postos_config?select=permite_outros&posto=eq.' + encodeURIComponent(usuarioLogado.posto);
+      var respCfg = await fetch(urlCfg, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
+      var cfgArr = await respCfg.json();
+      permiteOutros = !!(cfgArr && cfgArr[0] && cfgArr[0].permite_outros);
+    } catch (e) { permiteOutros = false; }
+
+    if ((!catalogo || !catalogo.length) && !permiteOutros) {
       el.innerHTML = '<div class="empty-state"><div class="ic">' + icon('inbox', 40) + '</div>Nenhum material habilitado para este posto ainda.<br/>Fale com a administração.</div>';
       return;
     }
 
     var porCategoria = {};
     var ordem = [];
-    catalogo.forEach(function(m) {
+    (catalogo || []).forEach(function(m) {
       var cat = m.categoria || 'Outros';
       if (!porCategoria[cat]) { porCategoria[cat] = []; ordem.push(cat); }
       porCategoria[cat].push(m);
@@ -418,8 +438,21 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
           '</div>';
       });
     });
+
+    if (permiteOutros) {
+      html += '<div class="cat-header">' + icon('plus-circle', 14) + 'Outros Itens</div>';
+      html += '<div id="avulsos-lista"></div>';
+      html += '<div class="avulso-form">' +
+        '<input type="text" id="avulso-nome" placeholder="Nome do item"/>' +
+        '<input type="number" id="avulso-qtd" min="1" step="1" placeholder="Qtd."/>' +
+        '<input type="text" id="avulso-link" placeholder="Link de referência (Mercado Livre, Google...)"/>' +
+        '<button class="btn btn-outline" onclick="adicionarItemAvulso()">' + icon('plus', 14) + ' Adicionar</button>' +
+        '</div>';
+    }
+
     html += '<div class="foot-actions"><button class="btn btn-primary" onclick="irParaAssinatura()">Continuar</button></div>';
     el.innerHTML = html;
+    if (permiteOutros) renderAvulsosLista();
   };
 
   window.setQtd = function(materialId, val) {
@@ -428,10 +461,43 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     quantidades[materialId] = n;
   };
 
+  // ─── ITENS AVULSOS ("Outros") ─────────────────────────────────────────
+  window.adicionarItemAvulso = function() {
+    var errEl = document.getElementById('req-materiais-err');
+    var nome = document.getElementById('avulso-nome').value.trim();
+    var qtd = parseFloat(document.getElementById('avulso-qtd').value);
+    var link = document.getElementById('avulso-link').value.trim();
+    if (!nome) { errEl.innerHTML = icon('alert-triangle', 14) + ' Informe o nome do item avulso.'; errEl.style.display = 'block'; return; }
+    if (!qtd || qtd <= 0) { errEl.innerHTML = icon('alert-triangle', 14) + ' Informe a quantidade do item avulso.'; errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+    itensAvulsos.push({ descricao: nome, quantidade: qtd, link: link, avulso: true });
+    document.getElementById('avulso-nome').value = '';
+    document.getElementById('avulso-qtd').value = '';
+    document.getElementById('avulso-link').value = '';
+    renderAvulsosLista();
+  };
+
+  window.removerItemAvulso = function(idx) {
+    itensAvulsos.splice(idx, 1);
+    renderAvulsosLista();
+  };
+
+  function renderAvulsosLista() {
+    var el = document.getElementById('avulsos-lista');
+    if (!el) return;
+    if (!itensAvulsos.length) { el.innerHTML = ''; return; }
+    el.innerHTML = itensAvulsos.map(function(it, i) {
+      return '<div class="mat-card"><div class="mat-ph">' + icon('shopping-bag', 20) + '</div>' +
+        '<div class="mat-info"><div class="mat-nome">' + escapeHtml(it.descricao) + '</div>' +
+        '<div class="mat-un">Qtd: ' + it.quantidade + (it.link ? ' · <a href="' + escapeHtml(it.link) + '" target="_blank" rel="noopener">link</a>' : '') + '</div></div>' +
+        '<button class="btn btn-outline" style="width:auto;padding:8px 12px" onclick="removerItemAvulso(' + i + ')">' + icon('x', 14) + '</button></div>';
+    }).join('');
+  }
+
   window.irParaAssinatura = function() {
     var errEl = document.getElementById('req-materiais-err');
-    if (Object.keys(quantidades).length === 0) {
-      errEl.innerHTML = icon('alert-triangle', 14) + ' Informe a quantidade de pelo menos um material.';
+    if (Object.keys(quantidades).length === 0 && itensAvulsos.length === 0) {
+      errEl.innerHTML = icon('alert-triangle', 14) + ' Informe a quantidade de pelo menos um material ou adicione um item avulso.';
       errEl.style.display = 'block';
       return;
     }
@@ -486,7 +552,9 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     var itens = Object.keys(quantidades).map(function(materialId) {
       var m = catalogo.find(function(x) { return x.material_id === materialId; });
       return { material_id: materialId, descricao: m ? m.descricao : '', quantidade: quantidades[materialId] };
-    });
+    }).concat(itensAvulsos.map(function(it) {
+      return { material_id: null, descricao: it.descricao, quantidade: it.quantidade, link: it.link, avulso: true };
+    }));
 
     var btn = document.getElementById('btn-enviar-req');
     btn.disabled = true; btn.textContent = 'Enviando...';
