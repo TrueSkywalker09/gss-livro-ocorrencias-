@@ -102,8 +102,8 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 .cat-header{display:flex;align-items:center;gap:8px;background:#1e3a5f;color:#fff;font-weight:700;font-size:12.5px;padding:10px 14px;border-radius:8px;margin:18px 0 10px;text-transform:uppercase;letter-spacing:.4px}
 .cat-header:first-child{margin-top:0}
 .mat-card{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:center}
-.mat-card img{width:52px;height:52px;object-fit:cover;border-radius:8px;background:var(--bg);flex-shrink:0}
-.mat-ph{width:52px;height:52px;border-radius:8px;background:var(--bg);color:var(--text3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mat-card img{width:68px;height:68px;object-fit:cover;border-radius:8px;background:var(--bg);flex-shrink:0}
+.mat-ph{width:68px;height:68px;border-radius:8px;background:var(--bg);color:var(--text3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .mat-info{flex:1;min-width:0}
 .mat-nome{font-weight:700;font-size:13px;color:var(--text)}
 .mat-un{font-size:11px;color:var(--text3);margin-top:2px}
@@ -114,6 +114,16 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 .avulso-form input{padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;width:100%}
 .avulso-form input:focus{outline:none;border-color:var(--border-focus)}
 .avulso-form .btn{width:100%}
+
+/* ─── MEUS PEDIDOS (histórico, últimos 6 meses) ─── */
+.hist-mes-header{display:flex;align-items:center;gap:8px;background:#0f3460;color:#fff;font-weight:700;font-size:12.5px;padding:10px 14px;border-radius:8px;margin:18px 0 10px;text-transform:uppercase;letter-spacing:.4px}
+.hist-mes-header:first-child{margin-top:0}
+.hist-card{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.hist-card-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.hist-card-data{font-size:11px;color:var(--text3)}
+.hist-item-row{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--text);padding:4px 0}
+.hist-item-row + .hist-item-row{border-top:1px solid var(--border)}
+.hist-item-row .qtd{font-weight:700;color:var(--primary);flex-shrink:0}
 
 .sig-wrap{background:#fff;border:1.5px dashed var(--border);border-radius:10px;overflow:hidden}
 #sigCanvas{display:block;width:100%;height:180px;touch-action:none}
@@ -191,7 +201,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
       <div class="txt">Requisições<span>GSS</span></div>
     </div>
     <nav class="app-nav">
-      <div class="app-nav-item active" id="nav-materiais" onclick="irParaMateriais()"></div>
+      <div class="app-nav-item active" id="nav-materiais" onclick="irParaMeusPedidos()"></div>
       <div class="app-nav-item disabled" id="nav-uniformes"></div>
       <div class="app-nav-item disabled" id="nav-epi"></div>
     </nav>
@@ -243,7 +253,8 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     'plus': '<line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>',
     'plus-circle': '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line>',
     'shopping-bag': '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path>',
-    'x': '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>'
+    'x': '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>',
+    'clock': '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>'
   };
 
   function icon(name, size) {
@@ -372,7 +383,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     document.getElementById('sidebar-user-nome').textContent = usuarioLogado.nome || '';
     document.getElementById('sidebar-user-posto').textContent = usuarioLogado.posto || '';
     document.getElementById('sidebar-avatar').textContent = (usuarioLogado.nome || '?').trim().charAt(0).toUpperCase();
-    irParaMateriais();
+    irParaMeusPedidos();
   }
 
   function setNavAtivo(id) {
@@ -388,10 +399,86 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     back.onclick = onVoltar || null;
   }
 
-  // ─── REQUISIÇÃO DE MATERIAIS ──────────────────────────────────────────
-  window.irParaMateriais = async function() {
+  // ─── MEUS PEDIDOS (histórico, últimos 6 meses) ─────────────────────────
+  // Mês de referência de um pedido — não é o mês calendário do envio, e sim
+  // o mês de compra/entrega a que ele se refere. Corte no dia 27: pedidos do
+  // dia 1 ao 27 contam pro mês seguinte (ex: 1-27/ago → setembro); pedidos
+  // do dia 28 em diante já perderam o corte daquele ciclo e contam pro mês
+  // depois do seguinte (ex: 28-31/ago → outubro). Mesma regra replicada no
+  // desktop (modulo-suprimentos.js, _mesReferenciaPedido).
+  var MESES_ORD = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+  function mesReferenciaPedido(dataObj) {
+    var offset = dataObj.getDate() <= 27 ? 1 : 2;
+    return MESES_ORD[(dataObj.getMonth() + offset) % 12];
+  }
+
+  window.irParaMeusPedidos = async function() {
     setNavAtivo('nav-materiais');
     setTopbar('Requisição de Materiais', false);
+    var el = document.getElementById('app-content');
+    el.innerHTML = '<div class="empty-state">Carregando seus pedidos...</div>';
+
+    var historico = [];
+    var erro = null;
+    try {
+      var resp = await fetch(SUPABASE_EDGE + '/req-materiais', {
+        method: 'POST', headers: headersJson(),
+        body: JSON.stringify({ action: 'listar-historico', id_acesso: usuarioLogado.id, posto: usuarioLogado.posto })
+      });
+      var body = await resp.json();
+      if (!resp.ok || body.error) throw new Error(body.error || 'Falha ao carregar.');
+      historico = body.solicitacoes || [];
+    } catch (e) { erro = e.message; }
+
+    var novaBtn = '<div class="foot-actions"><button class="btn btn-primary" onclick="irParaMateriais()">' + icon('plus', 15) + ' Fazer Nova Requisição</button></div>';
+
+    if (erro) {
+      el.innerHTML = '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' Não foi possível carregar seus pedidos anteriores agora (' + escapeHtml(erro) + ').</div>' + novaBtn;
+      return;
+    }
+
+    // Só mostra os últimos 6 meses de referência distintos — não os últimos
+    // 6 meses calendário, e sim os 6 ciclos de pedido mais recentes (segue a
+    // mesma lógica de corte do dia 27 usada pra atribuir o mês).
+    var porMes = {};
+    var ordemMeses = [];
+    historico.forEach(function(r) {
+      var mes = mesReferenciaPedido(new Date(r.criado_em));
+      if (!porMes[mes]) { porMes[mes] = []; ordemMeses.push(mes); }
+      porMes[mes].push(r);
+    });
+    ordemMeses.sort(function(a, b) {
+      var da = porMes[a].reduce(function(acc, r) { return Math.max(acc, new Date(r.criado_em).getTime()); }, 0);
+      var db = porMes[b].reduce(function(acc, r) { return Math.max(acc, new Date(r.criado_em).getTime()); }, 0);
+      return db - da;
+    });
+    ordemMeses = ordemMeses.slice(0, 6);
+
+    if (!ordemMeses.length) {
+      el.innerHTML = '<div class="empty-state"><div class="ic">' + icon('clock', 40) + '</div>Você ainda não fez nenhuma requisição.<br/>Comece uma abaixo.</div>' + novaBtn;
+      return;
+    }
+
+    var html = '';
+    ordemMeses.forEach(function(mes) {
+      html += '<div class="hist-mes-header">' + icon('clock', 14) + escapeHtml(mes) + '</div>';
+      porMes[mes].sort(function(a, b) { return new Date(b.criado_em) - new Date(a.criado_em); }).forEach(function(r) {
+        var dt = new Date(r.criado_em);
+        var dataFmt = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
+        var itensHtml = (r.itens || []).map(function(it) {
+          return '<div class="hist-item-row"><span>' + escapeHtml(it.descricao || '') + (it.avulso ? ' <span style="color:var(--text3);font-size:10px">(avulso)</span>' : '') + '</span><span class="qtd">' + it.quantidade + '</span></div>';
+        }).join('');
+        html += '<div class="hist-card"><div class="hist-card-top"><div class="hist-card-data">Enviado em ' + dataFmt + '</div></div>' + itensHtml + '</div>';
+      });
+    });
+    html += novaBtn;
+    el.innerHTML = html;
+  };
+
+  // ─── REQUISIÇÃO DE MATERIAIS (catálogo) ────────────────────────────────
+  window.irParaMateriais = async function() {
+    setNavAtivo('nav-materiais');
+    setTopbar('Requisição de Materiais', true, function() { irParaMeusPedidos(); });
     quantidades = {};
     itensAvulsos = [];
     permiteOutros = false;
@@ -431,7 +518,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     ordem.forEach(function(cat) {
       html += '<div class="cat-header">' + icon('package', 14) + escapeHtml(cat) + '</div>';
       porCategoria[cat].forEach(function(m) {
-        var fotoHtml = m.foto_url ? '<img src="' + m.foto_url + '" alt=""/>' : '<div class="mat-ph">' + icon('package', 22) + '</div>';
+        var fotoHtml = m.foto_url ? '<img src="' + m.foto_url + '" alt=""/>' : '<div class="mat-ph">' + icon('package', 28) + '</div>';
         html += '<div class="mat-card">' + fotoHtml +
           '<div class="mat-info"><div class="mat-nome">' + escapeHtml(m.descricao) + '</div><div class="mat-un">' + escapeHtml(m.unidade || '') + '</div></div>' +
           '<input type="number" min="0" step="1" placeholder="0" oninput="setQtd(\'' + m.material_id + '\', this.value)"/>' +
