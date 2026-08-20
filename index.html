@@ -124,6 +124,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 .hist-item-row{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--text);padding:4px 0}
 .hist-item-row + .hist-item-row{border-top:1px solid var(--border)}
 .hist-item-row .qtd{font-weight:700;color:var(--primary);flex-shrink:0}
+.hist-item-contest{display:flex;align-items:flex-start;gap:6px;background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border);border-radius:6px;padding:6px 8px;font-size:11px;margin:0 0 6px;line-height:1.4}
 
 .sig-wrap{background:#fff;border:1.5px dashed var(--border);border-radius:10px;overflow:hidden}
 #sigCanvas{display:block;width:100%;height:180px;touch-action:none}
@@ -467,7 +468,13 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
         var dt = new Date(r.criado_em);
         var dataFmt = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
         var itensHtml = (r.itens || []).map(function(it) {
-          return '<div class="hist-item-row"><span>' + escapeHtml(it.descricao || '') + (it.avulso ? ' <span style="color:var(--text3);font-size:10px">(avulso)</span>' : '') + '</span><span class="qtd">' + it.quantidade + '</span></div>';
+          var apr = it.aprovacao;
+          var linha = '<div class="hist-item-row"><span>' + escapeHtml(it.descricao || '') + (it.avulso ? ' <span style="color:var(--text3);font-size:10px">(avulso)</span>' : '') + '</span><span class="qtd">' + it.quantidade + '</span></div>';
+          if (apr && apr.status === 'contestado') {
+            linha += '<div class="hist-item-contest">' + icon('alert-triangle', 12) +
+              '<span>Quantidade ajustada pela sede para <b>' + apr.qtdAprovada + '</b>' + (apr.motivo ? ': ' + escapeHtml(apr.motivo) : '') + '</span></div>';
+          }
+          return linha;
         }).join('');
         html += '<div class="hist-card"><div class="hist-card-top"><div class="hist-card-data">Enviado em ' + dataFmt + '</div></div>' + itensHtml + '</div>';
       });
