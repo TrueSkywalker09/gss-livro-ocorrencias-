@@ -102,8 +102,8 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 .cat-header{display:flex;align-items:center;gap:8px;background:#1e3a5f;color:#fff;font-weight:700;font-size:12.5px;padding:10px 14px;border-radius:8px;margin:18px 0 10px;text-transform:uppercase;letter-spacing:.4px}
 .cat-header:first-child{margin-top:0}
 .mat-card{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:center}
-.mat-card img{width:68px;height:68px;object-fit:cover;border-radius:8px;background:var(--bg);flex-shrink:0}
-.mat-ph{width:68px;height:68px;border-radius:8px;background:var(--bg);color:var(--text3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mat-card img{width:128px;height:128px;object-fit:cover;border-radius:8px;background:var(--bg);flex-shrink:0}
+.mat-ph{width:128px;height:128px;border-radius:8px;background:var(--bg);color:var(--text3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .mat-info{flex:1;min-width:0}
 .mat-nome{font-weight:700;font-size:13px;color:var(--text)}
 .mat-un{font-size:11px;color:var(--text3);margin-top:2px}
@@ -138,6 +138,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 
 @media (max-width:480px){
   .app-content{padding:16px}
+  .mat-card img,.mat-ph{width:96px;height:96px}
 }
 </style>
 </head>
@@ -518,7 +519,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     ordem.forEach(function(cat) {
       html += '<div class="cat-header">' + icon('package', 14) + escapeHtml(cat) + '</div>';
       porCategoria[cat].forEach(function(m) {
-        var fotoHtml = m.foto_url ? '<img src="' + m.foto_url + '" alt=""/>' : '<div class="mat-ph">' + icon('package', 28) + '</div>';
+        var fotoHtml = m.foto_url ? '<img src="' + m.foto_url + '" alt=""/>' : '<div class="mat-ph">' + icon('package', 44) + '</div>';
         html += '<div class="mat-card">' + fotoHtml +
           '<div class="mat-info"><div class="mat-nome">' + escapeHtml(m.descricao) + '</div><div class="mat-un">' + escapeHtml(m.unidade || '') + '</div></div>' +
           '<input type="number" min="0" step="1" placeholder="0" oninput="setQtd(\'' + m.material_id + '\', this.value)"/>' +
