@@ -1165,7 +1165,11 @@
     var seen = {};
     var livrosDisponiveis = [];
     todosDisponiveis.forEach(function(l) {
-      if (!seen[l.id_posto]) { seen[l.id_posto] = true; livrosDisponiveis.push(l); }
+      // Chave inclui o livro (não só o posto) — um posto pode ter mais de 1
+      // livro configurado (ex: "Vigilância" + "CFTV" no mesmo CC), e cada um
+      // precisa aparecer como um card separado.
+      var chave = l.id_posto + '|' + (l.livro || '');
+      if (!seen[chave]) { seen[chave] = true; livrosDisponiveis.push(l); }
     });
     infoEl.innerHTML = '<span>' + icon('user', 13) + 'Olá <strong>' + escapeHtml(user.nome) + '</strong></span>' +
       '<span>' + livrosDisponiveis.length + ' livro(s) disponível(is)</span>';
@@ -1190,7 +1194,7 @@
         hojeBadge +
         '<div class="livro-item-icon">' + icon('clipboard', 20) + '</div>' +
         '<div class="livro-item-body">' +
-          '<h3>' + escapeHtml(nomePosto) + '</h3>' +
+          '<h3>' + escapeHtml(nomePosto) + (esc.livro ? ' — ' + escapeHtml(esc.livro) : '') + '</h3>' +
           '<span class="cc-tag">CC ' + escapeHtml(esc.id_posto) + '</span>' +
           '<div class="periodo">' + icon('calendar', 12) + fmtData(esc.data_inicio) + ' — ' + fmtData(esc.data_fim) + '</div>' +
           '<div class="abrir">Abrir Livro →</div>' +
@@ -1523,7 +1527,7 @@
         var resp = await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-          body: JSON.stringify({ action: 'listar', id_posto: escalaAtual.id_posto })
+          body: JSON.stringify({ action: 'listar', id_posto: escalaAtual.id_posto, livro: escalaAtual.livro || null })
         });
         var body = await resp.json();
         ocorrenciasDashboard = body.ocorrencias || [];
@@ -1905,7 +1909,8 @@
           descricao_dano: descDano ? descDano.toUpperCase() : null,
           recebimento: null,
           passagem: null,
-          assinatura: null
+          assinatura: null,
+          livro: escalaAtual.livro || null
         };
 
     // Trava contra duplo-clique: sem isso, cliques rápidos em "Salvar
@@ -1931,7 +1936,7 @@
         var respList = await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-          body: JSON.stringify({ action: 'listar', id_posto: escalaAtual.id_posto })
+          body: JSON.stringify({ action: 'listar', id_posto: escalaAtual.id_posto, livro: escalaAtual.livro || null })
         });
         var bodyList = await respList.json();
         ocorrenciasDashboard = bodyList.ocorrencias || [];
@@ -2154,7 +2159,8 @@
               colaborador: usuarioLogado ? usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')' : '',
               recebimento: recebimentoTexto || null,
               texto: window._passagemTexto,
-              assinatura: assinaturaAtual
+              assinatura: assinaturaAtual,
+              livro: escalaAtual ? (escalaAtual.livro || null) : null
             })
           });
         } catch (e) { /* continue even if save fails */ }
