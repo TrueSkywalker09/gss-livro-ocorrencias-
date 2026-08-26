@@ -748,8 +748,9 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     html += '<div class="cat-header">' + icon('shield', 14) + 'EPIs Entregues</div>';
     catalogoEpis.forEach(function(ep) {
       var fotoHtml = ep.foto_url ? '<img src="' + ep.foto_url + '" alt=""/>' : '<div class="mat-ph">' + icon('shield', 32) + '</div>';
+      var caHtml = ep.ca ? ' · CA ' + escapeHtml(ep.ca) : '';
       html += '<div class="mat-card">' + fotoHtml +
-        '<div class="mat-info"><div class="mat-nome">' + escapeHtml(ep.descricao) + '</div><div class="mat-un">' + escapeHtml(ep.unidade || '') + '</div></div>' +
+        '<div class="mat-info"><div class="mat-nome">' + escapeHtml(ep.descricao) + '</div><div class="mat-un">' + escapeHtml(ep.unidade || '') + caHtml + '</div></div>' +
         '<input type="number" min="0" step="1" placeholder="0" value="' + (epiQuantidades[ep.material_id] || '') + '" oninput="setQtdEpi(\'' + ep.material_id + '\', this.value)"/>' +
         '</div>';
     });
@@ -817,7 +818,10 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 
     var itens = Object.keys(epiQuantidades).map(function(materialId) {
       var ep = catalogoEpis.find(function(x) { return x.material_id === materialId; });
-      return { material_id: materialId, descricao: ep ? ep.descricao : '', quantidade: epiQuantidades[materialId] };
+      // CA gravado como estava no momento da entrega (snapshot) — se o
+      // cadastro do material mudar depois, o comprovante já emitido continua
+      // mostrando o CA exato do EPI que foi realmente entregue.
+      return { material_id: materialId, descricao: ep ? ep.descricao : '', ca: ep ? (ep.ca || '') : '', quantidade: epiQuantidades[materialId] };
     });
 
     var btn = document.getElementById('btn-enviar-epi');
