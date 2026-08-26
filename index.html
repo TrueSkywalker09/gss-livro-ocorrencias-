@@ -205,7 +205,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     <nav class="app-nav">
       <div class="app-nav-item active" id="nav-materiais" onclick="irParaMeusPedidos()"></div>
       <div class="app-nav-item disabled" id="nav-uniformes"></div>
-      <div class="app-nav-item disabled" id="nav-epi"></div>
+      <div class="app-nav-item" id="nav-epi" onclick="irParaEpiInicio()"></div>
     </nav>
     <div class="app-sidebar-footer">
       <div class="app-user">
@@ -256,7 +256,9 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     'plus-circle': '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line>',
     'shopping-bag': '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path>',
     'x': '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>',
-    'clock': '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>'
+    'clock': '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>',
+    'search': '<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>',
+    'trash': '<polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>'
   };
 
   function icon(name, size) {
@@ -274,9 +276,15 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   var senhaVisivel = false;
   var sig = { canvas: null, ctx: null, drawing: false, empty: true };
 
+  // ─── FORMULÁRIO DE EPI — estado do carrinho em construção ──────────────
+  var catalogoEpis = [];
+  var epiQuantidades = {};
+  var epiColaborador = null; // { re, nome }
+  var epiData = '';
+
   document.getElementById('nav-materiais').innerHTML = '<span class="ico-wrap">' + icon('package', 17) + '</span><span class="lbl">Requisição de Materiais</span>';
   document.getElementById('nav-uniformes').innerHTML = '<span class="ico-wrap">' + icon('shirt', 17) + '</span><span class="lbl">Requisição de Uniformes</span><span class="badge-em-breve">Em breve</span>';
-  document.getElementById('nav-epi').innerHTML = '<span class="ico-wrap">' + icon('shield', 17) + '</span><span class="lbl">Formulário de EPI</span><span class="badge-em-breve">Em breve</span>';
+  document.getElementById('nav-epi').innerHTML = '<span class="ico-wrap">' + icon('shield', 17) + '</span><span class="lbl">Formulário de EPI</span>';
   document.getElementById('btn-logout').innerHTML = icon('log-out', 14) + '<span class="lbl">Sair</span>';
   document.getElementById('pw-eye-toggle').innerHTML = icon('eye', 17);
   document.getElementById('topbar-back').innerHTML = icon('arrow-left', 17);
@@ -679,6 +687,178 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
       errEl.style.display = 'block';
     }
   };
+
+  // ─── FORMULÁRIO DE EPI ──────────────────────────────────────────────────
+  window.irParaEpiInicio = async function() {
+    setNavAtivo('nav-epi');
+    setTopbar('Formulário de EPI', false);
+    epiColaborador = null;
+    epiQuantidades = {};
+    epiData = new Date().toISOString().slice(0, 10);
+    var el = document.getElementById('app-content');
+    el.innerHTML = '<div class="empty-state">Carregando catálogo de EPIs...</div>';
+
+    try {
+      // Não existe catálogo próprio de EPIs: reaproveita req_materiais_posto
+      // (mesma tabela do catálogo de materiais), filtrando pelo Tipo cadastrado
+      // no desktop ("EPI / Proteção", em MAT_TIPOS) e pelo posto do responsável
+      // logado — os mesmos materiais que já aparecem em "Configurar Posto".
+      var url = SUPABASE_URL + '/rest/v1/req_materiais_posto?select=*&posto=eq.' + encodeURIComponent(usuarioLogado.posto) + '&categoria=eq.' + encodeURIComponent('EPI / Proteção') + '&ativo=eq.true&order=descricao';
+      var resp = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
+      catalogoEpis = await resp.json();
+    } catch (e) {
+      el.innerHTML = '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' Erro ao carregar catálogo de EPIs: ' + e.message + '</div>';
+      return;
+    }
+
+    if (!catalogoEpis || !catalogoEpis.length) {
+      el.innerHTML = '<div class="empty-state"><div class="ic">' + icon('inbox', 40) + '</div>Nenhum EPI habilitado para este posto ainda.<br/>Fale com a administração.</div>';
+      return;
+    }
+
+    renderEpiForm();
+  };
+
+  function renderEpiForm() {
+    var el = document.getElementById('app-content');
+    var html = '<div class="err-box" id="epi-err"></div>';
+
+    // ─── Passo 1: busca do colaborador por RE ───
+    if (!epiColaborador) {
+      html += '<div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px">' +
+        '<div class="form-field" style="margin-bottom:0;flex:1"><label>RE do Colaborador <span class="required">*</span></label>' +
+        '<input type="text" id="epi-re-input" placeholder="Digite o RE..." inputmode="numeric" onkeydown="if(event.key===\'Enter\')buscarColaboradorEpi()"/></div>' +
+        '<button class="btn btn-primary" style="width:auto;padding:12px 18px;white-space:nowrap" onclick="buscarColaboradorEpi()">' + icon('search', 14) + ' Buscar</button>' +
+        '</div>';
+      el.innerHTML = html;
+      var inp = document.getElementById('epi-re-input');
+      if (inp) inp.focus();
+      return;
+    }
+
+    // ─── Colaborador confirmado ───
+    html += '<div class="hist-card" style="display:flex;justify-content:space-between;align-items:center">' +
+      '<div><div style="font-size:11px;color:var(--text3)">RE ' + escapeHtml(epiColaborador.re) + '</div>' +
+      '<div style="font-weight:700;color:var(--text)">' + escapeHtml(epiColaborador.nome) + '</div></div>' +
+      '<button class="btn btn-outline" style="width:auto;padding:8px 12px" onclick="limparColaboradorEpi()">' + icon('x', 14) + ' Trocar</button>' +
+      '</div>';
+
+    html += '<div class="form-field"><label>Data da Entrega</label><input type="date" id="epi-data-input" value="' + escapeHtml(epiData) + '" onchange="epiData=this.value"/></div>';
+
+    html += '<div class="cat-header">' + icon('shield', 14) + 'EPIs Entregues</div>';
+    catalogoEpis.forEach(function(ep) {
+      var fotoHtml = ep.foto_url ? '<img src="' + ep.foto_url + '" alt=""/>' : '<div class="mat-ph">' + icon('shield', 32) + '</div>';
+      html += '<div class="mat-card">' + fotoHtml +
+        '<div class="mat-info"><div class="mat-nome">' + escapeHtml(ep.descricao) + '</div><div class="mat-un">' + escapeHtml(ep.unidade || '') + '</div></div>' +
+        '<input type="number" min="0" step="1" placeholder="0" value="' + (epiQuantidades[ep.material_id] || '') + '" oninput="setQtdEpi(\'' + ep.material_id + '\', this.value)"/>' +
+        '</div>';
+    });
+
+    html += '<div class="foot-actions"><button class="btn btn-primary" onclick="irParaAssinaturaEpi()">Continuar</button></div>';
+    el.innerHTML = html;
+  }
+
+  window.setQtdEpi = function(epiId, val) {
+    var n = parseFloat(val);
+    if (!n || n <= 0) { delete epiQuantidades[epiId]; return; }
+    epiQuantidades[epiId] = n;
+  };
+
+  window.buscarColaboradorEpi = async function() {
+    var errEl = document.getElementById('epi-err');
+    errEl.style.display = 'none';
+    var re = (document.getElementById('epi-re-input').value || '').trim();
+    if (!re) { errEl.innerHTML = icon('alert-triangle', 14) + ' Informe o RE do colaborador.'; errEl.style.display = 'block'; return; }
+
+    try {
+      var url = SUPABASE_URL + '/rest/v1/req_colaboradores_ref?select=re,nome&re=eq.' + encodeURIComponent(re) + '&posto=eq.' + encodeURIComponent(usuarioLogado.posto) + '&ativo=eq.true&limit=1';
+      var resp = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
+      var arr = await resp.json();
+      if (!arr || !arr.length) {
+        errEl.innerHTML = icon('alert-triangle', 14) + ' Nenhum colaborador ativo com esse RE encontrado neste posto.';
+        errEl.style.display = 'block';
+        return;
+      }
+      epiColaborador = { re: arr[0].re, nome: arr[0].nome };
+      renderEpiForm();
+    } catch (e) {
+      errEl.innerHTML = icon('alert-triangle', 14) + ' Erro de conexão: ' + e.message;
+      errEl.style.display = 'block';
+    }
+  };
+
+  window.limparColaboradorEpi = function() {
+    epiColaborador = null;
+    epiQuantidades = {};
+    renderEpiForm();
+  };
+
+  window.irParaAssinaturaEpi = function() {
+    var errEl = document.getElementById('epi-err');
+    if (Object.keys(epiQuantidades).length === 0) {
+      errEl.innerHTML = icon('alert-triangle', 14) + ' Informe a quantidade de pelo menos um EPI.';
+      errEl.style.display = 'block';
+      return;
+    }
+    setTopbar('Assinatura', true, function() { renderEpiForm(); });
+    var el = document.getElementById('app-content');
+    el.innerHTML =
+      '<div style="font-size:13px;color:var(--text2);margin-bottom:12px">Peça para <b>' + escapeHtml(epiColaborador.nome) + '</b> assinar no campo abaixo para confirmar o recebimento do(s) EPI(s)</div>' +
+      '<div class="sig-wrap"><canvas id="sigCanvas"></canvas></div>' +
+      '<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-outline" onclick="limparAssinatura()">' + icon('rotate-ccw', 14) + ' Limpar</button></div>' +
+      '<div class="foot-actions"><div class="err-box" id="assinatura-err"></div><button class="btn btn-primary" id="btn-enviar-epi" onclick="enviarEntregaEpi()">' + icon('edit', 15) + ' Confirmar e Enviar</button></div>';
+    initSignature();
+  };
+
+  window.enviarEntregaEpi = async function() {
+    var errEl = document.getElementById('assinatura-err');
+    errEl.style.display = 'none';
+    if (sig.empty) { errEl.innerHTML = icon('alert-triangle', 14) + ' Assine no campo acima antes de enviar.'; errEl.style.display = 'block'; return; }
+
+    var itens = Object.keys(epiQuantidades).map(function(materialId) {
+      var ep = catalogoEpis.find(function(x) { return x.material_id === materialId; });
+      return { material_id: materialId, descricao: ep ? ep.descricao : '', quantidade: epiQuantidades[materialId] };
+    });
+
+    var btn = document.getElementById('btn-enviar-epi');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+
+    try {
+      var resp = await fetch(SUPABASE_EDGE + '/req-epis', {
+        method: 'POST', headers: headersJson(),
+        body: JSON.stringify({
+          action: 'salvar',
+          id_acesso: usuarioLogado.id,
+          posto: usuarioLogado.posto,
+          re_colaborador: epiColaborador.re,
+          nome_colaborador: epiColaborador.nome,
+          itens: itens,
+          data_entrega: epiData,
+          assinatura: sig.canvas.toDataURL('image/png')
+        })
+      });
+      var body = await resp.json();
+      if (!resp.ok || body.error) {
+        btn.disabled = false; btn.innerHTML = icon('edit', 15) + ' Confirmar e Enviar';
+        errEl.textContent = body.error || 'Erro ao enviar.'; errEl.style.display = 'block';
+        return;
+      }
+      mostrarSucessoEpi();
+    } catch (e) {
+      btn.disabled = false; btn.innerHTML = icon('edit', 15) + ' Confirmar e Enviar';
+      errEl.textContent = 'Erro de conexão: ' + e.message;
+      errEl.style.display = 'block';
+    }
+  };
+
+  function mostrarSucessoEpi() {
+    setTopbar('Entrega Registrada', false);
+    document.getElementById('app-content').innerHTML =
+      '<div class="success-wrap"><div class="ic">' + icon('check-circle', 56) + '</div>' +
+      '<h1 style="font-size:19px;font-weight:800">Entrega de EPI registrada!</h1>' +
+      '<div style="font-size:13px;color:var(--text2);margin:10px 0 24px">Os EPIs foram registrados com sucesso para ' + escapeHtml(epiColaborador ? epiColaborador.nome : '') + '.</div>' +
+      '<button class="btn btn-primary" style="max-width:240px" onclick="irParaEpiInicio()">Nova Entrega</button></div>';
+  }
 
   function mostrarSucesso() {
     setTopbar('Requisição Enviada', false);
