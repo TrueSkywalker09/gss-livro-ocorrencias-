@@ -281,6 +281,9 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   var epiQuantidades = {};
   var epiColaborador = null; // { re, nome }
   var epiData = '';
+  var epiEmpresaFilial = ''; // '01' GSS SEGURANÇA | '02' GSS SERVIÇOS
+  var epiColabResultados = [];
+  var epiColabBuscaTimer = null;
 
   document.getElementById('nav-materiais').innerHTML = '<span class="ico-wrap">' + icon('package', 17) + '</span><span class="lbl">Requisição de Materiais</span>';
   document.getElementById('nav-uniformes').innerHTML = '<span class="ico-wrap">' + icon('shirt', 17) + '</span><span class="lbl">Requisição de Uniformes</span><span class="badge-em-breve">Em breve</span>';
@@ -695,6 +698,8 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     epiColaborador = null;
     epiQuantidades = {};
     epiData = new Date().toISOString().slice(0, 10);
+    epiEmpresaFilial = '';
+    epiColabResultados = [];
     var el = document.getElementById('app-content');
     el.innerHTML = '<div class="empty-state">Carregando catálogo de EPIs...</div>';
 
@@ -723,16 +728,22 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     var el = document.getElementById('app-content');
     var html = '<div class="err-box" id="epi-err"></div>';
 
-    // ─── Passo 1: busca do colaborador por RE ───
+    // ─── Passo 1: empresa + busca do colaborador (RE ou nome) — mesmo padrão
+    // de busca usado em "Emitir Comprovante" no desktop ─────────────────────
     if (!epiColaborador) {
-      html += '<div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px">' +
-        '<div class="form-field" style="margin-bottom:0;flex:1"><label>RE do Colaborador <span class="required">*</span></label>' +
-        '<input type="text" id="epi-re-input" placeholder="Digite o RE..." inputmode="numeric" onkeydown="if(event.key===\'Enter\')buscarColaboradorEpi()"/></div>' +
-        '<button class="btn btn-primary" style="width:auto;padding:12px 18px;white-space:nowrap" onclick="buscarColaboradorEpi()">' + icon('search', 14) + ' Buscar</button>' +
+      var empBloqueado = !epiEmpresaFilial;
+      html += '<div class="form-field">' +
+        '<label>Empresa</label>' +
+        '<div style="display:flex;gap:8px">' +
+        '<button onclick="setEpiEmpresa(\'02\')" style="flex:1;padding:10px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:' + (epiEmpresaFilial === '02' ? '2.5px solid #b45309' : '1.5px solid var(--border)') + ';background:' + (epiEmpresaFilial === '02' ? '#fef3c7' : 'var(--card)') + ';color:' + (epiEmpresaFilial === '02' ? '#b45309' : 'var(--text2)') + '">GSS SERVIÇOS</button>' +
+        '<button onclick="setEpiEmpresa(\'01\')" style="flex:1;padding:10px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:' + (epiEmpresaFilial === '01' ? '2.5px solid #0369a1' : '1.5px solid var(--border)') + ';background:' + (epiEmpresaFilial === '01' ? '#e0f2fe' : 'var(--card)') + ';color:' + (epiEmpresaFilial === '01' ? '#0369a1' : 'var(--text2)') + '">GSS SEGURANÇA</button>' +
+        '</div></div>' +
+        '<div class="form-field" style="position:relative;' + (empBloqueado ? 'opacity:.5;pointer-events:none' : '') + '">' +
+        '<label>Colaborador Ativo (RE ou Nome) <span class="required">*</span></label>' +
+        '<input type="text" id="epi-colab-busca" placeholder="' + (empBloqueado ? 'Selecione a empresa acima primeiro...' : 'Buscar RE ou nome...') + '" oninput="buscarColaboradorEpiInput(this.value)" autocomplete="off"/>' +
+        '<div id="epi-colab-drop" style="display:none;position:absolute;top:66px;left:0;right:0;background:var(--card);border:1.5px solid var(--border);border-radius:9px;z-index:20;max-height:240px;overflow-y:auto;box-shadow:0 8px 20px rgba(0,0,0,.12)"></div>' +
         '</div>';
       el.innerHTML = html;
-      var inp = document.getElementById('epi-re-input');
-      if (inp) inp.focus();
       return;
     }
 
@@ -765,27 +776,55 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     epiQuantidades[epiId] = n;
   };
 
-  window.buscarColaboradorEpi = async function() {
-    var errEl = document.getElementById('epi-err');
-    errEl.style.display = 'none';
-    var re = (document.getElementById('epi-re-input').value || '').trim();
-    if (!re) { errEl.innerHTML = icon('alert-triangle', 14) + ' Informe o RE do colaborador.'; errEl.style.display = 'block'; return; }
+  window.setEpiEmpresa = function(filial) {
+    epiEmpresaFilial = filial;
+    epiColaborador = null;
+    epiColabResultados = [];
+    renderEpiForm();
+  };
 
+  // Busca com debounce (RE ou nome) — mesmo padrão de "Emitir Comprovante" no
+  // desktop (EpiModule.buscaComp), só que via REST em req_colaboradores_ref
+  // (todos os colaboradores ativos da empresa selecionada, não só do posto
+  // do responsável logado).
+  window.buscarColaboradorEpiInput = function(val) {
+    clearTimeout(epiColabBuscaTimer);
+    var drop = document.getElementById('epi-colab-drop');
+    var termo = (val || '').trim();
+    if (termo.length < 2) { if (drop) drop.style.display = 'none'; return; }
+    epiColabBuscaTimer = setTimeout(function() { _buscarColaboradorEpi(termo); }, 250);
+  };
+
+  async function _buscarColaboradorEpi(termo) {
+    var drop = document.getElementById('epi-colab-drop');
+    if (!drop || !epiEmpresaFilial) return;
     try {
-      var url = SUPABASE_URL + '/rest/v1/req_colaboradores_ref?select=re,nome&re=eq.' + encodeURIComponent(re) + '&posto=eq.' + encodeURIComponent(usuarioLogado.posto) + '&ativo=eq.true&limit=1';
+      var orFiltro = '(nome.ilike.*' + termo + '*,re.ilike.*' + termo + '*)';
+      var url = SUPABASE_URL + '/rest/v1/req_colaboradores_ref?select=re,nome&filial=eq.' + epiEmpresaFilial + '&ativo=eq.true&or=' + encodeURIComponent(orFiltro) + '&order=nome&limit=10';
       var resp = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
-      var arr = await resp.json();
-      if (!arr || !arr.length) {
-        errEl.innerHTML = icon('alert-triangle', 14) + ' Nenhum colaborador ativo com esse RE encontrado neste posto.';
-        errEl.style.display = 'block';
+      epiColabResultados = await resp.json() || [];
+      if (!epiColabResultados.length) {
+        drop.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:var(--text3)">Nenhum colaborador encontrado.</div>';
+        drop.style.display = 'block';
         return;
       }
-      epiColaborador = { re: arr[0].re, nome: arr[0].nome };
-      renderEpiForm();
+      drop.innerHTML = epiColabResultados.map(function(c, i) {
+        return '<div onclick="selecionarColaboradorEpi(' + i + ')" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border)">' +
+          '<div style="font-weight:600;font-size:13px;color:var(--text)">' + escapeHtml(c.nome) + '</div>' +
+          '<div style="font-size:11px;color:var(--text3)">RE ' + escapeHtml(c.re) + '</div></div>';
+      }).join('');
+      drop.style.display = 'block';
     } catch (e) {
-      errEl.innerHTML = icon('alert-triangle', 14) + ' Erro de conexão: ' + e.message;
-      errEl.style.display = 'block';
+      drop.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:var(--danger)">Erro ao buscar: ' + escapeHtml(e.message) + '</div>';
+      drop.style.display = 'block';
     }
+  }
+
+  window.selecionarColaboradorEpi = function(idx) {
+    var c = epiColabResultados[idx];
+    if (!c) return;
+    epiColaborador = { re: c.re, nome: c.nome };
+    renderEpiForm();
   };
 
   window.limparColaboradorEpi = function() {
