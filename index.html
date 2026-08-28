@@ -15,7 +15,6 @@
       --danger:#b91c1c;--danger-bg:#fef2f2;--danger-border:#fecaca;
       --radius:10px;--radius-sm:6px;--radius-lg:14px;
       --shadow:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 12px rgba(0,0,0,.1);
-      --sidebar-w:280px;
     }
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;margin:0}
     .hidden{display:none !important}
@@ -23,18 +22,47 @@
     .icon-inline{display:inline-flex;align-items:center;gap:7px}
     button.icon-inline,a.icon-inline{justify-content:center}
 
-    /* ─── HEADER ─── */
-    .app-header{position:sticky;top:0;left:0;right:0;height:56px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;align-items:center;padding:0 16px;z-index:100;gap:12px}
-    .app-header .logo{display:flex;align-items:center;gap:8px;text-decoration:none}
-    .app-header .logo-icon{width:32px;height:32px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800;padding:3px;box-sizing:border-box;box-shadow:0 0 0 1px var(--border)}
-    .app-header .logo-text{font-size:14px;font-weight:700;color:var(--text);line-height:1.2}
-    .app-header .logo-text span{display:block;font-size:11px;color:var(--text2);font-weight:400}
-    .app-header .btn-back{background:none;border:none;cursor:pointer;color:var(--text);padding:6px;border-radius:var(--radius-sm);display:none;align-items:center;justify-content:center}
-    .app-header .btn-back:hover{background:var(--bg)}
-    .app-header .user-info{margin-left:auto;font-size:13px;font-weight:600;color:var(--text);text-transform:uppercase}
+    /* ─── APP SHELL — mesmo mecanismo do sidebar do desktop/Electron: recolhido
+       (56px, só ícones) por padrão, expande (242px, revela rótulos) no hover ─── */
+    .app-shell{display:none;min-height:100vh}
+    .app-shell.active{display:flex}
+    .app-sidebar{width:56px;flex-shrink:0;background:linear-gradient(180deg,#0c1a2e 0%,#0f3460 100%);min-height:100vh;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:50;overflow:hidden;transition:width .22s cubic-bezier(.4,0,.2,1)}
+    .app-sidebar:hover{width:242px;box-shadow:4px 0 24px rgba(0,0,0,.35)}
+    .app-sidebar-header{padding:10px 10px;min-height:57px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08);overflow:hidden;white-space:nowrap}
+    .app-sidebar-header img{width:36px;height:36px;border-radius:10px;background:#fff;padding:2px;flex-shrink:0;object-fit:contain}
+    .app-sidebar-header .txt{color:#fff;font-size:12.5px;font-weight:800;line-height:1.3;opacity:0;transition:opacity .15s;white-space:nowrap}
+    .app-sidebar-header .txt span{display:block;font-size:10px;font-weight:400;color:rgba(255,255,255,.4);margin-top:1px}
+    .app-sidebar:hover .app-sidebar-header .txt{opacity:1}
+    .app-nav{flex:1;padding:8px 0 4px;overflow-y:auto;overflow-x:hidden}
+    .app-nav-item{display:flex;align-items:center;gap:8px;padding:8px 0 8px 19px;color:rgba(255,255,255,.65);font-size:12.5px;font-weight:500;cursor:pointer;border-left:3px solid transparent;transition:background .12s,color .12s;white-space:nowrap;overflow:hidden}
+    .app-nav-item:hover{background:rgba(255,255,255,.09);color:#fff}
+    .app-nav-item.active{background:rgba(14,165,233,.18);color:#fff;font-weight:700;border-left-color:#0ea5e9}
+    .app-nav-item.hidden{display:none}
+    .app-nav-item .ico-wrap{flex-shrink:0;width:20px;display:flex;align-items:center;justify-content:center}
+    .app-nav-item .lbl{opacity:0;transition:opacity .14s;flex:1;overflow:hidden;text-overflow:ellipsis}
+    .app-sidebar:hover .app-nav-item .lbl{opacity:1}
+    .app-sidebar-footer{padding:8px 10px 12px;border-top:1px solid rgba(255,255,255,.08);overflow:hidden}
+    .app-user{display:flex;align-items:center;gap:8px;margin-bottom:6px;white-space:nowrap}
+    .app-avatar{width:32px;height:32px;border-radius:8px;background:#0ea5e9;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex-shrink:0}
+    .app-user .info{overflow:hidden;opacity:0;transition:opacity .14s}
+    .app-sidebar:hover .app-user .info{opacity:1}
+    .app-user .nome{font-size:11.5px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .app-user .posto{font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .app-switch-btn{display:flex;align-items:center;gap:6px;width:100%;color:#7dd3fc;font-size:11px;font-weight:600;cursor:pointer;background:none;border:none;padding:5px 2px;opacity:0;transition:opacity .14s,color .15s;white-space:nowrap}
+    .app-sidebar:hover .app-switch-btn{opacity:1}
+    .app-switch-btn:hover{color:#bae6fd}
+    .app-logout{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;background:none;border:none;padding:3px 2px;opacity:0;transition:opacity .14s,color .15s;white-space:nowrap}
+    .app-sidebar:hover .app-logout{opacity:1}
+    .app-logout:hover{color:#fca5a5}
+    .app-main{flex:1;margin-left:56px;display:flex;flex-direction:column;min-height:100vh}
+    .app-topbar{height:56px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:10}
+    .app-topbar .back-btn{background:none;border:none;cursor:pointer;color:var(--text2);display:flex;align-items:center;padding:6px;border-radius:7px}
+    .app-topbar .back-btn:hover{background:var(--bg)}
+    .app-topbar .title{font-size:15px;font-weight:800;color:var(--text)}
+    .app-topbar .btn-fechar-livro{width:auto;margin-left:auto;padding:8px 14px;font-size:12.5px}
+    .app-content{flex:1;padding:24px;width:100%}
 
     /* ─── MAIN LAYOUT ─── */
-    .app-body{margin-top:56px;min-height:calc(100vh - 56px)}
     .screen{display:none}
     .screen.active{display:flex}
 
@@ -138,25 +166,12 @@
     .user-bar span{display:inline-flex;align-items:center;gap:5px}
 
     /* ─── DASHBOARD ─── */
-    .dashboard-screen{width:100%;min-height:calc(100vh - 56px);padding:20px;align-items:flex-start;gap:20px;max-width:1400px;margin:0 auto}
-    .dashboard-sidebar{width:300px;flex-shrink:0;display:flex;flex-direction:column;gap:16px;position:sticky;top:76px}
-    .dashboard-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow)}
-    .dashboard-card .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-    .dashboard-card .card-title{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);letter-spacing:.5px}
-    .dashboard-card .card-badge{background:var(--primary-light);color:var(--primary);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
-    .dashboard-card .stats-number{font-size:36px;font-weight:800;color:var(--text);line-height:1;margin-bottom:16px}
-    .dashboard-main{flex:1;min-width:0}
-    .donut-container{display:flex;flex-direction:column;align-items:center;margin-bottom:4px}
-    .donut-legend{display:flex;flex-direction:column;gap:8px;width:100%;margin-top:14px}
-    .legend-item{display:flex;align-items:center;gap:8px;font-size:13px}
-    .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-    .legend-label{flex:1;color:var(--text2)}
-    .legend-count{font-weight:700;color:var(--text)}
-    .status-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
-    .status-row:last-child{border-bottom:none}
-    .status-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text)}
-    .status-dot{width:8px;height:8px;border-radius:50%}
-    .status-count{font-weight:700;font-size:15px;color:var(--text)}
+    .dashboard-screen{width:100%;padding:0;flex-direction:column;max-width:1100px;margin:0 auto}
+    .dashboard-main{flex:1;min-width:0;width:100%}
+    .dash-summary-bar{display:flex;gap:24px;align-items:center;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 18px;margin-bottom:16px;font-size:13px;color:var(--text2);flex-wrap:wrap}
+    .dash-summary-item{display:flex;align-items:center;gap:7px}
+    .dash-summary-item strong{color:var(--text);font-size:15px;margin-left:2px}
+    .dash-summary-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
     /* ─── FILTER BAR ─── */
     .filter-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
@@ -210,7 +225,7 @@
     }
 
     /* ─── CADASTRO ─── */
-    .cadastro-screen{flex-direction:column;min-height:100vh;width:100%;max-width:700px;margin:0 auto;padding:20px}
+    .cadastro-screen{flex-direction:column;width:100%;max-width:700px;margin:0 auto}
     .form-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);overflow:hidden}
     .form-card-header{background:var(--primary);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:10px}
     .form-card-header .title{font-size:16px;font-weight:700}
@@ -223,15 +238,15 @@
     .checkbox-field label{font-size:14px;font-weight:600;cursor:pointer}
 
     /* ─── PASSAGEM ─── */
-    .passagem-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:600px;margin:0 auto}
+    .passagem-screen{flex-direction:column;width:100%;max-width:600px;margin:0 auto}
 
     /* ─── ASSINATURA ─── */
-    .assinar-screen{flex-direction:column;min-height:100vh;width:100%;padding:20px;max-width:600px;margin:0 auto}
+    .assinar-screen{flex-direction:column;width:100%;max-width:600px;margin:0 auto}
     .assinatura-canvas-wrap{border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
     .assinatura-canvas-wrap canvas{width:100%;height:280px;touch-action:none;cursor:crosshair;display:block}
 
     /* ─── DETALHE ─── */
-    .detalhe-screen{flex-direction:column;min-height:100vh;width:100%;max-width:760px;margin:0 auto;padding:20px}
+    .detalhe-screen{flex-direction:column;width:100%;max-width:760px;margin:0 auto}
     .detalhe-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);overflow:hidden}
     .detalhe-header{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-hover) 100%);color:#fff;padding:20px 24px}
     .detalhe-header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
@@ -266,7 +281,7 @@
     .detalhe-footer .btn{flex:1}
 
     /* ─── SUCESSO ─── */
-    .sucesso-screen{align-items:center;justify-content:center;min-height:100vh;width:100%;padding:20px}
+    .sucesso-screen{align-items:center;justify-content:center;width:100%;min-height:60vh}
     .sucesso-card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);padding:40px 32px;text-align:center;max-width:400px;width:100%}
     .sucesso-icon{color:var(--success);margin-bottom:12px;display:flex;justify-content:center}
     .sucesso-card h2{font-size:20px;font-weight:800;color:var(--success);margin-bottom:8px}
@@ -274,24 +289,15 @@
     .sucesso-card .btn{margin-bottom:10px}
 
     /* ─── RESPONSIVE ─── */
-    @media(max-width:960px){
-      .dashboard-screen{flex-direction:column}
-      .dashboard-sidebar{width:100%;position:static;flex-direction:row;flex-wrap:wrap}
-      .dashboard-sidebar .dashboard-card{flex:1;min-width:260px}
-    }
     @media(max-width:768px){
-      .app-header .btn-back{display:flex}
       .form-grid{grid-template-columns:1fr}
       .detalhe-grid{grid-template-columns:1fr}
       .filter-bar{flex-direction:column}
       .search-input{min-width:100%}
       .filter-select{width:100%}
       .btn-nova{width:100%}
-      .livros-screen,.recebimento-screen,.cadastro-screen,.passagem-screen,.assinar-screen,.detalhe-screen{padding:16px}
-      .dashboard-screen{padding:16px}
-    }
-    @media(max-width:600px){
-      .dashboard-sidebar{flex-direction:column}
+      .livros-screen,.recebimento-screen{padding:16px}
+      .app-content{padding:16px}
     }
     @media(max-width:480px){
       .form-card-body{padding:16px}
@@ -305,16 +311,6 @@
   </style>
 </head>
 <body>
-
-<!-- ════════════ HEADER ════════════ -->
-<header class="app-header" id="app-header">
-  <button class="btn-back" id="btn-header-back" onclick="headerBack()" aria-label="Voltar"></button>
-  <a class="logo" href="#">
-    <div class="logo-icon"><img src="logo-gss.png" alt="GSS" style="width:100%;height:100%;object-fit:contain"/></div>
-    <div class="logo-text">GSS<span>Livro de Ocorrências</span></div>
-  </a>
-  <div class="user-info" id="header-user"></div>
-</header>
 
 <!-- ════════════ LOGIN ════════════ -->
 <div class="login-screen" id="login-screen">
@@ -470,32 +466,45 @@
   </div>
 </div>
 
+<!-- ════════════ APP SHELL (pós-abertura de livro) — sidebar + conteúdo ════════════ -->
+<div class="app-shell" id="app-shell">
+  <aside class="app-sidebar">
+    <div class="app-sidebar-header">
+      <img src="logo-gss.png" alt="GSS"/>
+      <div class="txt">Livro de<span>Ocorrências</span></div>
+    </div>
+    <nav class="app-nav">
+      <div class="app-nav-item active" id="nav-ocorrencias" onclick="carregarDashboard()"></div>
+      <div class="app-nav-item hidden" id="nav-acessos" onclick="abrirAcessos()"></div>
+    </nav>
+    <div class="app-sidebar-footer">
+      <div class="app-user">
+        <div class="app-avatar" id="sidebar-avatar"></div>
+        <div class="info">
+          <div class="nome" id="sidebar-user-nome"></div>
+          <div class="posto" id="sidebar-user-posto"></div>
+        </div>
+      </div>
+      <button class="app-switch-btn hidden" id="btn-switch-app" onclick="irParaOutroSistema()"></button>
+      <button class="app-logout" onclick="fazerLogout()" id="btn-logout"></button>
+    </div>
+  </aside>
+  <main class="app-main">
+    <div class="app-topbar">
+      <button class="back-btn hidden" id="topbar-back" onclick="headerBack()"></button>
+      <div class="title" id="topbar-title"></div>
+      <button class="btn btn-outline icon-inline btn-fechar-livro hidden" onclick="fecharLivro()" id="topbar-btn-fechar"></button>
+    </div>
+    <div class="app-content" id="app-content">
+
 <!-- ════════════ DASHBOARD ════════════ -->
 <div class="screen dashboard-screen" id="dashboard-screen">
-  <div class="dashboard-sidebar">
-    <div class="dashboard-card" id="dashboard-badge">
-      <div class="card-header">
-        <span class="card-title">Total Ocorrências</span>
-        <span class="card-badge" id="dash-filtro-badge">Todos</span>
-      </div>
-      <div class="stats-number" id="dash-total">0</div>
-      <div class="donut-container">
-        <svg id="dash-donut" width="120" height="120" viewBox="0 0 120 120"></svg>
-        <div class="donut-legend" id="dash-legend"></div>
-      </div>
-    </div>
-    <div class="dashboard-card">
-      <div class="card-title" style="margin-bottom:14px">Status</div>
-      <div id="dash-status"></div>
-      <div style="margin-top:14px">
-        <button class="btn btn-outline icon-inline" onclick="fecharLivro()" style="font-size:13px;padding:10px" id="dash-btn-fechar"></button>
-      </div>
-      <div style="margin-top:10px" id="dash-btn-acessos-wrap" class="hidden">
-        <button class="btn btn-outline icon-inline" onclick="abrirAcessos()" style="font-size:13px;padding:10px" id="dash-btn-acessos"></button>
-      </div>
-    </div>
-  </div>
   <div class="dashboard-main">
+    <div class="dash-summary-bar" id="dash-summary-bar">
+      <div class="dash-summary-item"><span class="dash-summary-dot" style="background:var(--primary)"></span>Abertas <strong id="dash-summary-abertas">0</strong></div>
+      <div class="dash-summary-item"><span class="dash-summary-dot" style="background:var(--success)"></span>Finalizadas <strong id="dash-summary-finalizadas">0</strong></div>
+      <div class="dash-summary-item"><span class="dash-summary-dot" style="background:var(--text3)"></span>Total <strong id="dash-summary-total">0</strong></div>
+    </div>
     <div class="filter-bar">
       <div class="search-input">
         <span class="search-icon" id="dash-search-icon"></span>
@@ -781,6 +790,10 @@
   </div>
 </div>
 
+    </div>
+  </main>
+</div>
+
 <script>
 (function() {
   'use strict';
@@ -813,7 +826,8 @@
     'plus': '<line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>',
     'clipboard': '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="2" ry="2"></rect>',
     'edit': '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>',
-    'briefcase': '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>'
+    'briefcase': '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>',
+    'repeat': '<polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path>'
   };
 
   function icon(name, size) {
@@ -835,6 +849,7 @@
   var _colabPosto = [];
   var recebimentoDados = { materiais: [], materialComProblema: [] };
   var recebimentoTexto = null;
+  var podeAlternar = false;
 
   // ─── SESSION PERSISTENCE ────────────────────────────────────────────────
   var SESSION_KEY = 'gss_session';
@@ -848,6 +863,7 @@
         recebimentoHabilitado: recebimentoHabilitadoAtual,
         controleAcessoHabilitado: controleAcessoHabilitadoAtual,
         recebimentoTexto: recebimentoTexto,
+        podeAlternar: podeAlternar,
         timestamp: Date.now()
       }));
       if (escalaAtual) {
@@ -865,6 +881,7 @@
         recebimentoHabilitadoAtual = session.recebimentoHabilitado;
         controleAcessoHabilitadoAtual = session.controleAcessoHabilitado === true;
         recebimentoTexto = session.recebimentoTexto || null;
+        podeAlternar = session.podeAlternar === true;
         escalaAtual = book;
         return true;
       }
@@ -882,13 +899,29 @@
   }
 
   // ─── UTILS ──────────────────────────────────────────────────────────────
+  var SHELL_SCREENS = ['dashboard-screen','cadastro-screen','detalhe-screen','acessos-screen','cadastro-acesso-screen','passagem-screen','assinar-screen','sucesso-screen','fechado-screen'];
+  var BACK_SCREENS = ['cadastro-screen','passagem-screen','assinar-screen','detalhe-screen','acessos-screen','cadastro-acesso-screen'];
+  var NAV_ID_FOR_SCREEN = { 'dashboard-screen':'nav-ocorrencias', 'acessos-screen':'nav-acessos', 'cadastro-acesso-screen':'nav-acessos' };
+  var TITLE_FOR_SCREEN = {
+    'dashboard-screen':'Ocorrências',
+    'cadastro-screen':'Ocorrência',
+    'detalhe-screen':'Detalhe da Ocorrência',
+    'acessos-screen':'Controle de Acesso',
+    'cadastro-acesso-screen':'Registro de Acesso',
+    'passagem-screen':'Passagem de Serviço',
+    'assinar-screen':'Assinatura',
+    'sucesso-screen':'Ocorrência Registrada',
+    'fechado-screen':'Livro Fechado'
+  };
+
   function showScreen(id) {
     var screens = document.querySelectorAll('.screen');
     screens.forEach(function(s) { s.classList.remove('active'); });
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('loading-screen').classList.remove('active');
-    document.getElementById('app-header').style.display = 'none';
-    document.getElementById('btn-header-back').style.display = 'none';
+
+    var isShell = SHELL_SCREENS.indexOf(id) !== -1;
+    document.getElementById('app-shell').classList.toggle('active', isShell);
 
     if (id === 'login-screen') {
       document.getElementById('login-screen').style.display = 'flex';
@@ -902,14 +935,14 @@
     var el = document.getElementById(id);
     if (el) el.classList.add('active');
 
-    // Show header for logged-in screens
-    if (['trocar-senha-screen','livros-screen','recebimento-screen','material-screen','dashboard-screen','cadastro-screen','passagem-screen','assinar-screen','sucesso-screen','detalhe-screen','fechado-screen','acessos-screen','cadastro-acesso-screen'].indexOf(id) !== -1) {
-      document.getElementById('app-header').style.display = 'flex';
-      updateHeaderUser();
-      // Show back button on non-main screens
-      if (['cadastro-screen','passagem-screen','assinar-screen','detalhe-screen','acessos-screen','cadastro-acesso-screen'].indexOf(id) !== -1) {
-        document.getElementById('btn-header-back').style.display = 'flex';
-      }
+    if (isShell) {
+      updateSidebarUser();
+      document.getElementById('btn-switch-app').classList.toggle('hidden', !podeAlternar);
+      var navId = NAV_ID_FOR_SCREEN[id];
+      document.querySelectorAll('.app-nav-item').forEach(function(n) { n.classList.toggle('active', n.id === navId); });
+      document.getElementById('topbar-title').textContent = TITLE_FOR_SCREEN[id] || '';
+      document.getElementById('topbar-back').classList.toggle('hidden', BACK_SCREENS.indexOf(id) === -1);
+      document.getElementById('topbar-btn-fechar').classList.toggle('hidden', id !== 'dashboard-screen');
     }
 
     // Cada tela troca via display:none/flex (sem navegação real de página), então o
@@ -920,10 +953,29 @@
     window.scrollTo(0, 0);
   }
 
-  function updateHeaderUser() {
-    var el = document.getElementById('header-user');
-    el.textContent = usuarioLogado ? usuarioLogado.nome : '';
+  function updateSidebarUser() {
+    if (!usuarioLogado) return;
+    document.getElementById('sidebar-user-nome').textContent = usuarioLogado.nome || '';
+    document.getElementById('sidebar-user-posto').textContent = escalaAtual ? escalaAtual.id_posto : '';
+    document.getElementById('sidebar-avatar').textContent = (usuarioLogado.nome || '?').trim().charAt(0).toUpperCase();
   }
+
+  function verificarAcessoOutroSistema() {
+    if (!usuarioLogado || !usuarioLogado.re) return;
+    fetch(SUPABASE_EDGE + '/auth-form', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      body: JSON.stringify({ action: 'verificar-re', re: usuarioLogado.re })
+    }).then(function(r) { return r.json(); }).then(function(body) {
+      podeAlternar = !!(body && body.habilitado_outro_sistema);
+      salvarSessao();
+      document.getElementById('btn-switch-app').classList.toggle('hidden', !podeAlternar);
+    }).catch(function() {});
+  }
+
+  window.irParaOutroSistema = function() {
+    window.location.href = 'https://gss-requisicoes.pages.dev/';
+  };
 
   function showErro(el, msg) {
     el.innerHTML = icon('alert-triangle', 14) + '<span>' + escapeHtml(msg) + '</span>';
@@ -965,7 +1017,12 @@
 
   // ─── ÍCONES ESTÁTICOS (preenchidos uma vez no DOMContentLoaded) ────────
   function initStaticIcons() {
-    document.getElementById('btn-header-back').innerHTML = icon('arrow-left', 18);
+    document.getElementById('topbar-back').innerHTML = icon('arrow-left', 17);
+    document.getElementById('topbar-btn-fechar').innerHTML = icon('log-out', 14) + '<span>Fechar Livro</span>';
+    document.getElementById('nav-ocorrencias').innerHTML = '<span class="ico-wrap">' + icon('inbox', 17) + '</span><span class="lbl">Ocorrências</span>';
+    document.getElementById('nav-acessos').innerHTML = '<span class="ico-wrap">' + icon('users', 17) + '</span><span class="lbl">Controle de Acesso</span>';
+    document.getElementById('btn-switch-app').innerHTML = '<span class="ico-wrap">' + icon('repeat', 15) + '</span><span class="lbl">Ir para Requisições</span>';
+    document.getElementById('btn-logout').innerHTML = '<span class="ico-wrap">' + icon('log-out', 14) + '</span><span class="lbl">Sair</span>';
     document.getElementById('pw-eye-toggle').innerHTML = icon('eye', 17);
     document.getElementById('livros-btn-sair').innerHTML = icon('log-out', 15) + '<span>Sair</span>';
     document.getElementById('rec-sec-colaborador').innerHTML = icon('user', 15) + '<span>Colaborador</span>';
@@ -973,8 +1030,6 @@
     document.getElementById('rec-sec-texto').innerHTML = icon('file-text', 15) + '<span>Texto de Recebimento</span>';
     document.getElementById('rec-btn-voltar').innerHTML = icon('arrow-left', 15) + '<span>Voltar aos Livros</span>';
     document.getElementById('dash-search-icon').innerHTML = icon('search', 15);
-    document.getElementById('dash-btn-fechar').innerHTML = icon('log-out', 15) + '<span>Fechar Livro</span>';
-    document.getElementById('dash-btn-acessos').innerHTML = icon('users', 15) + '<span>Controle de Acesso</span>';
     document.getElementById('dash-btn-nova').innerHTML = icon('plus', 15) + '<span>Nova Ocorrência</span>';
     document.getElementById('acessos-btn-novo').innerHTML = icon('plus', 15) + '<span>Novo Acesso</span>';
     document.getElementById('acessos-btn-voltar').innerHTML = icon('arrow-left', 15) + '<span>Voltar ao Dashboard</span>';
@@ -1077,6 +1132,7 @@
       }
       usuarioLogado = user;
       salvarSessao();
+      verificarAcessoOutroSistema();
       if (user.primeiro_acesso) {
         showTrocarSenha(user);
       } else {
@@ -1518,9 +1574,7 @@
   // ─── DASHBOARD ──────────────────────────────────────────────────────────
   async function carregarDashboard() {
     showScreen('loading-screen');
-    document.getElementById('app-header').style.display = 'flex';
-    updateHeaderUser();
-    document.getElementById('dash-btn-acessos-wrap').classList.toggle('hidden', !controleAcessoHabilitadoAtual);
+    document.getElementById('nav-acessos').classList.toggle('hidden', !controleAcessoHabilitadoAtual);
     try {
       // Carregar ocorrências do posto
       if (escalaAtual) {
@@ -1555,27 +1609,12 @@
     var filtered = getFilteredOcorrencias();
     // Stats
     var total = filtered.length;
-    var normais = filtered.filter(function(o) { return o.urgencia === 'NAO_URGENTE' || o.urgencia === 'POUCO_URGENTE'; }).length;
-    var urgentes = filtered.filter(function(o) { return o.urgencia === 'URGENTE' || o.urgencia === 'MUITO_URGENTE'; }).length;
-    var criticas = filtered.filter(function(o) { return o.urgencia === 'EMERGENCIA'; }).length;
     var abertas = filtered.filter(function(o) { return o.status === 'ABERTA'; }).length;
     var finalizadas = filtered.filter(function(o) { return o.status === 'FINALIZADA'; }).length;
 
-    document.getElementById('dash-total').textContent = total;
-
-    // Donut chart
-    renderDonut(normais, urgentes, criticas);
-
-    // Legend
-    document.getElementById('dash-legend').innerHTML =
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div><span class="legend-label">Normais</span><span class="legend-count">' + normais + '</span></div>' +
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div><span class="legend-label">Urgentes</span><span class="legend-count">' + urgentes + '</span></div>' +
-      '<div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div><span class="legend-label">Críticas</span><span class="legend-count">' + criticas + '</span></div>';
-
-    // Status
-    document.getElementById('dash-status').innerHTML =
-      '<div class="status-row"><div class="status-label"><div class="status-dot" style="background:var(--primary)"></div>Abertas</div><div class="status-count">' + abertas + '</div></div>' +
-      '<div class="status-row"><div class="status-label"><div class="status-dot" style="background:var(--success)"></div>Finalizadas</div><div class="status-count">' + finalizadas + '</div></div>';
+    document.getElementById('dash-summary-abertas').textContent = abertas;
+    document.getElementById('dash-summary-finalizadas').textContent = finalizadas;
+    document.getElementById('dash-summary-total').textContent = total;
 
     // Cards
     var listEl = document.getElementById('dash-occ-list');
@@ -1659,49 +1698,6 @@
 
       '</div>' +
     '</div>';
-  }
-
-  function renderDonut(normais, urgentes, criticas) {
-    var total = normais + urgentes + criticas;
-    var svg = document.getElementById('dash-donut');
-    if (total === 0) {
-      svg.innerHTML = '<circle cx="60" cy="60" r="50" fill="none" stroke="#e5e7eb" stroke-width="16"/>';
-      return;
-    }
-    var colors = ['#1E5EFF', '#f59e0b', '#b91c1c'];
-    var vals = [normais, urgentes, criticas];
-    var cx = 60, cy = 60, r = 50, sw = 16;
-    var paths = '';
-    var cumul = 0;
-    for (var i = 0; i < 3; i++) {
-      if (vals[i] === 0) continue;
-      var pct = vals[i] / total;
-      if (pct >= 1) {
-        paths += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + colors[i] + '" stroke-width="' + sw + '"/>';
-        cumul = 1;
-        break;
-      }
-      var startAngle = cumul * 2 * Math.PI - Math.PI / 2;
-      cumul += pct;
-      var endAngle = cumul * 2 * Math.PI - Math.PI / 2;
-      var large = pct > 0.5 ? 1 : 0;
-      var x1 = cx + r * Math.cos(startAngle);
-      var y1 = cy + r * Math.sin(startAngle);
-      var x2 = cx + r * Math.cos(endAngle);
-      var y2 = cy + r * Math.sin(endAngle);
-      paths += '<path d="M' + x1 + ',' + y1 + ' A' + r + ',' + r + ' 0 ' + large + ',1 ' + x2 + ',' + y2 + '" fill="none" stroke="' + colors[i] + '" stroke-width="' + sw + '" stroke-linecap="butt"/>';
-    }
-    if (cumul < 1) {
-      var startA = cumul * 2 * Math.PI - Math.PI / 2;
-      var endA = Math.PI * 2 - Math.PI / 2;
-      var x1e = cx + r * Math.cos(startA);
-      var y1e = cy + r * Math.sin(startA);
-      var x2e = cx + r * Math.cos(endA);
-      var y2e = cy + r * Math.sin(endA);
-      var largeE = (1 - cumul) > 0.5 ? 1 : 0;
-      paths += '<path d="M' + x1e + ',' + y1e + ' A' + r + ',' + r + ' 0 ' + largeE + ',1 ' + x2e + ',' + y2e + '" fill="none" stroke="#e5e7eb" stroke-width="' + sw + '" stroke-linecap="butt"/>';
-    }
-    svg.innerHTML = paths;
   }
 
   function getFilteredOcorrencias() {
@@ -2315,6 +2311,7 @@
     escalaAtual = null;
     recebimentoHabilitadoAtual = false;
     controleAcessoHabilitadoAtual = false;
+    podeAlternar = false;
     window._escalasAtivos = [];
     ocorrenciasDashboard = [];
     acessosLocalDashboard = [];
@@ -2325,7 +2322,6 @@
     senhaVisivel = false;
     document.getElementById('pw-eye-toggle').innerHTML = icon('eye', 17);
     document.getElementById('login-erro').style.display = 'none';
-    document.getElementById('app-header').style.display = 'none';
     showScreen('login-screen');
     document.getElementById('login-input').focus();
   };
