@@ -86,6 +86,9 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 .app-sidebar:hover .app-user .info{opacity:1}
 .app-user .nome{font-size:11.5px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .app-user .posto{font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-switch-btn{display:flex;align-items:center;gap:6px;width:100%;color:#7dd3fc;font-size:11px;font-weight:600;cursor:pointer;background:none;border:none;padding:5px 2px;opacity:0;transition:opacity .14s,color .15s;white-space:nowrap}
+.app-sidebar:hover .app-switch-btn{opacity:1}
+.app-switch-btn:hover{color:#bae6fd}
 .app-logout{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;background:none;border:none;padding:3px 2px;opacity:0;transition:opacity .14s,color .15s;white-space:nowrap}
 .app-sidebar:hover .app-logout{opacity:1}
 .app-logout:hover{color:#fca5a5}
@@ -215,6 +218,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
           <div class="posto" id="sidebar-user-posto"></div>
         </div>
       </div>
+      <button class="app-switch-btn hidden" id="btn-switch-app" onclick="irParaOutroSistema()"></button>
       <button class="app-logout" onclick="sair()" id="btn-logout"></button>
     </div>
   </aside>
@@ -258,7 +262,8 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     'x': '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>',
     'clock': '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>',
     'search': '<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>',
-    'trash': '<polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>'
+    'trash': '<polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>',
+    'repeat': '<polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path>'
   };
 
   function icon(name, size) {
@@ -269,6 +274,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   }
 
   var usuarioLogado = null;
+  var podeAlternar = false;
   var catalogo = [];
   var quantidades = {};
   var permiteOutros = false;
@@ -288,6 +294,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   document.getElementById('nav-materiais').innerHTML = '<span class="ico-wrap">' + icon('package', 17) + '</span><span class="lbl">Requisição de Materiais</span>';
   document.getElementById('nav-uniformes').innerHTML = '<span class="ico-wrap">' + icon('shirt', 17) + '</span><span class="lbl">Requisição de Uniformes</span><span class="badge-em-breve">Em breve</span>';
   document.getElementById('nav-epi').innerHTML = '<span class="ico-wrap">' + icon('shield', 17) + '</span><span class="lbl">Formulário de EPI</span>';
+  document.getElementById('btn-switch-app').innerHTML = '<span class="ico-wrap">' + icon('repeat', 15) + '</span><span class="lbl">Ir para Livro de Ocorrências</span>';
   document.getElementById('btn-logout').innerHTML = icon('log-out', 14) + '<span class="lbl">Sair</span>';
   document.getElementById('pw-eye-toggle').innerHTML = icon('eye', 17);
   document.getElementById('topbar-back').innerHTML = icon('arrow-left', 17);
@@ -303,7 +310,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   };
 
   function salvarSessao() {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ usuario: usuarioLogado, timestamp: Date.now() }));
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ usuario: usuarioLogado, podeAlternar: podeAlternar, timestamp: Date.now() }));
   }
 
   function restaurarSessao() {
@@ -313,6 +320,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
       var session = JSON.parse(raw);
       if (session && session.usuario && (Date.now() - session.timestamp) < SESSION_MAX_AGE) {
         usuarioLogado = session.usuario;
+        podeAlternar = session.podeAlternar === true;
         return true;
       }
     } catch (e) {}
@@ -320,9 +328,26 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     return false;
   }
 
+  function verificarAcessoOutroSistema() {
+    if (!usuarioLogado || !usuarioLogado.re) return;
+    fetch(SUPABASE_EDGE + '/auth-form', {
+      method: 'POST', headers: headersJson(),
+      body: JSON.stringify({ action: 'verificar-re', re: usuarioLogado.re })
+    }).then(function(r) { return r.json(); }).then(function(body) {
+      podeAlternar = !!(body && body.habilitado_outro_sistema);
+      salvarSessao();
+      document.getElementById('btn-switch-app').classList.toggle('hidden', !podeAlternar);
+    }).catch(function() {});
+  }
+
+  window.irParaOutroSistema = function() {
+    window.location.href = 'https://gss-livro-ocorrencias.pages.dev/';
+  };
+
   window.sair = function() {
     localStorage.removeItem(SESSION_KEY);
     usuarioLogado = null;
+    podeAlternar = false;
     document.getElementById('app-shell').classList.remove('active');
     document.getElementById('login-screen').style.display = 'flex';
   };
@@ -351,6 +376,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
       }
       usuarioLogado = body.user;
       salvarSessao();
+      verificarAcessoOutroSistema();
       if (usuarioLogado.primeiro_acesso) {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('trocar-senha-screen').classList.add('active');
@@ -396,6 +422,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     document.getElementById('sidebar-user-nome').textContent = usuarioLogado.nome || '';
     document.getElementById('sidebar-user-posto').textContent = usuarioLogado.posto || '';
     document.getElementById('sidebar-avatar').textContent = (usuarioLogado.nome || '?').trim().charAt(0).toUpperCase();
+    document.getElementById('btn-switch-app').classList.toggle('hidden', !podeAlternar);
     irParaMeusPedidos();
   }
 
