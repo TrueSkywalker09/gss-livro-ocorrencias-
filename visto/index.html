@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Rubrica Diária — GSS</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --primary:#1E5EFF;--primary-hover:#1a4fe0;
+      --bg:#F4F5F7;--card:#FFFFFF;--text:#1f2937;--text2:#6b7280;--text3:#9ca3af;
+      --border:#e5e7eb;--border-focus:#1E5EFF;
+      --success:#15803d;--success-bg:#f0fdf4;--success-border:#bbf7d0;
+      --danger:#b91c1c;--danger-bg:#fef2f2;--danger-border:#fecaca;
+      --radius:10px;--radius-sm:6px;--radius-lg:14px;
+      --shadow:0 1px 3px rgba(0,0,0,.08);
+    }
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    .hidden{display:none !important}
+    .wrap{max-width:640px;margin:0 auto;padding:24px 20px;min-height:100vh;display:flex;flex-direction:column;justify-content:center}
+    .card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:28px}
+    .titulo{font-size:19px;font-weight:800;text-align:center;margin-bottom:4px;color:#0f172a}
+    .sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:20px}
+    .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading{text-align:center;padding:40px 0}
+    .alert{border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:16px}
+    .alert-error{background:var(--danger-bg);border:1px solid var(--danger-border);color:var(--danger)}
+    .alert-success{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success)}
+    .resumo{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;line-height:1.7}
+    .resumo b{color:#0f172a}
+    .ocorrencias-lista{max-height:220px;overflow-y:auto;margin-bottom:16px;border:1px solid var(--border);border-radius:8px}
+    .ocor-item{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12.5px;line-height:1.5}
+    .ocor-item:last-child{border-bottom:none}
+    .ocor-item .prot{font-weight:700;color:var(--primary)}
+    .ocor-vazio{padding:16px;text-align:center;color:var(--text2);font-size:13px}
+    .form-field{margin-bottom:16px}
+    .form-field label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+    .form-field label .required{color:var(--danger)}
+    .form-field input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);font-family:inherit}
+    .form-field input:focus{outline:none;border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(30,94,255,.12)}
+    .assinatura-wrap{border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
+    .assinatura-wrap canvas{width:100%;height:220px;touch-action:none;cursor:crosshair;display:block}
+    .assinatura-actions{display:flex;justify-content:flex-end;margin-top:6px}
+    .link-limpar{background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;text-decoration:underline}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 20px;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;margin-top:6px}
+    .btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-hover)}
+    .btn-primary:disabled{background:var(--text3);cursor:not-allowed}
+    .icone-topo{text-align:center;font-size:40px;margin-bottom:8px}
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="card">
+
+    <div id="tela-carregando" class="loading">
+      <div class="spinner"></div>
+      <p style="margin-top:12px;color:var(--text2);font-size:13px">Carregando...</p>
+    </div>
+
+    <div id="tela-erro" class="hidden">
+      <div class="icone-topo">⚠️</div>
+      <div class="titulo">Não foi possível abrir</div>
+      <div id="erro-msg" class="alert alert-error" style="margin-top:16px"></div>
+    </div>
+
+    <div id="tela-ja-rubricado" class="hidden">
+      <div class="icone-topo">✅</div>
+      <div class="titulo">Dia já rubricado</div>
+      <div class="sub" id="ja-rubricado-sub"></div>
+      <div class="resumo" id="ja-rubricado-info"></div>
+    </div>
+
+    <div id="tela-rubrica" class="hidden">
+      <div class="titulo">Rubrica Diária</div>
+      <div class="sub">Confira o resumo do dia e assine para confirmar a rubrica</div>
+
+      <div class="resumo" id="rubrica-resumo"></div>
+
+      <div id="rubrica-ocorrencias-wrap">
+        <div class="form-field" style="margin-bottom:8px"><label>Ocorrências do dia</label></div>
+        <div class="ocorrencias-lista" id="rubrica-ocorrencias"></div>
+      </div>
+
+      <div id="rubrica-erro" class="alert alert-error hidden"></div>
+
+      <div class="form-field">
+        <label>Nome de quem está rubricando <span class="required">*</span></label>
+        <input type="text" id="rubrica-nome" placeholder="Nome completo"/>
+      </div>
+
+      <div class="form-field">
+        <label>Assinatura <span class="required">*</span></label>
+        <div class="assinatura-wrap">
+          <canvas id="assinatura-canvas" width="920" height="360"></canvas>
+        </div>
+        <div class="assinatura-actions">
+          <button type="button" class="link-limpar" onclick="limparAssinatura()">Limpar assinatura</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-confirmar" onclick="confirmarRubrica()">Confirmar Rubrica</button>
+    </div>
+
+    <div id="tela-sucesso" class="hidden">
+      <div class="icone-topo">✅</div>
+      <div class="titulo">Rubrica registrada!</div>
+      <div class="sub">Obrigado — o dia foi rubricado digitalmente com sucesso.</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  var SUPABASE_URL = 'https://xyfllrcdrcvjimzwbfsm.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5ZmxscmNkcmN2amltendiZnNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzQ4NzUsImV4cCI6MjA5Nzg1MDg3NX0.nHgqNJnfWQW5BTfEWQTK92LRPLqNadiC-xios5zN4_A';
+  var SUPABASE_EDGE = SUPABASE_URL + '/functions/v1';
+
+  var token = new URLSearchParams(window.location.search).get('token');
+
+  var assinaturaCanvas, assinaturaCtx, assinaturaDesenhando = false, assinaturaTemPixels = false;
+
+  function mostrarTela(id) {
+    ['tela-carregando', 'tela-erro', 'tela-ja-rubricado', 'tela-rubrica', 'tela-sucesso'].forEach(function(t) {
+      document.getElementById(t).classList.toggle('hidden', t !== id);
+    });
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+
+  function fmtData(iso) {
+    if (!iso) return '-';
+    var p = iso.split('-');
+    return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : iso;
+  }
+
+  function fmtDataHora(iso) {
+    if (!iso) return '-';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  }
+
+  function mostrarErro(msg) {
+    document.getElementById('erro-msg').textContent = msg;
+    mostrarTela('tela-erro');
+  }
+
+  function carregar() {
+    if (!token) { mostrarErro('Link inválido — token não informado.'); return; }
+
+    fetch(SUPABASE_EDGE + '/visto-diario', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      body: JSON.stringify({ action: 'carregar', token: token })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      if (data.error) { mostrarErro(data.error); return; }
+
+      if (data.status === 'aprovado') {
+        document.getElementById('ja-rubricado-sub').textContent = data.posto_nome + ' — ' + fmtData(data.data);
+        document.getElementById('ja-rubricado-info').innerHTML =
+          '<b>Rubricado por:</b> ' + escapeHtml(data.aprovado_por_nome || '-') + '<br/>' +
+          '<b>Em:</b> ' + fmtDataHora(data.aprovado_em);
+        mostrarTela('tela-ja-rubricado');
+        return;
+      }
+
+      document.getElementById('rubrica-resumo').innerHTML =
+        '<b>Posto:</b> ' + escapeHtml(data.posto_nome) + (data.livro ? ' — ' + escapeHtml(data.livro) : '') + '<br/>' +
+        '<b>Data:</b> ' + fmtData(data.data);
+
+      var ocorrencias = data.ocorrencias || [];
+      var listaEl = document.getElementById('rubrica-ocorrencias');
+      if (ocorrencias.length === 0) {
+        listaEl.innerHTML = '<div class="ocor-vazio">Nenhuma ocorrência registrada neste dia.</div>';
+      } else {
+        listaEl.innerHTML = ocorrencias.map(function(o) {
+          return '<div class="ocor-item"><span class="prot">' + escapeHtml(o.protocolo || '-') + '</span> — ' +
+            escapeHtml(o.categoria_nome || '-') + ' — ' + escapeHtml(o.local || '-') + '<br/>' +
+            escapeHtml(o.descritivo || '') + '</div>';
+        }).join('');
+      }
+
+      initAssinatura();
+      mostrarTela('tela-rubrica');
+    }).catch(function() {
+      mostrarErro('Erro ao carregar. Verifique sua conexão e tente novamente.');
+    });
+  }
+
+  function initAssinatura() {
+    assinaturaCanvas = document.getElementById('assinatura-canvas');
+    assinaturaCtx = assinaturaCanvas.getContext('2d');
+    assinaturaTemPixels = false;
+    assinaturaCtx.strokeStyle = '#000';
+    assinaturaCtx.lineWidth = 4;
+    assinaturaCtx.lineCap = 'round';
+    assinaturaCtx.lineJoin = 'round';
+    assinaturaCtx.fillStyle = '#fff';
+    assinaturaCtx.fillRect(0, 0, assinaturaCanvas.width, assinaturaCanvas.height);
+    assinaturaCanvas.onpointerdown = onAssinaturaStart;
+    assinaturaCanvas.onpointermove = onAssinaturaMove;
+    assinaturaCanvas.onpointerup = onAssinaturaEnd;
+    assinaturaCanvas.onpointerleave = onAssinaturaEnd;
+  }
+
+  function getCanvasPos(e) {
+    var rect = assinaturaCanvas.getBoundingClientRect();
+    return { x: (e.clientX - rect.left) * (assinaturaCanvas.width / rect.width), y: (e.clientY - rect.top) * (assinaturaCanvas.height / rect.height) };
+  }
+
+  function onAssinaturaStart(e) {
+    assinaturaDesenhando = true;
+    var pos = getCanvasPos(e);
+    assinaturaCtx.beginPath();
+    assinaturaCtx.arc(pos.x, pos.y, assinaturaCtx.lineWidth / 2, 0, Math.PI * 2);
+    assinaturaCtx.fill();
+    assinaturaCtx.beginPath();
+    assinaturaCtx.moveTo(pos.x, pos.y);
+  }
+
+  function onAssinaturaMove(e) {
+    if (!assinaturaDesenhando) return;
+    var pos = getCanvasPos(e);
+    assinaturaCtx.lineTo(pos.x, pos.y);
+    assinaturaCtx.stroke();
+    assinaturaCtx.beginPath();
+    assinaturaCtx.moveTo(pos.x, pos.y);
+    assinaturaTemPixels = true;
+  }
+
+  function onAssinaturaEnd() { assinaturaDesenhando = false; }
+
+  window.limparAssinatura = function() {
+    if (!assinaturaCtx) return;
+    assinaturaCtx.fillStyle = '#fff';
+    assinaturaCtx.fillRect(0, 0, assinaturaCanvas.width, assinaturaCanvas.height);
+    assinaturaTemPixels = false;
+  };
+
+  window.confirmarRubrica = function() {
+    var erroEl = document.getElementById('rubrica-erro');
+    var nome = (document.getElementById('rubrica-nome').value || '').trim();
+
+    if (!nome) { erroEl.textContent = 'Informe o nome de quem está rubricando.'; erroEl.classList.remove('hidden'); return; }
+    if (!assinaturaTemPixels) { erroEl.textContent = 'Assine antes de confirmar.'; erroEl.classList.remove('hidden'); return; }
+    erroEl.classList.add('hidden');
+
+    var btn = document.getElementById('btn-confirmar');
+    if (btn.disabled) return;
+    btn.disabled = true;
+
+    var assinatura = assinaturaCanvas.toDataURL('image/png');
+
+    fetch(SUPABASE_EDGE + '/visto-diario', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      body: JSON.stringify({ action: 'confirmar', token: token, nome: nome, assinatura: assinatura })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      btn.disabled = false;
+      if (data.error) { erroEl.textContent = data.error; erroEl.classList.remove('hidden'); return; }
+      mostrarTela('tela-sucesso');
+    }).catch(function() {
+      btn.disabled = false;
+      erroEl.textContent = 'Erro ao enviar. Tente novamente.';
+      erroEl.classList.remove('hidden');
+    });
+  };
+
+  carregar();
+</script>
+</body>
+</html>

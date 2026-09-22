@@ -388,6 +388,46 @@
   </div>
 </div>
 
+<!-- ════════════ VEÍCULO DO PLANTÃO — KM INICIAL (AO ABRIR O LIVRO) ════════════ -->
+<div class="screen livros-screen" id="veiculo-screen">
+  <div class="livros-card" style="max-width:400px;width:100%">
+    <div style="text-align:center;margin-bottom:20px">
+      <h1 style="font-size:20px;font-weight:800;margin-bottom:4px">Veículo do Plantão</h1>
+      <p style="font-size:13px;color:var(--text2)">Selecione o veículo e informe o KM ao assumir o plantão.</p>
+    </div>
+    <div class="form-field" id="veiculo-select-wrap">
+      <label>Veículo <span class="required">*</span></label>
+      <select id="veiculo-select"></select>
+    </div>
+    <div class="form-field">
+      <label>KM ao assumir o plantão <span class="required">*</span></label>
+      <input type="number" id="veiculo-km-inicial" min="0" placeholder="Ex: 45210"/>
+    </div>
+    <div id="veiculo-erro" class="alert alert-error" style="display:none"></div>
+    <div style="margin-top:20px">
+      <button class="btn btn-primary icon-inline" onclick="confirmarVeiculoInicial()" id="veiculo-btn-continuar"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ VEÍCULO DO PLANTÃO — KM FINAL (AO FECHAR O LIVRO) ════════════ -->
+<div class="screen livros-screen" id="km-final-screen">
+  <div class="livros-card" style="max-width:400px;width:100%">
+    <div style="text-align:center;margin-bottom:20px">
+      <h1 style="font-size:20px;font-weight:800;margin-bottom:4px">Encerramento do Veículo</h1>
+      <p style="font-size:13px;color:var(--text2)" id="km-final-veiculo-label"></p>
+    </div>
+    <div class="form-field">
+      <label>KM ao encerrar o plantão <span class="required">*</span></label>
+      <input type="number" id="veiculo-km-final" min="0" placeholder="Ex: 45280"/>
+    </div>
+    <div id="km-final-erro" class="alert alert-error" style="display:none"></div>
+    <div style="margin-top:20px">
+      <button class="btn btn-primary icon-inline" onclick="confirmarVeiculoFinal()" id="km-final-btn-continuar"></button>
+    </div>
+  </div>
+</div>
+
 <!-- ════════════ RECEBIMENTO ════════════ -->
 <div class="screen recebimento-screen" id="recebimento-screen">
   <div class="livros-card">
@@ -842,6 +882,11 @@
   var escalaAtual = null;
   var recebimentoHabilitadoAtual = false;
   var controleAcessoHabilitadoAtual = false;
+  var veiculoHabilitadoAtual = false;
+  var veiculosLivroAtual = [];
+  var veiculoSelecionadoAtual = null;
+  var kmInicialPlantao = null;
+  var kmFinalPlantao = null;
   var abaLivrosAtiva = 'ativos';
   var ocorrenciasDashboard = [];
   var acessosLocalDashboard = [];
@@ -862,6 +907,10 @@
         usuario: usuarioLogado,
         recebimentoHabilitado: recebimentoHabilitadoAtual,
         controleAcessoHabilitado: controleAcessoHabilitadoAtual,
+        veiculoHabilitado: veiculoHabilitadoAtual,
+        veiculoSelecionado: veiculoSelecionadoAtual,
+        kmInicialPlantao: kmInicialPlantao,
+        kmFinalPlantao: kmFinalPlantao,
         recebimentoTexto: recebimentoTexto,
         podeAlternar: podeAlternar,
         timestamp: Date.now()
@@ -880,6 +929,10 @@
         usuarioLogado = session.usuario;
         recebimentoHabilitadoAtual = session.recebimentoHabilitado;
         controleAcessoHabilitadoAtual = session.controleAcessoHabilitado === true;
+        veiculoHabilitadoAtual = session.veiculoHabilitado === true;
+        veiculoSelecionadoAtual = session.veiculoSelecionado || null;
+        kmInicialPlantao = (typeof session.kmInicialPlantao === 'number') ? session.kmInicialPlantao : null;
+        kmFinalPlantao = (typeof session.kmFinalPlantao === 'number') ? session.kmFinalPlantao : null;
         recebimentoTexto = session.recebimentoTexto || null;
         podeAlternar = session.podeAlternar === true;
         escalaAtual = book;
@@ -896,6 +949,9 @@
       localStorage.removeItem(BOOK_KEY);
     } catch(e) {}
     recebimentoTexto = null;
+    veiculoSelecionadoAtual = null;
+    kmInicialPlantao = null;
+    kmFinalPlantao = null;
   }
 
   // ─── UTILS ──────────────────────────────────────────────────────────────
@@ -1040,6 +1096,8 @@
     document.getElementById('acesso-cad-label-documento').innerHTML = icon('file-text', 13) + ' CPF ou Matrícula/RE <span class="required">*</span>';
     document.getElementById('acesso-cad-btn-salvar').innerHTML = icon('save', 15) + '<span>Salvar Acesso</span>';
     document.getElementById('material-btn-continuar').innerHTML = icon('check-circle', 15) + '<span>Continuar</span>';
+    document.getElementById('veiculo-btn-continuar').innerHTML = icon('check-circle', 15) + '<span>Continuar</span>';
+    document.getElementById('km-final-btn-continuar').innerHTML = icon('check-circle', 15) + '<span>Continuar</span>';
     document.getElementById('cad-header-title').innerHTML = icon('file-text', 18) + '<span>Dados da Ocorrência</span>';
     document.getElementById('cad-label-inicio').innerHTML = icon('calendar', 13) + ' Início <span class="required">*</span>';
     document.getElementById('cad-label-urgencia').innerHTML = icon('alert-triangle', 13) + ' Urgência <span class="required">*</span>';
@@ -1274,9 +1332,11 @@
     escalaAtual = escala;
 
     var recebimentoHabilitado = false;
+    var veiculoHabilitado = false;
     try {
+      var filtroLivro = escala.livro ? ('&livro=eq.' + encodeURIComponent(escala.livro)) : '&livro=is.null';
       var r = new XMLHttpRequest();
-      r.open('GET', SUPABASE_URL + '/rest/v1/gss_postos_ativos?id_posto=eq.' + encodeURIComponent(escala.id_posto) + '&select=nome,cc,recebimento_servico,controle_acesso', false);
+      r.open('GET', SUPABASE_URL + '/rest/v1/gss_livros_config?id_posto=eq.' + encodeURIComponent(escala.id_posto) + filtroLivro + '&select=recebimento_servico,controle_acesso,controle_veiculo', false);
       r.setRequestHeader('apikey', SUPABASE_ANON_KEY);
       r.send();
       if (r.status === 200) {
@@ -1284,10 +1344,12 @@
         if (d && d.length > 0) {
           recebimentoHabilitado = d[0].recebimento_servico === true;
           controleAcessoHabilitadoAtual = d[0].controle_acesso === true;
+          veiculoHabilitado = d[0].controle_veiculo === true;
         }
       }
     } catch(e) {}
     recebimentoHabilitadoAtual = recebimentoHabilitado;
+    veiculoHabilitadoAtual = veiculoHabilitado;
 
     materiaisLivroAtual = [];
     try {
@@ -1312,6 +1374,14 @@
   };
 
   function _continuarAposMaterial() {
+    if (veiculoHabilitadoAtual && !veiculoSelecionadoAtual) {
+      abrirVeiculoInicial();
+    } else {
+      _continuarAposVeiculo();
+    }
+  }
+
+  function _continuarAposVeiculo() {
     if (recebimentoHabilitadoAtual) {
       iniciarRecebimento();
     } else {
@@ -1319,6 +1389,58 @@
       carregarDashboard();
     }
   }
+
+  // ─── VEÍCULO DO PLANTÃO — KM INICIAL (checkpoint ao abrir o livro) ──────
+  window.abrirVeiculoInicial = function() {
+    veiculosLivroAtual = [];
+    try {
+      var rv = new XMLHttpRequest();
+      rv.open('GET', SUPABASE_URL + '/rest/v1/gss_veiculos?id_posto=eq.' + encodeURIComponent(escalaAtual.id_posto) + '&ativo=eq.true&select=id,marca,modelo,ano,placa,km_inicial', false);
+      rv.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      rv.send();
+      if (rv.status === 200) {
+        var lista = JSON.parse(rv.responseText);
+        if (lista && lista.length > 0) veiculosLivroAtual = lista;
+      }
+    } catch(e) {}
+
+    // Sem veículo cadastrado no posto: não há o que selecionar, segue o fluxo.
+    if (veiculosLivroAtual.length === 0) {
+      _continuarAposVeiculo();
+      return;
+    }
+
+    var wrap = document.getElementById('veiculo-select-wrap');
+    var select = document.getElementById('veiculo-select');
+    var optsHtml = veiculosLivroAtual.map(function(v) {
+      return '<option value="' + v.id + '">' + escapeHtml(v.marca + ' ' + v.modelo + ' — ' + v.placa) + '</option>';
+    }).join('');
+    select.innerHTML = optsHtml;
+    wrap.classList.toggle('hidden', veiculosLivroAtual.length === 1);
+
+    document.getElementById('veiculo-km-inicial').value = '';
+    document.getElementById('veiculo-erro').style.display = 'none';
+    showScreen('veiculo-screen');
+  };
+
+  window.confirmarVeiculoInicial = function() {
+    var erroEl = document.getElementById('veiculo-erro');
+    var veiculoId = document.getElementById('veiculo-select').value;
+    var km = parseFloat(document.getElementById('veiculo-km-inicial').value);
+    var veiculo = veiculosLivroAtual.find(function(v) { return String(v.id) === String(veiculoId); });
+
+    if (!veiculo) { showErro(erroEl, 'Selecione o veículo.'); return; }
+    if (isNaN(km) || km < 0) { showErro(erroEl, 'Informe o KM ao assumir o plantão.'); return; }
+    if (km < (veiculo.km_inicial || 0)) {
+      if (!confirm('O KM informado (' + km + ') é menor que o último KM registrado para este veículo (' + veiculo.km_inicial + '). Deseja continuar mesmo assim?')) return;
+    }
+
+    erroEl.style.display = 'none';
+    veiculoSelecionadoAtual = veiculo;
+    kmInicialPlantao = km;
+    salvarSessao();
+    _continuarAposVeiculo();
+  };
 
   window.voltarLivros = function() {
     escalaAtual = null;
@@ -2157,7 +2279,13 @@
               recebimento: recebimentoTexto || null,
               texto: window._passagemTexto,
               assinatura: assinaturaAtual,
-              livro: escalaAtual ? (escalaAtual.livro || null) : null
+              livro: escalaAtual ? (escalaAtual.livro || null) : null,
+              veiculo_id: veiculoSelecionadoAtual ? veiculoSelecionadoAtual.id : null,
+              veiculo_placa: veiculoSelecionadoAtual ? veiculoSelecionadoAtual.placa : null,
+              veiculo_marca: veiculoSelecionadoAtual ? veiculoSelecionadoAtual.marca : null,
+              veiculo_modelo: veiculoSelecionadoAtual ? veiculoSelecionadoAtual.modelo : null,
+              km_inicial: kmInicialPlantao,
+              km_final: kmFinalPlantao
             })
           });
         } catch (e) { /* continue even if save fails */ }
@@ -2195,6 +2323,33 @@
       if (!confirm('Há ' + abertas.length + ' ocorrência(s) em aberto. Deseja fechar mesmo assim?')) return;
     }
 
+    // Se há veículo selecionado no plantão e o KM final ainda não foi
+    // informado, exige essa tela antes de seguir pra passagem/assinatura.
+    if (veiculoHabilitadoAtual && veiculoSelecionadoAtual && kmFinalPlantao === null) {
+      document.getElementById('km-final-veiculo-label').textContent =
+        veiculoSelecionadoAtual.marca + ' ' + veiculoSelecionadoAtual.modelo + ' — ' + veiculoSelecionadoAtual.placa;
+      document.getElementById('veiculo-km-final').value = '';
+      document.getElementById('km-final-erro').style.display = 'none';
+      showScreen('km-final-screen');
+      return;
+    }
+
+    _continuarFechamentoLivro();
+  };
+
+  window.confirmarVeiculoFinal = function() {
+    var erroEl = document.getElementById('km-final-erro');
+    var km = parseFloat(document.getElementById('veiculo-km-final').value);
+
+    if (isNaN(km) || km < 0) { showErro(erroEl, 'Informe o KM ao encerrar o plantão.'); return; }
+    if (km < kmInicialPlantao) { showErro(erroEl, 'KM final não pode ser menor que o KM inicial (' + kmInicialPlantao + ').'); return; }
+
+    erroEl.style.display = 'none';
+    kmFinalPlantao = km;
+    _continuarFechamentoLivro();
+  };
+
+  function _continuarFechamentoLivro() {
     // Passagem de Serviço acompanha o toggle "Recebimento de Serviço" do
     // posto (configurado no painel admin): se o posto não usa recebimento,
     // também não exige o formulário de passagem ao fechar — fecha direto.
@@ -2230,7 +2385,7 @@
     configurarBuscaReceptor();
     gerarTextoPassagem();
     showScreen('passagem-screen');
-  };
+  }
 
   function configurarBuscaReceptor() {
     var input = document.getElementById('psg-busca-receptor');
