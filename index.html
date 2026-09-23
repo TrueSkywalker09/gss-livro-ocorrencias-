@@ -309,6 +309,7 @@
       .occ-meta{flex-direction:column;gap:4px}
     }
   </style>
+  <link rel="stylesheet" href="ronda.css"/>
 </head>
 <body>
 
@@ -366,10 +367,12 @@
 <!-- ════════════ LIVROS ════════════ -->
 <div class="screen livros-screen" id="livros-screen">
   <div class="livros-header">
-    <h1>Livros Disponíveis</h1>
-    <p>Selecione o livro de ocorrência</p>
+    <h1 id="livros-titulo">Livros Disponíveis</h1>
+    <p id="livros-subtitulo">Selecione o livro de ocorrência</p>
   </div>
   <div id="livros-user-info" class="user-bar" style="display:none"></div>
+  <div id="rondas-secao"></div>
+  <div class="livros-secao-titulo hidden" id="livros-secao-titulo" style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin:6px 0 -6px"></div>
   <div class="livros-grid" id="livros-lista"></div>
   <div style="margin-top:22px;text-align:center">
     <button class="btn btn-outline icon-inline" onclick="fazerLogout()" style="width:auto;padding:10px 22px" id="livros-btn-sair"></button>
@@ -1126,6 +1129,8 @@
 
   // ─── INIT ───────────────────────────────────────────────────────────────
   function init() {
+    // Sessão da Ronda (ronda.js) — o colaborador estava numa ronda.
+    if (window.GSSRonda && window.GSSRonda.restaurar()) return;
     if (restaurarSessao()) {
       // Session valid → go to dashboard or livros
       if (escalaAtual) {
@@ -1252,17 +1257,27 @@
       });
       var body = await resp.json();
       var livros = body.livros || [];
-      if (!livros || livros.length === 0) {
+      var rondas = window.GSSRonda ? (body.rondas || []) : [];
+      if (livros.length === 0 && rondas.length === 0) {
         showNoLivros(user);
         return;
       }
-      showLivros(user, livros);
+      // Escalado só para ronda, num único posto: vai direto para a Ronda.
+      if (livros.length === 0 && rondas.length === 1) {
+        window.GSSRonda.abrirDireto(user, rondas[0]);
+        return;
+      }
+      showLivros(user, livros, rondas);
     } catch (err) {
       showNoLivros(user);
     }
   }
 
   function showNoLivros(user) {
+    document.getElementById('rondas-secao').innerHTML = '';
+    document.getElementById('livros-secao-titulo').classList.add('hidden');
+    document.getElementById('livros-titulo').textContent = 'Livros Disponíveis';
+    document.getElementById('livros-subtitulo').textContent = 'Selecione o livro de ocorrência';
     var infoEl = document.getElementById('livros-user-info');
     infoEl.innerHTML = '<span>' + icon('user', 13) + 'Olá <strong>' + escapeHtml(user.nome) + '</strong></span>';
     infoEl.style.display = 'flex';
@@ -1273,7 +1288,8 @@
     showScreen('livros-screen');
   }
 
-  function showLivros(user, livros) {
+  function showLivros(user, livros, rondas) {
+    rondas = rondas || [];
     var infoEl = document.getElementById('livros-user-info');
     var todosDisponiveis = livros.filter(function(l) { return !l.tem_ocorrencia || l.eh_hoje; });
     var seen = {};
@@ -1286,8 +1302,18 @@
       if (!seen[chave]) { seen[chave] = true; livrosDisponiveis.push(l); }
     });
     infoEl.innerHTML = '<span>' + icon('user', 13) + 'Olá <strong>' + escapeHtml(user.nome) + '</strong></span>' +
-      '<span>' + livrosDisponiveis.length + ' livro(s) disponível(is)</span>';
+      '<span>' + (rondas.length ? rondas.length + ' ronda(s) · ' : '') + livrosDisponiveis.length + ' livro(s) disponível(is)</span>';
     infoEl.style.display = 'flex';
+
+    // Ronda (ronda.js) e Livro aparecem em seções separadas do mesmo hub.
+    document.getElementById('rondas-secao').innerHTML = rondas.length ? window.GSSRonda.renderHub(user, rondas) : '';
+    var tituloSecao = document.getElementById('livros-secao-titulo');
+    tituloSecao.innerHTML = icon('clipboard', 14) + ' Livro de Ocorrências';
+    tituloSecao.classList.toggle('hidden', !rondas.length || !livrosDisponiveis.length);
+    document.getElementById('livros-titulo').textContent = rondas.length ? (livrosDisponiveis.length ? 'Meus Postos' : 'Rondas') : 'Livros Disponíveis';
+    document.getElementById('livros-subtitulo').textContent = rondas.length
+      ? (livrosDisponiveis.length ? 'Escolha a ronda ou o livro de ocorrência' : 'Selecione o posto da ronda')
+      : 'Selecione o livro de ocorrência';
 
     function renderLivro(esc) {
       var nomePosto = esc.id_posto;
@@ -1318,7 +1344,7 @@
     window._escalasAtivos = livrosDisponiveis;
     document.getElementById('livros-lista').innerHTML = livrosDisponiveis.length > 0
       ? livrosDisponiveis.map(renderLivro).join('')
-      : '<div class="no-livro"><div class="no-livro-icon">' + icon('clipboard', 36) + '</div><p style="font-size:13px;color:var(--text2)">Nenhum livro disponível no momento.</p></div>';
+      : rondas.length ? '' : '<div class="no-livro"><div class="no-livro-icon">' + icon('clipboard', 36) + '</div><p style="font-size:13px;color:var(--text2)">Nenhum livro disponível no momento.</p></div>';
     showScreen('livros-screen');
   }
 
@@ -2463,6 +2489,7 @@
 
   // ─── LOGOUT ─────────────────────────────────────────────────────────────
   window.fazerLogout = function() {
+    if (window.GSSRonda) window.GSSRonda.limpar();
     usuarioLogado = null;
     escalaAtual = null;
     recebimentoHabilitadoAtual = false;
@@ -2482,6 +2509,24 @@
     document.getElementById('login-input').focus();
   };
 
+  // ─── PONTE PARA O MÓDULO DE RONDA (ronda.js) ───────────────────────────
+  // A Ronda reaproveita login, ícones e navegação do Livro, mas vive no
+  // próprio arquivo — só o necessário é exposto aqui.
+  window.GSSLivro = {
+    SUPABASE_EDGE: SUPABASE_EDGE,
+    SUPABASE_ANON_KEY: SUPABASE_ANON_KEY,
+    ICONS: ICONS,
+    icon: icon,
+    escapeHtml: escapeHtml,
+    showScreen: showScreen,
+    abrirHub: function(user) {
+      usuarioLogado = user;
+      escalaAtual = null;
+      carregarLivros(user);
+    },
+    sair: function() { window.fazerLogout(); }
+  };
+
   // ─── ENTER KEY HANDLERS ────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function() {
     initStaticIcons();
@@ -2494,5 +2539,6 @@
 
 })();
 </script>
+<script src="ronda.js"></script>
 </body>
 </html>
