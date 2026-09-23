@@ -133,12 +133,6 @@
     return div.innerHTML;
   }
 
-  function fmtData(iso) {
-    if (!iso) return '-';
-    var p = iso.split('-');
-    return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : iso;
-  }
-
   function fmtDataHora(iso) {
     if (!iso) return '-';
     var d = new Date(iso);
@@ -162,7 +156,7 @@
       if (data.error) { mostrarErro(data.error); return; }
 
       if (data.status === 'aprovado') {
-        document.getElementById('ja-rubricado-sub').textContent = data.posto_nome + ' — ' + fmtData(data.data);
+        document.getElementById('ja-rubricado-sub').textContent = data.posto_nome + ' — ' + fmtDataHora(data.fechamento_em);
         document.getElementById('ja-rubricado-info').innerHTML =
           '<b>Rubricado por:</b> ' + escapeHtml(data.aprovado_por_nome || '-') + '<br/>' +
           '<b>Em:</b> ' + fmtDataHora(data.aprovado_em);
@@ -172,12 +166,13 @@
 
       document.getElementById('rubrica-resumo').innerHTML =
         '<b>Posto:</b> ' + escapeHtml(data.posto_nome) + (data.livro ? ' — ' + escapeHtml(data.livro) : '') + '<br/>' +
-        '<b>Data:</b> ' + fmtData(data.data);
+        '<b>Colaborador:</b> ' + escapeHtml(data.colaborador || '-') + '<br/>' +
+        '<b>Fechamento do livro:</b> ' + fmtDataHora(data.fechamento_em);
 
       var ocorrencias = data.ocorrencias || [];
       var listaEl = document.getElementById('rubrica-ocorrencias');
       if (ocorrencias.length === 0) {
-        listaEl.innerHTML = '<div class="ocor-vazio">Nenhuma ocorrência registrada neste dia.</div>';
+        listaEl.innerHTML = '<div class="ocor-vazio">Nenhuma ocorrência registrada neste plantão.</div>';
       } else {
         listaEl.innerHTML = ocorrencias.map(function(o) {
           return '<div class="ocor-item"><span class="prot">' + escapeHtml(o.protocolo || '-') + '</span> — ' +
