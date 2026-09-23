@@ -93,7 +93,7 @@
       <div class="form-field">
         <label>Assinatura <span class="required">*</span></label>
         <div class="assinatura-wrap">
-          <canvas id="assinatura-canvas" width="920" height="360"></canvas>
+          <canvas id="assinatura-canvas" width="560" height="220"></canvas>
         </div>
         <div class="assinatura-actions">
           <button type="button" class="link-limpar" onclick="limparAssinatura()">Limpar assinatura</button>
@@ -249,6 +249,8 @@
     var btn = document.getElementById('btn-confirmar');
     if (btn.disabled) return;
     btn.disabled = true;
+    var btnTextoOriginal = btn.textContent;
+    btn.textContent = 'Enviando...';
 
     var assinatura = assinaturaCanvas.toDataURL('image/png');
 
@@ -258,10 +260,12 @@
       body: JSON.stringify({ action: 'confirmar', token: token, nome: nome, assinatura: assinatura })
     }).then(function(r) { return r.json(); }).then(function(data) {
       btn.disabled = false;
+      btn.textContent = btnTextoOriginal;
       if (data.error) { erroEl.textContent = data.error; erroEl.classList.remove('hidden'); return; }
       mostrarTela('tela-sucesso');
     }).catch(function() {
       btn.disabled = false;
+      btn.textContent = btnTextoOriginal;
       erroEl.textContent = 'Erro ao enviar. Tente novamente.';
       erroEl.classList.remove('hidden');
     });
