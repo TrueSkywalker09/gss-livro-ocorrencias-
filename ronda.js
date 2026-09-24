@@ -49,7 +49,8 @@
   var CTX_KEY = 'gss_ronda_ctx_';
   var SESSAO_MAX_MS = 14 * 60 * 60 * 1000; // cobre um plantão 12x36 com folga
   var PREFIXO_TOKEN = 'GSSR1-';
-  var JSQR_URL = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+  // Arquivo local (jsqr 1.4.0): no app Android a página roda sem internet.
+  var JSQR_URL = 'jsQR.min.js';
   var URGENCIAS = [
     ['NAO_URGENTE', 'Não Urgente'], ['POUCO_URGENTE', 'Pouco Urgente'], ['URGENTE', 'Urgente'],
     ['MUITO_URGENTE', 'Muito Urgente'], ['EMERGENCIA', 'Emergência']
@@ -246,7 +247,7 @@
   var TRJ_MIN_INTERVALO = 30;   // s
   var TRJ_LOTE_MS = 60000;
   var TRJ_SEM_SINAL_MS = 45000;
-  var trj = { idRonda: null, watchId: null, timer: null, buffer: [], ultimo: null, ultimaFixEm: 0, erro: null, wakeLock: null };
+  var trj = { idRonda: null, watchId: null, nativo: false, timer: null, buffer: [], ultimo: null, ultimaFixEm: 0, erro: null, wakeLock: null };
 
   function distM(lat1, lng1, lat2, lng2) {
     var rad = Math.PI / 180, dLat = (lat2 - lat1) * rad, dLng = (lng2 - lng1) * rad;
@@ -272,10 +273,13 @@
     }
     var p = [t, Math.round(c.latitude * 1e6) / 1e6, Math.round(c.longitude * 1e6) / 1e6, Math.round(c.accuracy),
       c.altitude == null ? null : Math.round(c.altitude * 10) / 10];
+    if (pos.simulado) p.push(1); // app de "GPS falso" (só o app Android detecta)
     trj.ultimo = p;
     trj.buffer.push(p);
     salvarBufferTrajeto();
     atualizarIndicadorTrajeto();
+    // Com a tela apagada o setInterval pode dormir; a própria posição dispara o lote.
+    if (trj.nativo && trj.buffer.length && t - trj.buffer[0][0] >= TRJ_LOTE_MS / 1000) descarregarTrajeto();
   }
 
   function aoFalharPosicao(e) {
@@ -291,6 +295,19 @@
     }).catch(function() {});
   }
 
+  // App Android: sem liberar a economia de bateria, marcas como Xiaomi/Samsung
+  // matam o GPS com a tela apagada. Confere uma vez por ronda.
+  function verificarAparelho() {
+    var N = window.GSSNativo;
+    if (!N || !N.ativo) return;
+    N.status().then(function(s) {
+      if (!s.gpsLigado) { toast('Ligue a Localização (GPS) do celular para registrar o trajeto.', 'erro'); return; }
+      if (!s.bateriaLiberada && window.confirm('Para o trajeto continuar com a tela apagada, o GSS Ronda precisa ficar fora da economia de bateria.\n\nAbrir o ajuste agora?')) {
+        N.abrirAjustesBateria();
+      }
+    }).catch(function() {});
+  }
+
   // Liga o rastreio da ronda em andamento (idempotente — chamado a cada render).
   function garantirRastreio() {
     var ronda = st.ctx && st.ctx.ronda;
@@ -301,7 +318,11 @@
     try { trj.buffer = JSON.parse(localStorage.getItem(TRJ_KEY + ronda.id)) || []; } catch (e) { trj.buffer = []; }
     trj.ultimo = trj.buffer.length ? trj.buffer[trj.buffer.length - 1] : null;
     trj.erro = null;
-    if (navigator.geolocation) {
+    trj.nativo = !!(window.GSSNativo && window.GSSNativo.ativo);
+    if (trj.nativo) {
+      // App Android: GPS segue com a tela apagada (notificação "Ronda em andamento").
+      trj.watchId = window.GSSNativo.gpsIniciar(aoPosicionar, aoFalharPosicao);
+    } else if (navigator.geolocation) {
       trj.watchId = navigator.geolocation.watchPosition(aoPosicionar, aoFalharPosicao,
         { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
     } else {
@@ -309,12 +330,16 @@
     }
     trj.timer = setInterval(function() { descarregarTrajeto(); atualizarIndicadorTrajeto(); }, TRJ_LOTE_MS);
     pedirWakeLock();
+    verificarAparelho();
   }
 
   // Para o GPS e manda o que sobrou no buffer (que fica salvo se não der).
   function pararRastreio() {
     if (!trj.idRonda) return Promise.resolve();
-    if (trj.watchId !== null && navigator.geolocation) navigator.geolocation.clearWatch(trj.watchId);
+    if (trj.watchId !== null) {
+      if (trj.nativo) window.GSSNativo.gpsParar(trj.watchId);
+      else if (navigator.geolocation) navigator.geolocation.clearWatch(trj.watchId);
+    }
     clearInterval(trj.timer);
     if (trj.wakeLock) { trj.wakeLock.release().catch(function() {}); trj.wakeLock = null; }
     var fim = descarregarTrajeto();
@@ -679,7 +704,7 @@
       var s = document.createElement('script');
       s.src = JSQR_URL;
       s.onload = resolve;
-      s.onerror = function() { reject(new Error('Não foi possível carregar o leitor de QR. Verifique a conexão.')); };
+      s.onerror = function() { reject(new Error('Não foi possível carregar o leitor de QR. Recarregue a página.')); };
       document.head.appendChild(s);
     });
   }
@@ -810,6 +835,26 @@
     el.innerHTML = icon('map-pin', 14) + 'Localização capturada (±' + Math.round(l.gps.precisao_m) + ' m)';
   }
 
+  // Só no app Android, no instante da leitura do QR, sem depender de internet:
+  // redes Wi-Fi à vista (conferência do local), barômetro (andar) e hora pelo
+  // GPS (relógio do aparelho pode ter sido alterado). Cada item chega quando
+  // fica pronto; o que não chegar até o "Confirmar" vai sem.
+  function coletarExtrasNativos(leitura) {
+    leitura.extras = {};
+    var N = window.GSSNativo;
+    if (!N || !N.ativo) return;
+    leitura.extras.origem = 'app';
+    N.horaGps().then(function(h) { if (h && h.epoch_ms) leitura.extras.gps_time_ms = h.epoch_ms; }).catch(function() {});
+    N.pressao().then(function(p) { if (p && p.hpa != null) leitura.extras.pressao_hpa = p.hpa; }).catch(function() {});
+    N.wifiScan().then(function(w) {
+      leitura.extras.wifi = ((w && w.redes) || [])
+        .sort(function(a, b) { return b.rssi - a.rssi; })
+        .slice(0, 15)
+        .map(function(r) { return { bssid: r.bssid, ssid: r.ssid, rssi: r.rssi, idade_s: r.idade_s }; });
+      leitura.extras.wifi_em_cache = !!(w && w.em_cache);
+    }).catch(function() {});
+  }
+
   function abrirRegistro(ponto, token) {
     st.leitura = { ponto: ponto, token: token, lida_em: new Date().toISOString(), status: 'ok', foto: null, processandoFoto: false, gps: undefined };
     var leitura = st.leitura;
@@ -818,6 +863,7 @@
       if (st.leitura === leitura) atualizarGps();
       return loc;
     });
+    coletarExtrasNativos(leitura);
 
     preencherTopo('rd-reg', 'Registrar ponto', st.posto.nome_posto + ' · lido às ' + hora(leitura.lida_em));
     document.getElementById('rd-reg-ponto').textContent = ponto.nome;
@@ -922,6 +968,7 @@
         precisao_m: loc ? loc.precisao_m : null,
         altitude_m: loc ? loc.altitude_m : null
       };
+      Object.assign(dados, l.extras || {});
       // Trajeto recente chega antes da leitura: o servidor usa para o score.
       return descarregarTrajeto().then(function() { return enviarLeitura(dados, l.ponto); });
     }).then(function(ok) {
@@ -1057,6 +1104,7 @@
       });
     },
     iniciar: iniciar,
+    emAndamento: function() { return !!(trj.idRonda || (st.ctx && st.ctx.ronda)); },
     irParaExecucao: function() { L.showScreen('ronda-exec-screen'); renderExec(); },
     abrirScanner: abrirScanner,
     fecharScanner: fecharScanner,

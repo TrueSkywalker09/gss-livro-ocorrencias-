@@ -17,3 +17,10 @@
 
 /*.css
   Cache-Control: no-cache, must-revalidate
+
+/app-bundle.json
+  Cache-Control: no-cache, must-revalidate
+  Access-Control-Allow-Origin: *
+
+/app-bundle.zip
+  Cache-Control: public, max-age=31536000, immutable
