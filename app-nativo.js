@@ -17,6 +17,8 @@
 
   var URL_PACOTE = 'https://gss-livro-ocorrencias.pages.dev/app-bundle.json';
   var PENDENTE_KEY = 'gss_app_bundle_pendente';
+  var DIAG_KEY = 'gss_app_atualizacao';
+  var RONDA_MAX_MS = 14 * 60 * 60 * 1000; // mesmo limite da sessão da ronda (ronda.js)
   var VERIFICAR_MS = 30 * 60 * 1000;
 
   function chamar(plugin, metodo, opcoes) {
@@ -73,7 +75,9 @@
         var k = localStorage.key(i);
         if (k.indexOf('gss_ronda_ctx_') === 0) {
           var ctx = JSON.parse(localStorage.getItem(k));
-          if (ctx && ctx.ronda) return true;
+          // Ronda esquecida no cache (encerrada pelo servidor, aparelho não
+          // voltou ao posto) não pode travar as atualizações para sempre.
+          if (ctx && ctx.ronda && Date.now() - new Date(ctx.ronda.iniciada_em).getTime() < RONDA_MAX_MS) return true;
         }
       }
     } catch (e) {}
@@ -89,6 +93,12 @@
     return true;
   }
 
+  // Último resultado da verificação (aparece no rodapé do hub): sem isso uma
+  // falha do updater fica invisível.
+  function registrar(situacao) {
+    try { localStorage.setItem(DIAG_KEY, JSON.stringify(Object.assign({ em: new Date().toISOString() }, situacao))); } catch (e) {}
+  }
+
   function verificarAtualizacao() {
     if (navigator.onLine === false) return;
     Promise.all([
@@ -96,16 +106,24 @@
       fetch(URL_PACOTE + '?t=' + Date.now(), { cache: 'no-store' }).then(function(r) { return r.json(); })
     ]).then(function(res) {
       var local = res[0].versao, remoto = res[1];
-      if (!remoto || !remoto.version || remoto.version === local) return;
+      if (!remoto || !remoto.version || remoto.version === local) { registrar({ ok: true, versao: local }); return; }
       return chamar('CapacitorUpdater', 'list').then(function(l) {
         var ja = ((l && l.bundles) || []).filter(function(b) { return b.version === remoto.version && b.status === 'success'; })[0];
-        return ja || chamar('CapacitorUpdater', 'download', { url: remoto.url, version: remoto.version });
+        // checksum (SHA-256 do zip) é obrigatório no updater.
+        return ja || chamar('CapacitorUpdater', 'download', { url: remoto.url, version: remoto.version, checksum: remoto.checksum || '' });
       }).then(function(b) {
+        registrar({ ok: true, versao: local, baixada: remoto.version });
         try { localStorage.setItem(PENDENTE_KEY, b.id); } catch (e) {}
         aplicarPendente();
+      }, function(e) {
+        registrar({ ok: false, versao: local, remota: remoto.version, erro: String((e && e.message) || e) });
       });
     }).catch(function() { /* sem internet ou servidor fora: tenta depois */ });
   }
+
+  window.GSSNativo.diagnostico = function() {
+    try { return JSON.parse(localStorage.getItem(DIAG_KEY)) || null; } catch (e) { return null; }
+  };
 
   // Confirma que esta versão abriu bem; sem isso o updater volta para a anterior.
   chamar('CapacitorUpdater', 'notifyAppReady').catch(function() {});

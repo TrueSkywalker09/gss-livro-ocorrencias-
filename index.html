@@ -383,6 +383,9 @@
   <!-- Atalho para as Requisições (só para quem tem acesso aos dois sistemas):
        quem não precisa abrir um livro chega às Requisições direto do hub. -->
   <div id="requisicoes-secao"></div>
+  <!-- Só no app GSS Legion: versão do app/página e última verificação de
+       atualização (para conferir se o celular está atualizado). -->
+  <div id="app-versao" style="display:none;margin-top:16px;text-align:center;font-size:11px;color:var(--text3)"></div>
   <div style="margin-top:22px;text-align:center">
     <button class="btn btn-outline icon-inline" onclick="fazerLogout()" style="width:auto;padding:10px 22px" id="livros-btn-sair"></button>
   </div>
@@ -1053,6 +1056,7 @@
   function renderAtalhoRequisicoes() {
     var el = document.getElementById('requisicoes-secao');
     if (!el) return;
+    renderVersaoApp();
     if (!podeAlternar) { el.innerHTML = ''; ajustarTituloLivros(); return; }
     el.innerHTML =
       '<div class="req-secao-titulo">' + icon('package', 14) + ' Requisições</div>' +
@@ -1066,6 +1070,24 @@
           '</div></div>' +
       '</div>';
     ajustarTituloLivros();
+  }
+
+  // Rodapé do hub, só no app: "GSS Legion 1.0.2 · página 77ef1cd1 · atualizado".
+  function renderVersaoApp() {
+    var el = document.getElementById('app-versao');
+    var N = window.GSSNativo;
+    if (!el || !N || !N.ativo) return;
+    Promise.all([
+      N.status().catch(function() { return {}; }),
+      fetch('bundle-versao.json').then(function(r) { return r.json(); }).catch(function() { return {}; })
+    ]).then(function(r) {
+      var d = N.diagnostico ? N.diagnostico() : null;
+      var sit = !d ? '' : d.ok
+        ? (d.baixada ? ' · nova versão baixada — reabra o app' : ' · atualizado')
+        : ' · falha ao atualizar: ' + escapeHtml(d.erro || '?');
+      el.innerHTML = 'GSS Legion ' + escapeHtml(r[0].versaoApp || '?') + ' · página ' + escapeHtml(String(r[1].versao || '?').slice(0, 8)) + sit;
+      el.style.display = 'block';
+    });
   }
 
   // Com mais de uma seção no hub, os livros ganham o título "Livro de Ocorrências".
