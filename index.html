@@ -1034,7 +1034,9 @@
   }
 
   window.irParaOutroSistema = function() {
-    window.location.href = 'https://gss-requisicoes.pages.dev/';
+    // App GSS Legion: as Requisições vêm embutidas no pacote (funcionam sem internet).
+    var emApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    window.location.href = emApp ? 'requisicoes/index.html' : 'https://gss-requisicoes.pages.dev/';
   };
 
   function showErro(el, msg) {

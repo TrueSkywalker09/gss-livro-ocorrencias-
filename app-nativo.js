@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// GSS — Ponte com o app Android "GSS Ronda" (app-ronda/, Capacitor)
+// GSS — Ponte com o app Android "GSS Legion" (app-ronda/, Capacitor)
 // No navegador este arquivo não faz nada. Dentro do app expõe window.GSSNativo:
 //   gpsIniciar/gpsParar — GPS que continua com a tela apagada (serviço em
 //                         primeiro plano do plugin background-geolocation)
@@ -40,7 +40,7 @@
       if (!cap.isPluginAvailable('BackgroundGeolocation')) return null;
       return cap.nativeCallback('BackgroundGeolocation', 'addWatcher', {
         backgroundTitle: 'Ronda em andamento',
-        backgroundMessage: 'O GSS Ronda está registrando o trajeto.',
+        backgroundMessage: 'O GSS Legion está registrando o trajeto.',
         requestPermissions: true,
         stale: false,
         distanceFilter: 0

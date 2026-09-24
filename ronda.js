@@ -302,7 +302,7 @@
     if (!N || !N.ativo) return;
     N.status().then(function(s) {
       if (!s.gpsLigado) { toast('Ligue a Localização (GPS) do celular para registrar o trajeto.', 'erro'); return; }
-      if (!s.bateriaLiberada && window.confirm('Para o trajeto continuar com a tela apagada, o GSS Ronda precisa ficar fora da economia de bateria.\n\nAbrir o ajuste agora?')) {
+      if (!s.bateriaLiberada && window.confirm('Para o trajeto continuar com a tela apagada, o GSS Legion precisa ficar fora da economia de bateria.\n\nAbrir o ajuste agora?')) {
         N.abrirAjustesBateria();
       }
     }).catch(function() {});
