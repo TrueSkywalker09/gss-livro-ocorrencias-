@@ -124,6 +124,11 @@
     .livro-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:18px;cursor:pointer;transition:all .15s;display:flex;gap:14px;align-items:flex-start;position:relative}
     .livro-item:hover{border-color:var(--primary);box-shadow:var(--shadow-md);transform:translateY(-2px)}
     .livro-item-icon{width:44px;height:44px;border-radius:10px;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    /* atalho do hub para as Requisições */
+    .req-secao-titulo{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin:24px 0 10px;display:flex;align-items:center;gap:6px}
+    .livro-item.req-atalho .livro-item-icon{background:#fef3c7;color:#b45309}
+    .livro-item.req-atalho:hover{border-color:#b45309}
+    .livro-item.req-atalho .abrir{color:#b45309}
     .livro-item-body{flex:1;min-width:0}
     .livro-item h3{font-size:15px;font-weight:700;margin-bottom:6px;color:var(--text);padding-right:56px}
     .livro-item .cc-tag{font-size:10px;font-weight:700;color:var(--text2);background:var(--bg);border:1px solid var(--border);padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:8px}
@@ -375,6 +380,9 @@
   <div id="rondas-secao"></div>
   <div class="livros-secao-titulo hidden" id="livros-secao-titulo" style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin:6px 0 -6px"></div>
   <div class="livros-grid" id="livros-lista"></div>
+  <!-- Atalho para as Requisições (só para quem tem acesso aos dois sistemas):
+       quem não precisa abrir um livro chega às Requisições direto do hub. -->
+  <div id="requisicoes-secao"></div>
   <div style="margin-top:22px;text-align:center">
     <button class="btn btn-outline icon-inline" onclick="fazerLogout()" style="width:auto;padding:10px 22px" id="livros-btn-sair"></button>
   </div>
@@ -871,7 +879,8 @@
     'clipboard': '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><rect x="9" y="3" width="6" height="4" rx="2" ry="2"></rect>',
     'edit': '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>',
     'briefcase': '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>',
-    'repeat': '<polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path>'
+    'repeat': '<polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path>',
+    'package': '<line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>'
   };
 
   function icon(name, size) {
@@ -1020,9 +1029,12 @@
     document.getElementById('sidebar-avatar').textContent = (usuarioLogado.nome || '?').trim().charAt(0).toUpperCase();
   }
 
+  // Promise da última verificação (carregarLivros espera por ela antes de
+  // decidir se pula o hub).
+  var acessoVerificado = Promise.resolve();
   function verificarAcessoOutroSistema() {
-    if (!usuarioLogado || !usuarioLogado.re) return;
-    fetch(SUPABASE_EDGE + '/auth-form', {
+    if (!usuarioLogado || !usuarioLogado.re) return acessoVerificado;
+    acessoVerificado = fetch(SUPABASE_EDGE + '/auth-form', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
       body: JSON.stringify({ action: 'verificar-re', re: usuarioLogado.re })
@@ -1030,7 +1042,39 @@
       podeAlternar = !!(body && body.habilitado_outro_sistema);
       salvarSessao();
       document.getElementById('btn-switch-app').classList.toggle('hidden', !podeAlternar);
+      renderAtalhoRequisicoes();
     }).catch(function() {});
+    return acessoVerificado;
+  }
+
+  // Seção "Requisições" no hub (Meus Postos): quem não precisa abrir um livro
+  // chega às Requisições sem passar por ele. Mesma regra do botão da barra
+  // lateral (habilitado_outro_sistema).
+  function renderAtalhoRequisicoes() {
+    var el = document.getElementById('requisicoes-secao');
+    if (!el) return;
+    if (!podeAlternar) { el.innerHTML = ''; ajustarTituloLivros(); return; }
+    el.innerHTML =
+      '<div class="req-secao-titulo">' + icon('package', 14) + ' Requisições</div>' +
+      '<div class="livros-grid" style="margin-top:0">' +
+        '<div class="livro-item req-atalho" onclick="irParaOutroSistema()">' +
+          '<div class="livro-item-icon">' + icon('package', 20) + '</div>' +
+          '<div class="livro-item-body">' +
+            '<h3>Requisições GSS</h3>' +
+            '<div class="periodo">Materiais do posto e entrega de EPI</div>' +
+            '<div class="abrir">Abrir Requisições →</div>' +
+          '</div></div>' +
+      '</div>';
+    ajustarTituloLivros();
+  }
+
+  // Com mais de uma seção no hub, os livros ganham o título "Livro de Ocorrências".
+  var hubAtual = { rondas: 0, livros: 0 };
+  function ajustarTituloLivros() {
+    var t = document.getElementById('livros-secao-titulo');
+    if (!t) return;
+    t.innerHTML = icon('clipboard', 14) + ' Livro de Ocorrências';
+    t.classList.toggle('hidden', !hubAtual.livros || !(hubAtual.rondas || podeAlternar));
   }
 
   window.irParaOutroSistema = function() {
@@ -1265,10 +1309,15 @@
         showNoLivros(user);
         return;
       }
-      // Escalado só para ronda, num único posto: vai direto para a Ronda.
+      // Escalado só para ronda, num único posto: vai direto para a Ronda —
+      // a não ser que também use as Requisições (aí mostra o hub, com o atalho).
+      // Espera a verificação de acesso no máximo 4 s (sinal ruim não trava).
       if (livros.length === 0 && rondas.length === 1) {
-        window.GSSRonda.abrirDireto(user, rondas[0]);
-        return;
+        await Promise.race([acessoVerificado, new Promise(function(r) { setTimeout(r, 4000); })]);
+        if (!podeAlternar) {
+          window.GSSRonda.abrirDireto(user, rondas[0]);
+          return;
+        }
       }
       showLivros(user, livros, rondas);
     } catch (err) {
@@ -1278,6 +1327,8 @@
 
   function showNoLivros(user) {
     document.getElementById('rondas-secao').innerHTML = '';
+    hubAtual = { rondas: 0, livros: 0 };
+    renderAtalhoRequisicoes();
     document.getElementById('livros-secao-titulo').classList.add('hidden');
     document.getElementById('livros-titulo').textContent = 'Livros Disponíveis';
     document.getElementById('livros-subtitulo').textContent = 'Selecione o livro de ocorrência';
@@ -1310,9 +1361,8 @@
 
     // Ronda (ronda.js) e Livro aparecem em seções separadas do mesmo hub.
     document.getElementById('rondas-secao').innerHTML = rondas.length ? window.GSSRonda.renderHub(user, rondas) : '';
-    var tituloSecao = document.getElementById('livros-secao-titulo');
-    tituloSecao.innerHTML = icon('clipboard', 14) + ' Livro de Ocorrências';
-    tituloSecao.classList.toggle('hidden', !rondas.length || !livrosDisponiveis.length);
+    hubAtual = { rondas: rondas.length, livros: livrosDisponiveis.length };
+    renderAtalhoRequisicoes();
     document.getElementById('livros-titulo').textContent = rondas.length ? (livrosDisponiveis.length ? 'Meus Postos' : 'Rondas') : 'Livros Disponíveis';
     document.getElementById('livros-subtitulo').textContent = rondas.length
       ? (livrosDisponiveis.length ? 'Escolha a ronda ou o livro de ocorrência' : 'Selecione o posto da ronda')
