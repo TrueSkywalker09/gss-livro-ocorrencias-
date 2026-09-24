@@ -148,6 +148,7 @@
     .material-item-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
     .material-item-select{width:auto;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--card);color:var(--text)}
     .material-obs{margin-top:12px}
+    .material-item-nota{display:inline-block;margin-top:4px;padding:2px 8px;border-radius:4px;background:#dcfce7;color:#15803d;font-size:11px;font-weight:700}
     .material-obs textarea{width:100%;min-height:70px;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;resize:vertical}
 
     /* ─── RECEBIMENTO ─── */
@@ -1421,7 +1422,12 @@
     veiculosLivroAtual = [];
     try {
       var rv = new XMLHttpRequest();
-      rv.open('GET', SUPABASE_URL + '/rest/v1/gss_veiculos?id_posto=eq.' + encodeURIComponent(escalaAtual.id_posto) + '&ativo=eq.true&select=id,marca,modelo,ano,placa,km_inicial', false);
+      // Veículo sem livro (NULL) vale pra todos os livros do posto; com livro,
+      // só aparece naquele livro (ex.: carro da COORDENAÇÃO fora do CFTV).
+      var filtroVeicLivro = escalaAtual.livro
+        ? '&or=(livro.is.null,livro.eq.' + encodeURIComponent('"' + escalaAtual.livro + '"') + ')'
+        : '&livro=is.null';
+      rv.open('GET', SUPABASE_URL + '/rest/v1/gss_veiculos?id_posto=eq.' + encodeURIComponent(escalaAtual.id_posto) + '&ativo=eq.true' + filtroVeicLivro + '&select=id,marca,modelo,ano,placa,km_inicial', false);
       rv.setRequestHeader('apikey', SUPABASE_ANON_KEY);
       rv.send();
       if (rv.status === 200) {
@@ -1494,6 +1500,7 @@
         '<div>' +
           '<div class="acesso-item-nome">' + escapeHtml(m.nome) + (m.especificacao ? ' — ' + escapeHtml(m.especificacao) : '') + '</div>' +
           '<div class="acesso-item-meta"><span>Qtd: ' + (m.quantidade || 1) + '</span></div>' +
+          (m.estado === 'Bom' && m.observacao === MATERIAL_SUBSTITUIDO ? '<span class="material-item-nota">' + MATERIAL_SUBSTITUIDO + '</span>' : '') +
         '</div>' +
         '<select class="material-item-select" onchange="onMudarEstadoMaterial(\'' + m.id + '\', this.value)">' + opts + '</select>' +
       '</div>' +
@@ -1516,6 +1523,11 @@
     if (m) m.observacao = valor;
   };
 
+  var MATERIAL_SUBSTITUIDO = 'MATERIAL RECÉM SUBSTITUÍDO';
+
+  // Grava a conferência no servidor (ocorrencias-detalhadas/conferir-material):
+  // item que sai de "Bom" abre automaticamente a ocorrência "Troca de Material
+  // Carga". Chamado mesmo sem alteração, pra limpar a nota de recém substituído.
   window.confirmarMaterialCarga = function() {
     var alterados = materiaisLivroAtual.filter(function(m) { return m.estado !== m._estadoOriginal; });
     var semObservacao = alterados.filter(function(m) { return !(m.observacao && m.observacao.trim()); });
@@ -1523,21 +1535,28 @@
       alert('Informe a observação do que não está conforme para: ' + semObservacao.map(function(m) { return m.nome; }).join(', '));
       return;
     }
-    var erro = false;
-    alterados.forEach(function(m) {
-      try {
-        var r = new XMLHttpRequest();
-        r.open('PATCH', SUPABASE_URL + '/rest/v1/gss_material_carga?id=eq.' + encodeURIComponent(m.id), false);
-        r.setRequestHeader('Content-Type', 'application/json');
-        r.setRequestHeader('apikey', SUPABASE_ANON_KEY);
-        r.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_ANON_KEY);
-        r.send(JSON.stringify({ estado: m.estado, observacao: m.observacao ? m.observacao.trim().toUpperCase() : null }));
-        if (r.status >= 400) erro = true;
-      } catch (e) { erro = true; }
-    });
-    if (erro) {
+    var result = null;
+    try {
+      var r = new XMLHttpRequest();
+      r.open('POST', SUPABASE_EDGE + '/ocorrencias-detalhadas', false);
+      r.setRequestHeader('Content-Type', 'application/json');
+      r.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_ANON_KEY);
+      r.send(JSON.stringify({
+        action: 'conferir-material',
+        id_posto: escalaAtual.id_posto,
+        id_acesso: usuarioLogado.id,
+        colaborador: usuarioLogado.nome + ' (RE: ' + (usuarioLogado.re || '-') + ')',
+        livro: escalaAtual.livro || null,
+        itens: alterados.map(function(m) { return { id: m.id, estado: m.estado, observacao: m.observacao || null }; })
+      }));
+      if (r.status === 200) result = JSON.parse(r.responseText);
+    } catch (e) {}
+    if (!result || !result.ok) {
       alert('Erro ao salvar as alterações de material. Tente novamente.');
       return;
+    }
+    if (result.protocolos && result.protocolos.length > 0) {
+      alert('Ocorrência de troca de material carga aberta automaticamente:\n' + result.protocolos.join('\n'));
     }
     _continuarAposMaterial();
   };
@@ -1591,25 +1610,33 @@
     } catch(e) {}
   }
 
-  function carregarMaterialCarga() {
-    var statusEl = document.getElementById('rec-material-status');
-    statusEl.innerHTML = '<div style="color:var(--text2)">Carregando material...</div>';
-    recebimentoDados.materiais = [];
-    recebimentoDados.materialComProblema = [];
-    if (!escalaAtual) return;
+  function buscarMaterialPosto() {
+    if (!escalaAtual) return [];
     try {
       var r = new XMLHttpRequest();
       r.open('GET', SUPABASE_URL + '/rest/v1/gss_material_carga?id_posto=eq.' + encodeURIComponent(escalaAtual.id_posto) + '&select=nome,especificacao,quantidade,estado', false);
       r.setRequestHeader('apikey', SUPABASE_ANON_KEY);
       r.send();
-      if (r.status === 200) {
-        var mats = JSON.parse(r.responseText);
-        if (mats && mats.length > 0) {
-          recebimentoDados.materiais = mats;
-          recebimentoDados.materialComProblema = mats.filter(function(m) { return m.estado && m.estado !== 'Bom'; });
-        }
-      }
+      if (r.status === 200) return JSON.parse(r.responseText) || [];
     } catch(e) {}
+    return [];
+  }
+
+  function materialNaoConforme(mats) {
+    return mats.filter(function(m) { return m.estado && m.estado !== 'Bom'; });
+  }
+
+  // "em totais condições de uso" ou "não estava de acordo — Rádio (Regular)".
+  function condicaoMaterialTexto(comProblema, conforme, verbo) {
+    if (comProblema.length === 0) return conforme;
+    return 'não ' + verbo + ' de acordo — ' + comProblema.map(function(m) { return m.nome + ' (' + m.estado + ')'; }).join(', ');
+  }
+
+  function carregarMaterialCarga() {
+    var statusEl = document.getElementById('rec-material-status');
+    statusEl.innerHTML = '<div style="color:var(--text2)">Carregando material...</div>';
+    recebimentoDados.materiais = buscarMaterialPosto();
+    recebimentoDados.materialComProblema = materialNaoConforme(recebimentoDados.materiais);
     if (recebimentoDados.materiais.length === 0) {
       statusEl.innerHTML = '<div style="color:var(--text2)">Nenhum material cadastrado</div>';
       return;
@@ -1686,11 +1713,7 @@
       document.getElementById('rec-texto').value = 'Preencha todos os campos para gerar o texto.';
       return;
     }
-    var condicao = 'em totais condições de uso';
-    if (recebimentoDados.materialComProblema.length > 0) {
-      var itens = recebimentoDados.materialComProblema.map(function(m) { return m.nome + ' (' + m.estado + ')'; }).join(', ');
-      condicao = 'não estava de acordo — ' + itens;
-    }
+    var condicao = condicaoMaterialTexto(recebimentoDados.materialComProblema, 'em totais condições de uso', 'estava');
     var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', recebi o posto de ' + recebeu + ', ' + cargoRecebeu + ', ' + tipoRecebeu + ' às ' + horario + ' ciente das normas em vigor, das determinações e material carga ' + condicao + ', bem como estou ciente das ocorrências registradas no período anterior.';
     document.getElementById('rec-texto').value = texto;
   }
@@ -1923,6 +1946,16 @@
       bodyHtml += '<div class="detalhe-section"><div class="detalhe-section-title" style="color:var(--danger)">' + icon('alert-triangle', 13) + '<span>Danos</span></div><div class="detalhe-box danger">' + escapeHtml(occ.descricao_dano) + '</div></div>';
     }
 
+    if (occ.procedimento_finalizacao) {
+      bodyHtml += '<div class="detalhe-section"><div class="detalhe-section-title" style="color:var(--success)">' + icon('check-circle', 13) + '<span>Procedimento de Finalização</span></div><div class="detalhe-box">' + escapeHtml(occ.procedimento_finalizacao) + '</div></div>';
+    }
+
+    if (statusAberta) {
+      bodyHtml += '<div class="detalhe-section hidden" id="finalizar-section"><div class="detalhe-section-title">' + icon('check-circle', 13) + '<span>Procedimento realizado para finalizar <span class="required">*</span></span></div>' +
+        '<textarea id="finalizar-procedimento" rows="4" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;resize:vertical" placeholder="Descreva o que foi feito para resolver a ocorrência"></textarea>' +
+        '<div id="finalizar-erro" class="alert alert-error" style="display:none;margin-top:8px"></div></div>';
+    }
+
     if (occ.assinatura) {
       bodyHtml += '<div class="detalhe-section"><div class="detalhe-section-title">' + icon('edit', 13) + '<span>Assinatura</span></div><div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px;display:inline-block"><img src="' + occ.assinatura + '" alt="Assinatura" style="max-width:300px;max-height:150px;display:block"/></div></div>';
     }
@@ -1933,7 +1966,7 @@
     var footerHtml = '<button class="btn btn-outline icon-inline" onclick="voltarDashboard()">' + icon('arrow-left', 15) + '<span>Voltar</span></button>' +
       '<button class="btn btn-outline icon-inline" onclick="abrirCadastro(\'' + occ.id + '\')">' + icon('edit', 15) + '<span>Editar</span></button>';
     if (statusAberta) {
-      footerHtml += '<button class="btn btn-success icon-inline" onclick="atualizarStatus(\'' + occ.id + '\', \'FINALIZADA\')">' + icon('check-circle', 15) + '<span>Finalizar</span></button>';
+      footerHtml += '<button class="btn btn-success icon-inline" id="detalhe-btn-finalizar" onclick="iniciarFinalizacao(\'' + occ.id + '\')">' + icon('check-circle', 15) + '<span>Finalizar</span></button>';
     }
     document.getElementById('detalhe-footer').innerHTML = footerHtml;
 
@@ -1942,7 +1975,27 @@
 
   window.fecharDetalhe = function() { voltarDashboard(); };
 
-  window.atualizarStatus = async function(id, status) {
+  // Finalizar exige o procedimento realizado: o 1º toque abre o campo, o 2º
+  // (Confirmar Finalização) envia.
+  window.iniciarFinalizacao = function(id) {
+    var sec = document.getElementById('finalizar-section');
+    if (sec.classList.contains('hidden')) {
+      sec.classList.remove('hidden');
+      document.getElementById('detalhe-btn-finalizar').innerHTML = icon('check-circle', 15) + '<span>Confirmar Finalização</span>';
+      var ta = document.getElementById('finalizar-procedimento');
+      ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      ta.focus();
+      return;
+    }
+    var procedimento = document.getElementById('finalizar-procedimento').value.trim();
+    if (!procedimento) {
+      showErro(document.getElementById('finalizar-erro'), 'Informe o procedimento realizado para finalizar a ocorrência.');
+      return;
+    }
+    atualizarStatus(id, 'FINALIZADA', procedimento.toUpperCase());
+  };
+
+  window.atualizarStatus = async function(id, status, procedimento) {
     // Trava contra duplo-clique: sem isso, dois cliques rápidos no "Finalizar"
     // disparam duas chamadas antes da tela recarregar, gerando (entre outras
     // coisas) dois emails de notificação para a mesma ocorrência.
@@ -1952,7 +2005,7 @@
       var resp = await fetch(SUPABASE_EDGE + '/ocorrencias-detalhadas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
-        body: JSON.stringify({ action: 'atualizar-status', id: id, status: status })
+        body: JSON.stringify({ action: 'atualizar-status', id: id, status: status, procedimento: procedimento || null })
       });
       var body = await resp.json();
       if (body.ok) {
@@ -2408,6 +2461,8 @@
     var nomePosto = escalaAtual ? escalaAtual.id_posto : '';
     document.getElementById('psg-posto-badge').innerHTML = icon('clipboard', 13) + '<span>Livro — ' + escapeHtml(nomePosto) + '</span>';
     carregarColaboradoresPosto();
+    // Recarrega na hora de fechar: pode ter havido troca finalizada no plantão.
+    materialPassagemComProblema = materialNaoConforme(buscarMaterialPosto());
     configurarBuscaReceptor();
     gerarTextoPassagem();
     showScreen('passagem-screen');
@@ -2444,6 +2499,8 @@
     gerarTextoPassagem();
   };
 
+  var materialPassagemComProblema = [];
+
   function gerarTextoPassagem() {
     var nome = document.getElementById('psg-nome').value || '';
     var funcao = document.getElementById('psg-funcao').value || '';
@@ -2457,7 +2514,7 @@
       document.getElementById('psg-texto').value = 'Preencha todos os campos para gerar o texto.';
       return;
     }
-    var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', passo o posto para ' + receptor + ', ' + cargoReceptor + ', ' + tipoReceptor + ' às ' + horario + ' juntamente com as normas em vigor, determinações e material carga em Total Condições de Uso, bem como as ocorrências registradas no meu período de trabalho.';
+    var texto = 'Eu, ' + nome + ', ' + funcao + ', ' + tipo + ', RE: ' + re + ', passo o posto para ' + receptor + ', ' + cargoReceptor + ', ' + tipoReceptor + ' às ' + horario + ' juntamente com as normas em vigor, determinações e material carga ' + condicaoMaterialTexto(materialPassagemComProblema, 'em Total Condições de Uso', 'está') + ', bem como as ocorrências registradas no meu período de trabalho.';
     document.getElementById('psg-texto').value = texto;
   }
 
