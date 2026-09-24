@@ -15,6 +15,11 @@
 //  - O ponto lido é identificado localmente pelo hash do token (o servidor
 //    nunca expõe o token), então funciona mesmo offline.
 //  - A ronda em andamento sobrevive a recarregar a página ou bloquear a tela.
+//  - Trajeto: durante a ronda o GPS é acompanhado (watchPosition), filtrado no
+//    aparelho (≥ 8 m ou ≥ 30 s entre pontos) e enviado em lotes de 1 min — ou
+//    antes de cada leitura, para o servidor pontuar a chegada ao ponto. Sem
+//    rede o lote entra na mesma fila. Wake Lock mantém a tela acesa: com a
+//    tela apagada o navegador para de entregar o GPS.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 (function() {
@@ -170,7 +175,7 @@
     });
   }
 
-  var ACAO_DA_OP = { iniciar: 'iniciar', leitura: 'registrar-leitura', encerrar: 'encerrar' };
+  var ACAO_DA_OP = { iniciar: 'iniciar', leitura: 'registrar-leitura', encerrar: 'encerrar', trajeto: 'registrar-trajeto' };
 
   // Envia a fila em ordem (iniciar → leituras → encerrar). Para no primeiro
   // erro de rede/servidor para não inverter a ordem; recusa definitiva (4xx)
@@ -190,6 +195,7 @@
           }).catch(function(e) {
             if (semRede(e) || e.status >= 500) return false;
             return filaRemover(op.seq).then(function() {
+              if (op.tipo === 'trajeto') return true; // lote recusado não merece alarme ao vigilante
               toast((op.tipo === 'leitura' ? 'Leitura de "' + (op.rotulo || 'ponto') + '"' : 'Operação da ronda') + ' recusada: ' + e.message, 'erro');
               return true;
             });
@@ -232,6 +238,124 @@
   window.addEventListener('online', function() { processarFila(); });
   window.addEventListener('offline', atualizarSync);
   setInterval(function() { if (st.filaTamanho > 0) processarFila(); }, 20000);
+
+  // ─── TRAJETO (GPS contínuo durante a ronda) ──────────────────────────────
+  var TRJ_KEY = 'gss_ronda_trj_';
+  var TRJ_PRECISAO_MAX = 100;   // m — pior que isso não serve nem de rastro
+  var TRJ_MIN_DIST = 8;         // m
+  var TRJ_MIN_INTERVALO = 30;   // s
+  var TRJ_LOTE_MS = 60000;
+  var TRJ_SEM_SINAL_MS = 45000;
+  var trj = { idRonda: null, watchId: null, timer: null, buffer: [], ultimo: null, ultimaFixEm: 0, erro: null, wakeLock: null };
+
+  function distM(lat1, lng1, lat2, lng2) {
+    var rad = Math.PI / 180, dLat = (lat2 - lat1) * rad, dLng = (lng2 - lng1) * rad;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * 6371000 * Math.asin(Math.sqrt(a));
+  }
+
+  function salvarBufferTrajeto() {
+    if (!trj.idRonda) return;
+    try { localStorage.setItem(TRJ_KEY + trj.idRonda, JSON.stringify(trj.buffer)); } catch (e) {}
+  }
+
+  function aoPosicionar(pos) {
+    var c = pos.coords;
+    trj.ultimaFixEm = Date.now();
+    trj.erro = null;
+    if (c.accuracy > TRJ_PRECISAO_MAX) { atualizarIndicadorTrajeto(); return; }
+    var t = Math.round(pos.timestamp / 1000);
+    var u = trj.ultimo;
+    if (u && t - u[0] < TRJ_MIN_INTERVALO && distM(u[1], u[2], c.latitude, c.longitude) < TRJ_MIN_DIST) {
+      atualizarIndicadorTrajeto();
+      return;
+    }
+    var p = [t, Math.round(c.latitude * 1e6) / 1e6, Math.round(c.longitude * 1e6) / 1e6, Math.round(c.accuracy),
+      c.altitude == null ? null : Math.round(c.altitude * 10) / 10];
+    trj.ultimo = p;
+    trj.buffer.push(p);
+    salvarBufferTrajeto();
+    atualizarIndicadorTrajeto();
+  }
+
+  function aoFalharPosicao(e) {
+    trj.erro = e && e.code === 1 ? 'negado' : 'falha';
+    atualizarIndicadorTrajeto();
+  }
+
+  function pedirWakeLock() {
+    if (!trj.idRonda || trj.wakeLock || !navigator.wakeLock || document.visibilityState !== 'visible') return;
+    navigator.wakeLock.request('screen').then(function(w) {
+      trj.wakeLock = w;
+      w.addEventListener('release', function() { trj.wakeLock = null; });
+    }).catch(function() {});
+  }
+
+  // Liga o rastreio da ronda em andamento (idempotente — chamado a cada render).
+  function garantirRastreio() {
+    var ronda = st.ctx && st.ctx.ronda;
+    if (!ronda) { pararRastreio(); return; }
+    if (trj.idRonda === ronda.id) return;
+    if (trj.idRonda) pararRastreio();
+    trj.idRonda = ronda.id;
+    try { trj.buffer = JSON.parse(localStorage.getItem(TRJ_KEY + ronda.id)) || []; } catch (e) { trj.buffer = []; }
+    trj.ultimo = trj.buffer.length ? trj.buffer[trj.buffer.length - 1] : null;
+    trj.erro = null;
+    if (navigator.geolocation) {
+      trj.watchId = navigator.geolocation.watchPosition(aoPosicionar, aoFalharPosicao,
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+    } else {
+      trj.erro = 'falha';
+    }
+    trj.timer = setInterval(function() { descarregarTrajeto(); atualizarIndicadorTrajeto(); }, TRJ_LOTE_MS);
+    pedirWakeLock();
+  }
+
+  // Para o GPS e manda o que sobrou no buffer (que fica salvo se não der).
+  function pararRastreio() {
+    if (!trj.idRonda) return Promise.resolve();
+    if (trj.watchId !== null && navigator.geolocation) navigator.geolocation.clearWatch(trj.watchId);
+    clearInterval(trj.timer);
+    if (trj.wakeLock) { trj.wakeLock.release().catch(function() {}); trj.wakeLock = null; }
+    var fim = descarregarTrajeto();
+    trj.idRonda = null; trj.watchId = null; trj.timer = null; trj.ultimo = null; trj.ultimaFixEm = 0;
+    return fim;
+  }
+
+  // Envia o buffer como um lote. Com fila não-vazia (ou ronda ainda não
+  // enviada) vai para a fila, atrás do "iniciar". Nunca rejeita.
+  function descarregarTrajeto() {
+    if (!trj.idRonda || !trj.buffer.length || !st.usuario || !st.posto) return Promise.resolve();
+    var op = {
+      tipo: 'trajeto', id_acesso: st.usuario.id, id_posto: st.posto.id_posto,
+      dados: { id: uuid(), id_ronda: trj.idRonda, pontos: trj.buffer }
+    };
+    var pendente = !!(st.ctx && st.ctx.ronda && st.ctx.ronda._pendente);
+    trj.buffer = [];
+    try { localStorage.removeItem(TRJ_KEY + op.dados.id_ronda); } catch (e) {}
+    var enfileirar = function() { return filaAdicionar(op); };
+    return filaListar().then(function(ops) {
+      if (ops.length || pendente) return enfileirar();
+      return api('registrar-trajeto', Object.assign({ id_acesso: op.id_acesso, id_posto: op.id_posto }, op.dados))
+        .catch(function(e) { if (semRede(e) || e.status >= 500) return enfileirar(); });
+    }).catch(function() {});
+  }
+
+  function atualizarIndicadorTrajeto() {
+    var el = document.getElementById('rd-trj');
+    if (!el) return;
+    var cls, txt;
+    if (trj.erro === 'negado') { cls = 'falha'; txt = 'Localização bloqueada — permita o acesso ao GPS no navegador'; }
+    else if (!trj.ultimaFixEm || Date.now() - trj.ultimaFixEm > TRJ_SEM_SINAL_MS) { cls = 'falha'; txt = 'Trajeto: aguardando sinal de GPS'; }
+    else { cls = 'ok'; txt = 'Trajeto sendo registrado'; }
+    el.className = 'rd-gps rd-trj ' + cls;
+    el.innerHTML = icon(cls === 'ok' ? 'crosshair' : 'alert-triangle', 13) + txt;
+  }
+
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') pedirWakeLock();
+    else descarregarTrajeto(); // o navegador pode encerrar a página em segundo plano
+  });
 
   // ─── SESSÃO / CACHE ──────────────────────────────────────────────────────
   function salvarSessao() {
@@ -411,6 +535,7 @@
 
   // ─── TELA INÍCIO ─────────────────────────────────────────────────────────
   function renderInicio() {
+    if (st.ctx) garantirRastreio();
     preencherTopo('rd-inicio', st.posto.nome_posto, 'CC ' + st.posto.id_posto + ' · ' + (st.usuario.nome || ''));
     var corpo = document.getElementById('rd-inicio-corpo');
     atualizarSync();
@@ -510,6 +635,7 @@
   // ─── TELA EXECUÇÃO ───────────────────────────────────────────────────────
   function renderExec() {
     if (!st.ctx || !st.ctx.ronda) { L.showScreen('ronda-inicio-screen'); renderInicio(); return; }
+    garantirRastreio();
     preencherTopo('rd-exec', st.posto.nome_posto, 'Ronda em andamento · ' + (st.usuario.nome || ''));
     atualizarSync();
     var mapa = lidasPorPonto();
@@ -538,8 +664,10 @@
         ? '<div class="rd-card" style="background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);font-size:13.5px;font-weight:700;text-align:center">' +
             icon('check-circle', 16) + ' Todos os pontos lidos. Encerre a ronda.</div>'
         : '<button class="rd-btn-grande" onclick="GSSRonda.abrirScanner()">' + icon('maximize', 28) + 'Escanear QR do Ponto<small>aponte a câmera para a etiqueta</small></button>') +
+      '<div class="rd-gps rd-trj" id="rd-trj"></div>' +
       '<div class="rd-card"><div class="rd-card-titulo">Pontos</div><div class="rd-pontos">' + grade + '</div></div>' +
       '<button class="btn ' + (completo ? 'btn-success' : 'btn-outline') + ' icon-inline" onclick="GSSRonda.encerrar()">' + icon('flag', 15) + '<span>Encerrar Ronda</span></button>';
+    atualizarIndicadorTrajeto();
   }
 
   // ─── SCANNER ─────────────────────────────────────────────────────────────
@@ -665,7 +793,7 @@
     return new Promise(function(resolve) {
       if (!navigator.geolocation) { resolve(null); return; }
       navigator.geolocation.getCurrentPosition(
-        function(pos) { resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, precisao_m: pos.coords.accuracy }); },
+        function(pos) { resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, precisao_m: pos.coords.accuracy, altitude_m: pos.coords.altitude }); },
         function() { resolve(null); },
         { enableHighAccuracy: true, timeout: 12000, maximumAge: 15000 }
       );
@@ -791,9 +919,11 @@
         lida_em: l.lida_em,
         lat: loc ? loc.lat : null,
         lng: loc ? loc.lng : null,
-        precisao_m: loc ? loc.precisao_m : null
+        precisao_m: loc ? loc.precisao_m : null,
+        altitude_m: loc ? loc.altitude_m : null
       };
-      return enviarLeitura(dados, l.ponto);
+      // Trajeto recente chega antes da leitura: o servidor usa para o score.
+      return descarregarTrajeto().then(function() { return enviarLeitura(dados, l.ponto); });
     }).then(function(ok) {
       if (!ok) { btn.disabled = false; btn.querySelector('span').textContent = 'Confirmar ponto'; return; }
       st.leitura = null;
@@ -854,6 +984,7 @@
 
     var dados = { id_ronda: st.ctx.ronda.id, encerrada_em: new Date().toISOString(), pendentes_offline: 0 };
     var concluir = function(texto) {
+      pararRastreio();
       st.ctx.ronda = null;
       st.ctx.leituras = [];
       salvarCtxCache();
@@ -867,7 +998,8 @@
         .then(function() { processarFila(); concluir('Ronda encerrada — será sincronizada quando a conexão voltar.'); });
     };
 
-    filaListar().then(function(ops) {
+    // Último lote do trajeto vai antes do encerrar (o servidor recalcula os scores).
+    descarregarTrajeto().then(filaListar).then(function(ops) {
       if (ops.length || st.ctx.ronda._pendente) return enfileirar();
       return api('encerrar', Object.assign(base(), dados)).then(function(res) {
         concluir(res.ronda && res.ronda.status === 'concluida' ? 'Ronda concluída. Bom trabalho!' : 'Ronda encerrada.');
@@ -902,6 +1034,7 @@
       } catch (e) { return false; }
     },
     limpar: function() {
+      pararRastreio();
       try { localStorage.removeItem(SESSAO_KEY); } catch (e) {}
       st.posto = null;
       st.ctx = null;
