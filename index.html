@@ -97,6 +97,12 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 .app-topbar .back-btn{background:none;border:none;cursor:pointer;color:var(--text2);display:flex;align-items:center;padding:6px;border-radius:7px}
 .app-topbar .back-btn:hover{background:var(--bg)}
 .app-topbar .title{font-size:15px;font-weight:800;color:var(--text)}
+/* fila offline: selo no topo e aviso de recusa */
+.req-fila{margin-left:auto;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;display:none;align-items:center;gap:5px;white-space:nowrap;background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+.req-fila.ativo{display:inline-flex}
+.req-fila.offline{background:var(--danger-bg);color:var(--danger);border-color:var(--danger-border)}
+.hist-card.pendente{border:1.5px dashed #f59e0b;background:#fffbeb}
+.hist-pendente{font-size:11px;font-weight:700;color:#92400e}
 .app-content{flex:1;padding:24px;max-width:760px;width:100%}
 
 .err-box{background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--danger);margin-bottom:14px;display:none}
@@ -226,11 +232,13 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     <div class="app-topbar">
       <button class="back-btn hidden" id="topbar-back"></button>
       <div class="title" id="topbar-title">Requisição de Materiais</div>
+      <span class="req-fila" id="req-fila-badge"></span>
     </div>
     <div class="app-content" id="app-content"></div>
   </main>
 </div>
 
+<script src="fila.js"></script>
 <script>
 (function() {
   'use strict';
@@ -263,7 +271,8 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     'clock': '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>',
     'search': '<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>',
     'trash': '<polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>',
-    'repeat': '<polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path>'
+    'repeat': '<polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path>',
+    'wifi-off': '<line x1="1" y1="1" x2="23" y2="23"></line><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line>'
   };
 
   function icon(name, size) {
@@ -301,6 +310,65 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 
   function headersJson() {
     return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY };
+  }
+
+  // ─── OFFLINE: id do aparelho, leitura com cache, selo da fila ────────────
+  // App Android GSS Legion (Capacitor): a página roda embutida, sem internet.
+  var EM_APP = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+
+  function uuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    var b = crypto.getRandomValues(new Uint8Array(16));
+    b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80;
+    var h = Array.prototype.map.call(b, function(x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+    return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
+  }
+
+  // GET no REST com cópia local: sem rede, devolve a última cópia (ou erro
+  // "sem cópia" na primeira vez sem internet).
+  async function restComCache(chave, url) {
+    try {
+      var resp = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
+      if (!resp.ok) throw Object.assign(new Error('Erro ' + resp.status), { status: resp.status });
+      var dados = await resp.json();
+      GSSReqCache.set(chave, dados);
+      return dados;
+    } catch (e) {
+      if (e.status && e.status < 500) throw e;
+      var copia = GSSReqCache.get(chave);
+      if (copia) return copia;
+      throw new Error('Sem internet. Conecte-se uma vez para baixar os dados deste posto.');
+    }
+  }
+
+  // Foto do catálogo vem da internet: sem sinal, troca pelo ícone.
+  window.fotoFalhou = function(img, ico) {
+    var ph = document.createElement('div');
+    ph.className = 'mat-ph';
+    ph.innerHTML = icon(ico || 'package', 32);
+    img.replaceWith(ph);
+  };
+
+  function atualizarSeloFila(ops) {
+    var el = document.getElementById('req-fila-badge');
+    if (!el) return;
+    var n = (ops || []).length;
+    var offline = navigator.onLine === false;
+    el.className = 'req-fila' + (n || offline ? ' ativo' : '') + (offline ? ' offline' : '');
+    el.innerHTML = offline
+      ? icon('wifi-off', 12) + (n ? n + ' aguardando envio' : 'Sem internet')
+      : icon('clock', 12) + n + ' aguardando envio';
+  }
+  GSSReqFila.aoMudar(atualizarSeloFila);
+  window.addEventListener('offline', function() { GSSReqFila.listar().then(atualizarSeloFila); });
+  window.addEventListener('online', function() { GSSReqFila.listar().then(atualizarSeloFila); });
+
+  function avisoRecusadas() {
+    var r = GSSReqFila.recusadas();
+    if (!r.length) return '';
+    return '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' ' +
+      r.map(function(x) { return escapeHtml(x.rotulo) + ' feita sem internet foi recusada pelo servidor: ' + escapeHtml(x.erro); }).join('<br/>') +
+      ' <a href="#" onclick="GSSReqFila.limparRecusadas();irParaMeusPedidos();return false">Entendi</a></div>';
   }
 
   window.togglePw = function() {
@@ -341,7 +409,8 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   }
 
   window.irParaOutroSistema = function() {
-    window.location.href = 'https://gss-livro-ocorrencias.pages.dev/';
+    // No app as duas páginas estão embutidas: vai para a cópia local (funciona sem internet).
+    window.location.href = EM_APP ? '../index.html' : 'https://gss-livro-ocorrencias.pages.dev/';
   };
 
   window.sair = function() {
@@ -460,20 +529,37 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 
     var historico = [];
     var erro = null;
+    var usandoCopia = false;
+    var chaveHist = 'hist_' + usuarioLogado.posto;
     try {
       var resp = await fetch(SUPABASE_EDGE + '/req-materiais', {
         method: 'POST', headers: headersJson(),
         body: JSON.stringify({ action: 'listar-historico', id_acesso: usuarioLogado.id, posto: usuarioLogado.posto })
       });
       var body = await resp.json();
-      if (!resp.ok || body.error) throw new Error(body.error || 'Falha ao carregar.');
+      if (!resp.ok || body.error) throw Object.assign(new Error(body.error || 'Falha ao carregar.'), { status: resp.status });
       historico = body.solicitacoes || [];
-    } catch (e) { erro = e.message; }
+      GSSReqCache.set(chaveHist, historico);
+    } catch (e) {
+      // Sem internet: mostra a última cópia do histórico.
+      var copia = !e.status || e.status >= 500 ? GSSReqCache.get(chaveHist) : null;
+      if (copia) { historico = copia; usandoCopia = true; } else erro = e.message;
+    }
+
+    // Pedidos feitos sem internet que ainda estão no celular.
+    var pendentes = (await GSSReqFila.listar()).filter(function(op) {
+      return op.tipo === 'material' && op.corpo.posto === usuarioLogado.posto;
+    }).map(function(op) {
+      return { id: op.corpo.id, itens: op.corpo.itens, registrado_em: op.corpo.registrado_em, criado_em: op.corpo.registrado_em, _pendente: true };
+    });
+    var jaNoServidor = {};
+    historico.forEach(function(r) { jaNoServidor[r.id] = true; });
+    historico = pendentes.filter(function(p) { return !jaNoServidor[p.id]; }).concat(historico);
 
     var novaBtn = '<div class="foot-actions"><button class="btn btn-primary" onclick="irParaMateriais()">' + icon('plus', 15) + ' Fazer Nova Requisição</button></div>';
 
-    if (erro) {
-      el.innerHTML = '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' Não foi possível carregar seus pedidos anteriores agora (' + escapeHtml(erro) + ').</div>' + novaBtn;
+    if (erro && !historico.length) {
+      el.innerHTML = avisoRecusadas() + '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' Não foi possível carregar seus pedidos anteriores agora (' + escapeHtml(erro) + ').</div>' + novaBtn;
       return;
     }
 
@@ -482,28 +568,31 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     // mesma lógica de corte do dia 27 usada pra atribuir o mês).
     var porMes = {};
     var ordemMeses = [];
+    // Data do pedido = quando foi feito no celular (registrado_em, pedidos
+    // feitos sem internet); pedidos antigos só têm criado_em.
+    function dataPedido(r) { return new Date(r.registrado_em || r.criado_em); }
     historico.forEach(function(r) {
-      var mes = mesReferenciaPedido(new Date(r.criado_em));
+      var mes = mesReferenciaPedido(dataPedido(r));
       if (!porMes[mes]) { porMes[mes] = []; ordemMeses.push(mes); }
       porMes[mes].push(r);
     });
     ordemMeses.sort(function(a, b) {
-      var da = porMes[a].reduce(function(acc, r) { return Math.max(acc, new Date(r.criado_em).getTime()); }, 0);
-      var db = porMes[b].reduce(function(acc, r) { return Math.max(acc, new Date(r.criado_em).getTime()); }, 0);
+      var da = porMes[a].reduce(function(acc, r) { return Math.max(acc, dataPedido(r).getTime()); }, 0);
+      var db = porMes[b].reduce(function(acc, r) { return Math.max(acc, dataPedido(r).getTime()); }, 0);
       return db - da;
     });
     ordemMeses = ordemMeses.slice(0, 6);
 
     if (!ordemMeses.length) {
-      el.innerHTML = '<div class="empty-state"><div class="ic">' + icon('clock', 40) + '</div>Você ainda não fez nenhuma requisição.<br/>Comece uma abaixo.</div>' + novaBtn;
+      el.innerHTML = avisoRecusadas() + '<div class="empty-state"><div class="ic">' + icon('clock', 40) + '</div>Você ainda não fez nenhuma requisição.<br/>Comece uma abaixo.</div>' + novaBtn;
       return;
     }
 
-    var html = '';
+    var html = avisoRecusadas() + (usandoCopia ? '<div class="err-box" style="display:block">' + icon('wifi-off', 14) + ' Sem internet — mostrando a última cópia dos seus pedidos.</div>' : '');
     ordemMeses.forEach(function(mes) {
       html += '<div class="hist-mes-header">' + icon('clock', 14) + escapeHtml(mes) + '</div>';
-      porMes[mes].sort(function(a, b) { return new Date(b.criado_em) - new Date(a.criado_em); }).forEach(function(r) {
-        var dt = new Date(r.criado_em);
+      porMes[mes].sort(function(a, b) { return dataPedido(b) - dataPedido(a); }).forEach(function(r) {
+        var dt = dataPedido(r);
         var dataFmt = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
         var itensHtml = (r.itens || []).map(function(it) {
           var apr = it.aprovacao;
@@ -514,7 +603,10 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
           }
           return linha;
         }).join('');
-        html += '<div class="hist-card"><div class="hist-card-top"><div class="hist-card-data">Enviado em ' + dataFmt + '</div></div>' + itensHtml + '</div>';
+        html += r._pendente
+          ? '<div class="hist-card pendente"><div class="hist-card-top"><div class="hist-card-data">Feito em ' + dataFmt + '</div>' +
+              '<div class="hist-pendente">' + icon('clock', 12) + ' Na fila — será enviado quando a internet voltar</div></div>' + itensHtml + '</div>'
+          : '<div class="hist-card"><div class="hist-card-top"><div class="hist-card-data">Enviado em ' + dataFmt + '</div></div>' + itensHtml + '</div>';
       });
     });
     html += novaBtn;
@@ -533,17 +625,15 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 
     try {
       var url = SUPABASE_URL + '/rest/v1/req_materiais_posto?select=*&posto=eq.' + encodeURIComponent(usuarioLogado.posto) + '&ativo=eq.true&order=categoria,descricao';
-      var resp = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
-      catalogo = await resp.json();
+      catalogo = await restComCache('catalogo_' + usuarioLogado.posto, url);
     } catch (e) {
-      el.innerHTML = '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' Erro ao carregar catálogo: ' + e.message + '</div>';
+      el.innerHTML = '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' Erro ao carregar catálogo: ' + escapeHtml(e.message) + '</div>';
       return;
     }
 
     try {
       var urlCfg = SUPABASE_URL + '/rest/v1/req_postos_config?select=permite_outros&posto=eq.' + encodeURIComponent(usuarioLogado.posto);
-      var respCfg = await fetch(urlCfg, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
-      var cfgArr = await respCfg.json();
+      var cfgArr = await restComCache('cfg_' + usuarioLogado.posto, urlCfg);
       permiteOutros = !!(cfgArr && cfgArr[0] && cfgArr[0].permite_outros);
     } catch (e) { permiteOutros = false; }
 
@@ -564,7 +654,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     ordem.forEach(function(cat) {
       html += '<div class="cat-header">' + icon('package', 14) + escapeHtml(cat) + '</div>';
       porCategoria[cat].forEach(function(m) {
-        var fotoHtml = m.foto_url ? '<img src="' + m.foto_url + '" alt=""/>' : '<div class="mat-ph">' + icon('package', 44) + '</div>';
+        var fotoHtml = m.foto_url ? '<img src="' + m.foto_url + '" alt="" onerror="fotoFalhou(this,\'package\')"/>' : '<div class="mat-ph">' + icon('package', 44) + '</div>';
         html += '<div class="mat-card">' + fotoHtml +
           '<div class="mat-info"><div class="mat-nome">' + escapeHtml(m.descricao) + '</div><div class="mat-un">' + escapeHtml(m.unidade || '') + '</div></div>' +
           '<input type="number" min="0" step="1" placeholder="0" oninput="setQtd(\'' + m.material_id + '\', this.value)"/>' +
@@ -692,28 +782,29 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     var btn = document.getElementById('btn-enviar-req');
     btn.disabled = true; btn.textContent = 'Enviando...';
 
+    // id do aparelho + hora do pedido: sem internet vai para a fila e o
+    // reenvio não duplica (ver fila.js).
     try {
-      var resp = await fetch(SUPABASE_EDGE + '/req-materiais', {
-        method: 'POST', headers: headersJson(),
-        body: JSON.stringify({
+      var r = await GSSReqFila.enviar({
+        tipo: 'material',
+        rotulo: 'Requisição de materiais',
+        url: SUPABASE_EDGE + '/req-materiais',
+        headers: headersJson(),
+        corpo: {
           action: 'salvar',
+          id: uuid(),
+          registrado_em: new Date().toISOString(),
           id_acesso: usuarioLogado.id,
           posto: usuarioLogado.posto,
           colaborador_nome: usuarioLogado.nome,
           itens: itens,
           assinatura: sig.canvas.toDataURL('image/png')
-        })
+        }
       });
-      var body = await resp.json();
-      if (!resp.ok || body.error) {
-        btn.disabled = false; btn.innerHTML = icon('edit', 15) + ' Confirmar e Enviar';
-        errEl.textContent = body.error || 'Erro ao enviar.'; errEl.style.display = 'block';
-        return;
-      }
-      mostrarSucesso();
+      mostrarSucesso(!!r.enfileirado);
     } catch (e) {
       btn.disabled = false; btn.innerHTML = icon('edit', 15) + ' Confirmar e Enviar';
-      errEl.textContent = 'Erro de conexão: ' + e.message;
+      errEl.textContent = e.message || 'Erro ao enviar.';
       errEl.style.display = 'block';
     }
   };
@@ -736,12 +827,13 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
       // no desktop ("EPI / Proteção", em MAT_TIPOS) e pelo posto do responsável
       // logado — os mesmos materiais que já aparecem em "Configurar Posto".
       var url = SUPABASE_URL + '/rest/v1/req_materiais_posto?select=*&posto=eq.' + encodeURIComponent(usuarioLogado.posto) + '&categoria=eq.' + encodeURIComponent('EPI / Proteção') + '&ativo=eq.true&order=descricao';
-      var resp = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
-      catalogoEpis = await resp.json();
+      catalogoEpis = await restComCache('epis_' + usuarioLogado.posto, url);
     } catch (e) {
-      el.innerHTML = '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' Erro ao carregar catálogo de EPIs: ' + e.message + '</div>';
+      el.innerHTML = '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' Erro ao carregar catálogo de EPIs: ' + escapeHtml(e.message) + '</div>';
       return;
     }
+    // Com internet, renova a lista de colaboradores guardada para a busca offline.
+    ['01', '02'].forEach(baixarColaboradores);
 
     if (!catalogoEpis || !catalogoEpis.length) {
       el.innerHTML = '<div class="empty-state"><div class="ic">' + icon('inbox', 40) + '</div>Nenhum EPI habilitado para este posto ainda.<br/>Fale com a administração.</div>';
@@ -785,7 +877,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 
     html += '<div class="cat-header">' + icon('shield', 14) + 'EPIs Entregues</div>';
     catalogoEpis.forEach(function(ep) {
-      var fotoHtml = ep.foto_url ? '<img src="' + ep.foto_url + '" alt=""/>' : '<div class="mat-ph">' + icon('shield', 32) + '</div>';
+      var fotoHtml = ep.foto_url ? '<img src="' + ep.foto_url + '" alt="" onerror="fotoFalhou(this,\'shield\')"/>' : '<div class="mat-ph">' + icon('shield', 32) + '</div>';
       var caHtml = ep.ca ? ' · CA ' + escapeHtml(ep.ca) : '';
       html += '<div class="mat-card">' + fotoHtml +
         '<div class="mat-info"><div class="mat-nome">' + escapeHtml(ep.descricao) + '</div><div class="mat-un">' + escapeHtml(ep.unidade || '') + caHtml + '</div></div>' +
@@ -822,14 +914,56 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     epiColabBuscaTimer = setTimeout(function() { _buscarColaboradorEpi(termo); }, 250);
   };
 
+  // Lista de colaboradores ativos da empresa guardada no aparelho (renovada 1x
+  // por dia com internet): a busca do EPI funciona sem sinal. O REST devolve
+  // no máximo 1000 linhas por vez, então pagina.
+  var COLAB_VALIDADE_MS = 24 * 60 * 60 * 1000;
+  async function baixarColaboradores(filial) {
+    if (navigator.onLine === false || GSSReqCache.idade('colab_' + filial) < COLAB_VALIDADE_MS) return;
+    try {
+      var todos = [];
+      for (var offset = 0; offset < 50000; offset += 1000) {
+        var url = SUPABASE_URL + '/rest/v1/req_colaboradores_ref?select=re,nome&filial=eq.' + filial + '&ativo=eq.true&order=nome&limit=1000&offset=' + offset;
+        var resp = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
+        if (!resp.ok) return;
+        var pagina = await resp.json();
+        todos = todos.concat(pagina);
+        if (pagina.length < 1000) break;
+      }
+      GSSReqCache.set('colab_' + filial, todos);
+    } catch (e) { /* sem rede: fica a cópia anterior */ }
+  }
+
+  function semAcento(s) {
+    return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+  }
+
+  function buscarColaboradorLocal(termo) {
+    var lista = GSSReqCache.get('colab_' + epiEmpresaFilial);
+    if (!lista) return null;
+    var t = semAcento(termo);
+    return lista.filter(function(c) { return semAcento(c.nome).indexOf(t) >= 0 || String(c.re).indexOf(termo) >= 0; }).slice(0, 10);
+  }
+
   async function _buscarColaboradorEpi(termo) {
     var drop = document.getElementById('epi-colab-drop');
     if (!drop || !epiEmpresaFilial) return;
     try {
-      var orFiltro = '(nome.ilike.*' + termo + '*,re.ilike.*' + termo + '*)';
-      var url = SUPABASE_URL + '/rest/v1/req_colaboradores_ref?select=re,nome&filial=eq.' + epiEmpresaFilial + '&ativo=eq.true&or=' + encodeURIComponent(orFiltro) + '&order=nome&limit=10';
-      var resp = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
-      epiColabResultados = await resp.json() || [];
+      var local = navigator.onLine === false ? buscarColaboradorLocal(termo) : null;
+      if (local) {
+        epiColabResultados = local;
+      } else {
+        try {
+          var orFiltro = '(nome.ilike.*' + termo + '*,re.ilike.*' + termo + '*)';
+          var url = SUPABASE_URL + '/rest/v1/req_colaboradores_ref?select=re,nome&filial=eq.' + epiEmpresaFilial + '&ativo=eq.true&or=' + encodeURIComponent(orFiltro) + '&order=nome&limit=10';
+          var resp = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
+          epiColabResultados = await resp.json() || [];
+        } catch (e) {
+          // Caiu a internet no meio: usa a lista guardada.
+          epiColabResultados = buscarColaboradorLocal(termo);
+          if (!epiColabResultados) throw new Error('sem internet e sem lista de colaboradores guardada neste celular');
+        }
+      }
       if (!epiColabResultados.length) {
         drop.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:var(--text3)">Nenhum colaborador encontrado.</div>';
         drop.style.display = 'block';
@@ -894,10 +1028,15 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     btn.disabled = true; btn.textContent = 'Enviando...';
 
     try {
-      var resp = await fetch(SUPABASE_EDGE + '/req-epis', {
-        method: 'POST', headers: headersJson(),
-        body: JSON.stringify({
+      var r = await GSSReqFila.enviar({
+        tipo: 'epi',
+        rotulo: 'Entrega de EPI para ' + epiColaborador.nome,
+        url: SUPABASE_EDGE + '/req-epis',
+        headers: headersJson(),
+        corpo: {
           action: 'salvar',
+          id: uuid(),
+          registrado_em: new Date().toISOString(),
           id_acesso: usuarioLogado.id,
           posto: usuarioLogado.posto,
           re_colaborador: epiColaborador.re,
@@ -905,37 +1044,35 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
           itens: itens,
           data_entrega: epiData,
           assinatura: sig.canvas.toDataURL('image/png')
-        })
+        }
       });
-      var body = await resp.json();
-      if (!resp.ok || body.error) {
-        btn.disabled = false; btn.innerHTML = icon('edit', 15) + ' Confirmar e Enviar';
-        errEl.textContent = body.error || 'Erro ao enviar.'; errEl.style.display = 'block';
-        return;
-      }
-      mostrarSucessoEpi();
+      mostrarSucessoEpi(!!r.enfileirado);
     } catch (e) {
       btn.disabled = false; btn.innerHTML = icon('edit', 15) + ' Confirmar e Enviar';
-      errEl.textContent = 'Erro de conexão: ' + e.message;
+      errEl.textContent = e.message || 'Erro ao enviar.';
       errEl.style.display = 'block';
     }
   };
 
-  function mostrarSucessoEpi() {
-    setTopbar('Entrega Registrada', false);
+  function mostrarSucessoEpi(naFila) {
+    setTopbar(naFila ? 'Entrega Guardada' : 'Entrega Registrada', false);
     document.getElementById('app-content').innerHTML =
-      '<div class="success-wrap"><div class="ic">' + icon('check-circle', 56) + '</div>' +
-      '<h1 style="font-size:19px;font-weight:800">Entrega de EPI registrada!</h1>' +
-      '<div style="font-size:13px;color:var(--text2);margin:10px 0 24px">Os EPIs foram registrados com sucesso para ' + escapeHtml(epiColaborador ? epiColaborador.nome : '') + '.</div>' +
+      '<div class="success-wrap"><div class="ic"' + (naFila ? ' style="color:#b45309"' : '') + '>' + icon(naFila ? 'clock' : 'check-circle', 56) + '</div>' +
+      '<h1 style="font-size:19px;font-weight:800">' + (naFila ? 'Entrega guardada no celular' : 'Entrega de EPI registrada!') + '</h1>' +
+      '<div style="font-size:13px;color:var(--text2);margin:10px 0 24px">' + (naFila
+        ? 'Você está sem internet. A entrega de ' + escapeHtml(epiColaborador ? epiColaborador.nome : '') + ' será enviada automaticamente quando a conexão voltar.'
+        : 'Os EPIs foram registrados com sucesso para ' + escapeHtml(epiColaborador ? epiColaborador.nome : '') + '.') + '</div>' +
       '<button class="btn btn-primary" style="max-width:240px" onclick="irParaEpiInicio()">Nova Entrega</button></div>';
   }
 
-  function mostrarSucesso() {
-    setTopbar('Requisição Enviada', false);
+  function mostrarSucesso(naFila) {
+    setTopbar(naFila ? 'Requisição Guardada' : 'Requisição Enviada', false);
     document.getElementById('app-content').innerHTML =
-      '<div class="success-wrap"><div class="ic">' + icon('check-circle', 56) + '</div>' +
-      '<h1 style="font-size:19px;font-weight:800">Requisição enviada!</h1>' +
-      '<div style="font-size:13px;color:var(--text2);margin:10px 0 24px">Seu pedido foi registrado com sucesso.</div>' +
+      '<div class="success-wrap"><div class="ic"' + (naFila ? ' style="color:#b45309"' : '') + '>' + icon(naFila ? 'clock' : 'check-circle', 56) + '</div>' +
+      '<h1 style="font-size:19px;font-weight:800">' + (naFila ? 'Requisição guardada no celular' : 'Requisição enviada!') + '</h1>' +
+      '<div style="font-size:13px;color:var(--text2);margin:10px 0 24px">' + (naFila
+        ? 'Você está sem internet. O pedido será enviado automaticamente quando a conexão voltar — não precisa refazer.'
+        : 'Seu pedido foi registrado com sucesso.') + '</div>' +
       '<button class="btn btn-primary" style="max-width:240px" onclick="irParaMateriais()">Nova Requisição</button></div>';
   }
 
