@@ -48,6 +48,8 @@
     alarmePermissoes: function() { return chamar('GssNativo', 'alarmePermissoes'); },
     pedirPermissaoNotificacao: function() { return chamar('GssNativo', 'pedirPermissaoNotificacao'); },
     abrirAjustesAlarme: function(qual) { return chamar('GssNativo', 'abrirAjustesAlarme', { qual: qual }); },
+    alarmeTestar: function(segundos) { return chamar('GssNativo', 'alarmeTestar', { segundos: segundos || 60 }); },
+    abrirAjustesXiaomi: function(qual) { return chamar('GssNativo', 'abrirAjustesXiaomi', { qual: qual }); },
     // Avisa quando um alarme toca com o app aberto (ou o app é aberto por ele).
     aoAlarme: function(callback) {
       if (!cap.isPluginAvailable('GssNativo') || !cap.addListener) return null;

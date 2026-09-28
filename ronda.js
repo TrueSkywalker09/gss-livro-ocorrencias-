@@ -55,6 +55,7 @@
   var SESSAO_KEY = 'gss_ronda_sessao';
   var APARELHO_KEY = 'gss_ronda_aparelho'; // posto a que o celular fixo pertence (alarmes)
   var AGENDA_MS = 30 * 60 * 1000;
+  var XIAOMI_OK_KEY = 'gss_ronda_xiaomi_ok'; // "Já configurei" do aviso da Xiaomi
   var CTX_KEY = 'gss_ronda_ctx_';
   var SESSAO_MAX_MS = 14 * 60 * 60 * 1000; // cobre um plantão 12x36 com folga
   var PREFIXO_TOKEN = 'GSSR1-';
@@ -1168,22 +1169,64 @@
     }).catch(function() {});
   }
 
+  function dataHora(ms) {
+    var d = new Date(ms);
+    return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + ' ' +
+      d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  function xiaomiMarcado() {
+    try { return localStorage.getItem(XIAOMI_OK_KEY) === '1'; } catch (e) { return false; }
+  }
+
+  // Xiaomi/Redmi/POCO: sem "Início automático" o sistema encerra o app ao
+  // bloquear a tela e os alarmes somem. Não há como o app ligar isso sozinho.
+  function htmlXiaomi(x) {
+    if (!x || !x.xiaomi) return '';
+    var itens = [
+      ['autostart', 'Início automático', 'ligar para o GSS Legion', x.inicioAutomatico],
+      ['permissoes', 'Mostrar na tela de bloqueio e Abrir janelas em segundo plano', 'permitir as duas', x.telaBloqueio === false || x.segundoPlano === false ? false : (x.telaBloqueio && x.segundoPlano ? true : null)],
+      ['bateria', 'Economia de bateria', 'escolher "Sem restrições"', x.bateriaLiberada ? true : null]
+    ];
+    var algumNegado = itens.some(function(it) { return it[3] === false; });
+    if (xiaomiMarcado() && !algumNegado) {
+      return '<div class="rd-alarme-linha rd-alarme-xiaomi-ok">' + icon('check-circle', 13) + '<span>Xiaomi configurado para o alarme</span>' +
+        '<button class="btn btn-outline" onclick="GSSRonda.xiaomiRever()">Rever</button></div>';
+    }
+    return '<div class="rd-alarme-xiaomi">' +
+      '<div class="rd-alarme-xiaomi-tit">' + icon('alert-triangle', 14) + 'Celular Xiaomi: libere o alarme</div>' +
+      '<div class="rd-alarme-xiaomi-sub">Sem isso a Xiaomi fecha o app ao bloquear a tela e o alarme não toca.</div>' +
+      itens.map(function(it) {
+        var estado = it[3] === true ? '<span class="ok">' + icon('check', 11) + ' ok</span>'
+          : it[3] === false ? '<span class="nao">desligado</span>' : '<span class="conf">conferir</span>';
+        return '<div class="rd-alarme-xiaomi-item"><div><b>' + it[1] + '</b> — ' + it[2] + ' ' + estado + '</div>' +
+          '<button class="btn btn-outline" onclick="GSSRonda.abrirXiaomi(\'' + it[0] + '\')">Abrir</button></div>';
+      }).join('') +
+      '<button class="btn btn-primary" onclick="GSSRonda.xiaomiConfigurado()">Já configurei</button>' +
+    '</div>';
+  }
+
   function atualizarInfoAlarme() {
     var els = document.querySelectorAll('.rd-alarme-info');
     var i = alarme.info;
     var html = '';
-    if (i && i.ativo && i.id_posto) {
+    if (i && i.id_posto) {
       var p = i.permissoes || {};
       var faltas = [];
       if (p.notificacoes === false) faltas.push(['notificacoes', 'Notificações do app desligadas — o alarme não toca.']);
       if (p.telaCheia === false) faltas.push(['telaCheia', 'Alarme em tela cheia bloqueado — com a tela apagada ele não aparece.']);
       if (p.alarmeExato === false) faltas.push(['alarmeExato', 'Alarme na hora exata bloqueado — pode tocar com atraso.']);
       html = '<div class="rd-alarme-linha">' + icon('bell', 13) + '<span>Alarmes deste aparelho: <b>' + esc(i.nome_posto || i.id_posto) + '</b>' +
-        (i.proximo_em ? ' · próximo às <b>' + hora(new Date(i.proximo_em).toISOString()) + '</b>' : '') + '</span></div>' +
+        (i.ativo && i.proximo_em ? ' · próximo às <b>' + hora(new Date(i.proximo_em).toISOString()) + '</b>' : i.ativo ? '' : ' · nenhum horário cadastrado') + '</span></div>' +
         faltas.map(function(f) {
           return '<div class="rd-alarme-falta">' + icon('alert-triangle', 13) + '<span>' + f[1] + '</span>' +
             '<button class="btn btn-outline" onclick="GSSRonda.corrigirAlarme(\'' + f[0] + '\')">Corrigir</button></div>';
-        }).join('');
+        }).join('') +
+        htmlXiaomi(i.xiaomi) +
+        (i.disparado_em !== undefined ? '<div class="rd-alarme-teste">' +
+          '<span>' + (i.teste_em ? 'Teste marcado para <b>' + dataHora(i.teste_em) + '</b> — bloqueie a tela e aguarde.'
+            : 'Último disparo do alarme: <b>' + (i.disparado_em ? dataHora(i.disparado_em) : 'nunca') + '</b>') + '</span>' +
+          '<button class="btn btn-outline" onclick="GSSRonda.testarAlarme()">' + icon('bell', 13) + ' Testar alarme (1 min)</button></div>' : '');
     }
     els.forEach(function(el) { el.innerHTML = html; });
   }
@@ -1206,6 +1249,7 @@
       if (!p) return;
       if (p.alerta) mostrarAlarme('alerta', p.alerta, p.nome_posto);
       else if (p.ronda) mostrarAlarme('ronda', p.ronda, p.nome_posto);
+      else if (p.teste) mostrarAlarme('teste', p.teste, p.nome_posto);
       else esconderAlarme();
     }).catch(function() {});
   }
@@ -1221,6 +1265,12 @@
       document.getElementById('rd-alarme-sub').textContent = (nomePosto || '') + ' · ' + h + ' — confirme que está tudo bem.';
       document.getElementById('rd-alarme-acoes').innerHTML =
         '<button class="rd-btn-grande rd-btn-ok" id="rd-btn-estoubem" onclick="GSSRonda.estouBem()">' + icon('check-circle', 28) + 'Estou bem</button>';
+    } else if (tipo === 'teste') {
+      document.getElementById('rd-alarme-ico').innerHTML = icon('bell', 44);
+      document.getElementById('rd-alarme-titulo').textContent = 'Teste do alarme';
+      document.getElementById('rd-alarme-sub').textContent = 'O alarme está funcionando neste aparelho (' + h + ').';
+      document.getElementById('rd-alarme-acoes').innerHTML =
+        '<button class="rd-btn-grande rd-btn-ok" onclick="GSSRonda.fecharTeste()">' + icon('check-circle', 28) + 'OK</button>';
     } else {
       document.getElementById('rd-alarme-ico').innerHTML = icon('bell', 44);
       document.getElementById('rd-alarme-titulo').textContent = 'Hora da ronda — ' + h;
@@ -1310,8 +1360,12 @@
     var N = nativoAlarme();
     if (!N) return;
     if (N.aoAlarme) N.aoAlarme(function() { verificarAlarmes(); carregarInfoAlarme(); });
+    var ultimaRevisao = 0;
     document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'visible') { verificarAlarmes(); carregarInfoAlarme(); }
+      if (document.visibilityState !== 'visible') return;
+      verificarAlarmes();
+      carregarInfoAlarme();
+      if (Date.now() - ultimaRevisao > 2 * 60 * 1000) { ultimaRevisao = Date.now(); sincronizarAgenda(); }
     });
     setTimeout(verificarAlarmes, 400); // app aberto a frio pelo alarme
     carregarInfoAlarme();
@@ -1378,6 +1432,35 @@
     cancelarRegistro: cancelarRegistro,
     encerrar: encerrar,
     iniciarPeloAlarme: iniciarPeloAlarme,
+    testarAlarme: function() {
+      var N = nativoAlarme();
+      if (!N || !N.alarmeTestar) return;
+      N.alarmeTestar(60).then(function(info) {
+        if (info && alarme.info) Object.assign(alarme.info, { teste_em: info.teste_em, disparado_em: info.disparado_em, xiaomi: info.xiaomi, permissoes: info.permissoes });
+        atualizarInfoAlarme();
+        toast('Teste em 1 minuto: bloqueie a tela agora e aguarde o alarme.', 'ok');
+      }).catch(function() { toast('Esta versão do app não tem o teste. Instale o APK mais novo.', 'erro'); });
+    },
+    fecharTeste: function() {
+      var N = nativoAlarme();
+      if (N) N.alarmeSilenciar('teste').catch(function() {});
+      esconderAlarme('teste');
+      carregarInfoAlarme();
+      setTimeout(verificarAlarmes, 300);
+    },
+    abrirXiaomi: function(qual) {
+      var N = nativoAlarme();
+      if (N && N.abrirAjustesXiaomi) N.abrirAjustesXiaomi(qual).catch(function() { toast('Abra Configurações → Apps → GSS Legion.', 'erro'); });
+    },
+    xiaomiConfigurado: function() {
+      try { localStorage.setItem(XIAOMI_OK_KEY, '1'); } catch (e) {}
+      atualizarInfoAlarme();
+      toast('Agora toque em "Testar alarme" e bloqueie a tela para conferir.', 'ok');
+    },
+    xiaomiRever: function() {
+      try { localStorage.removeItem(XIAOMI_OK_KEY); } catch (e) {}
+      atualizarInfoAlarme();
+    },
     adiarAlarme: adiarAlarme,
     estouBem: estouBem,
     corrigirAlarme: function(qual) {
