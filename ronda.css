@@ -48,6 +48,8 @@
 .rd-ponto.anomalia{background:var(--warning-bg);border-color:var(--warning-border);color:#92400e}
 .rd-ponto.anomalia .ico{color:#b45309}
 .rd-ponto.pendente-envio{border-style:dashed}
+.rd-ponto.proximo{background:var(--primary-light);border-color:var(--primary);color:var(--primary)}
+.rd-ponto.proximo .ico{color:var(--primary)}
 
 /* histórico do dia */
 .rd-hist-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}

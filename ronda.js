@@ -558,6 +558,15 @@
     return mapa;
   }
 
+  function sequencial() { return !!(st.ctx && st.ctx.config && st.ctx.config.ronda_sequencial); }
+
+  // Na ronda em sequência: o primeiro ponto da ordem cadastrada ainda não lido
+  // (st.ctx.pontos já vem ordenado por ordem, nome).
+  function proximoPonto() {
+    var mapa = lidasPorPonto();
+    return st.ctx.pontos.find(function(p) { return !mapa[p.id]; }) || null;
+  }
+
   // ─── TELA INÍCIO ─────────────────────────────────────────────────────────
   function renderInicio() {
     if (st.ctx) garantirRastreio();
@@ -587,7 +596,7 @@
         'Continuar Ronda<small>iniciada às ' + hora(st.ctx.ronda.iniciada_em) + '</small></button>';
     } else {
       html += '<button class="rd-btn-grande" id="rd-btn-iniciar" onclick="GSSRonda.iniciar()">' + icon('play', 26) +
-        'Iniciar Ronda<small>' + n + ' ponto' + (n > 1 ? 's' : '') + ' a percorrer</small></button>';
+        'Iniciar Ronda<small>' + n + ' ponto' + (n > 1 ? 's' : '') + ' a percorrer' + (sequencial() ? ' · em sequência' : '') + '</small></button>';
     }
 
     var hoje = st.ctx.rondas_hoje || [];
@@ -669,13 +678,16 @@
     var total = pontos.length;
     var pct = total ? Math.round(lidos / total * 100) : 0;
     var completo = total && lidos >= total;
+    var seq = sequencial();
+    var proximo = seq ? proximoPonto() : null;
 
-    var grade = pontos.map(function(p) {
+    var grade = pontos.map(function(p, i) {
       var l = mapa[p.id];
       var cls = !l ? '' : l.status === 'anomalia' ? 'anomalia' : 'feito';
       if (l && l._pendente) cls += ' pendente-envio';
+      if (proximo && proximo.id === p.id) cls += ' proximo';
       var ic = !l ? 'circle' : l.status === 'anomalia' ? 'alert-triangle' : 'check-circle';
-      return '<div class="rd-ponto ' + cls + '"><span class="ico">' + icon(ic, 15) + '</span><span>' + esc(p.nome) +
+      return '<div class="rd-ponto ' + cls + '"><span class="ico">' + icon(ic, 15) + '</span><span>' + (seq ? (i + 1) + '. ' : '') + esc(p.nome) +
         (l ? '<small>' + hora(l.lida_em) + (l._pendente ? ' · na fila' : '') + '</small>' : '') + '</span></div>';
     }).join('');
 
@@ -688,9 +700,9 @@
       (completo
         ? '<div class="rd-card" style="background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);font-size:13.5px;font-weight:700;text-align:center">' +
             icon('check-circle', 16) + ' Todos os pontos lidos. Encerre a ronda.</div>'
-        : '<button class="rd-btn-grande" onclick="GSSRonda.abrirScanner()">' + icon('maximize', 28) + 'Escanear QR do Ponto<small>aponte a câmera para a etiqueta</small></button>') +
+        : '<button class="rd-btn-grande" onclick="GSSRonda.abrirScanner()">' + icon('maximize', 28) + 'Escanear QR do Ponto<small>' + (proximo ? 'próximo: ' + esc(proximo.nome) : 'aponte a câmera para a etiqueta') + '</small></button>') +
       '<div class="rd-gps rd-trj" id="rd-trj"></div>' +
-      '<div class="rd-card"><div class="rd-card-titulo">Pontos</div><div class="rd-pontos">' + grade + '</div></div>' +
+      '<div class="rd-card"><div class="rd-card-titulo">Pontos' + (seq ? ' · siga a ordem' : '') + '</div><div class="rd-pontos">' + grade + '</div></div>' +
       '<button class="btn ' + (completo ? 'btn-success' : 'btn-outline') + ' icon-inline" onclick="GSSRonda.encerrar()">' + icon('flag', 15) + '<span>Encerrar Ronda</span></button>';
     atualizarIndicadorTrajeto();
   }
@@ -807,6 +819,10 @@
       var ponto = st.ctx.pontos.find(function(p) { return p.hash === hash; });
       if (!ponto) { avisoScanner('Este QR não pertence a este posto.'); return; }
       if (lidasPorPonto()[ponto.id]) { avisoScanner('"' + ponto.nome + '" já foi registrado nesta ronda.'); return; }
+      if (sequencial()) {
+        var proximo = proximoPonto();
+        if (proximo && proximo.id !== ponto.id) { avisoScanner('Siga a ordem da ronda: o próximo ponto é "' + proximo.nome + '".'); return; }
+      }
       if (navigator.vibrate) navigator.vibrate(120);
       fecharScanner();
       abrirRegistro(ponto, texto);
