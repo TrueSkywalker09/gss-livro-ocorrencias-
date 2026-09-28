@@ -4,6 +4,7 @@
 //   gpsIniciar/gpsParar — GPS que continua com a tela apagada (serviço em
 //                         primeiro plano do plugin background-geolocation)
 //   status, abrirAjustesBateria, wifiScan, pressao — plugin próprio GssNativo
+//   alarme*             — alarmes dos horários da ronda / Sempre Alerta
 // e mantém a página atualizada: a página vem embutida no APK (abre sem
 // internet) e, com internet, baixa a versão nova (app-bundle.json, publicado
 // pelo deploy-livro.ps1), aplicada só fora de uma ronda.
@@ -33,6 +34,25 @@
     wifiScan: function() { return chamar('GssNativo', 'wifiScan'); },
     pressao: function() { return chamar('GssNativo', 'pressao'); },
     horaGps: function() { return chamar('GssNativo', 'horaGps'); },
+
+    // Alarmes do celular fixo do posto (horários da ronda e Sempre Alerta),
+    // agendados no Android — tocam com o app fechado. APK anterior ao 1.0.3
+    // não tem esses métodos: a chamada rejeita e a página segue sem alarme.
+    alarmeAgendar: function(agenda) { return chamar('GssNativo', 'alarmeAgendar', agenda); },
+    alarmeLimpar: function() { return chamar('GssNativo', 'alarmeLimpar'); },
+    alarmeInfo: function() { return chamar('GssNativo', 'alarmeInfo'); },
+    alarmeEstadoRonda: function(estado) { return chamar('GssNativo', 'alarmeEstadoRonda', estado); },
+    alarmeSilenciar: function(tipo) { return chamar('GssNativo', 'alarmeSilenciar', tipo ? { tipo: tipo } : {}); },
+    alarmeAdiar: function(minutos) { return chamar('GssNativo', 'alarmeAdiar', { minutos: minutos }); },
+    alarmePendente: function() { return chamar('GssNativo', 'alarmePendente'); },
+    alarmePermissoes: function() { return chamar('GssNativo', 'alarmePermissoes'); },
+    pedirPermissaoNotificacao: function() { return chamar('GssNativo', 'pedirPermissaoNotificacao'); },
+    abrirAjustesAlarme: function(qual) { return chamar('GssNativo', 'abrirAjustesAlarme', { qual: qual }); },
+    // Avisa quando um alarme toca com o app aberto (ou o app é aberto por ele).
+    aoAlarme: function(callback) {
+      if (!cap.isPluginAvailable('GssNativo') || !cap.addListener) return null;
+      return cap.addListener('GssNativo', 'alarme', function(dados) { callback(dados || {}); });
+    },
 
     // Mesmo formato do navigator.geolocation (coords/timestamp), mais:
     //   timestamp = hora do fix do GPS (satélite), não a do relógio do aparelho

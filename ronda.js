@@ -20,6 +20,11 @@
 //    antes de cada leitura, para o servidor pontuar a chegada ao ponto. Sem
 //    rede o lote entra na mesma fila. Wake Lock mantém a tela acesa: com a
 //    tela apagada o navegador para de entregar o GPS.
+//  - Alarmes (app Android 1.0.3+): o celular fica fixo no posto. Ao abrir a
+//    Ronda de um posto, o aparelho passa a ser "do posto" (continua depois do
+//    Sair) e agenda no Android os horários da ronda e o Sempre Alerta; a
+//    agenda é revista a cada 30 min (ação agenda-posto, sem login). O "Estou
+//    bem" vai pela mesma fila offline.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 (function() {
@@ -38,7 +43,9 @@
     'refresh-cw': '<polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>',
     'circle': '<circle cx="12" cy="12" r="10"></circle>',
     'crosshair': '<circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line>',
-    'maximize': '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>'
+    'maximize': '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>',
+    'bell': '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path>',
+    'heart': '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>'
   };
   Object.keys(EXTRA_ICONS).forEach(function(k) { if (!L.ICONS[k]) L.ICONS[k] = EXTRA_ICONS[k]; });
 
@@ -46,6 +53,8 @@
   var esc = L.escapeHtml;
 
   var SESSAO_KEY = 'gss_ronda_sessao';
+  var APARELHO_KEY = 'gss_ronda_aparelho'; // posto a que o celular fixo pertence (alarmes)
+  var AGENDA_MS = 30 * 60 * 1000;
   var CTX_KEY = 'gss_ronda_ctx_';
   var SESSAO_MAX_MS = 14 * 60 * 60 * 1000; // cobre um plantão 12x36 com folga
   var PREFIXO_TOKEN = 'GSSR1-';
@@ -176,7 +185,7 @@
     });
   }
 
-  var ACAO_DA_OP = { iniciar: 'iniciar', leitura: 'registrar-leitura', encerrar: 'encerrar', trajeto: 'registrar-trajeto' };
+  var ACAO_DA_OP = { iniciar: 'iniciar', leitura: 'registrar-leitura', encerrar: 'encerrar', trajeto: 'registrar-trajeto', prova: 'prova-vida' };
 
   // Envia a fila em ordem (iniciar → leituras → encerrar). Para no primeiro
   // erro de rede/servidor para não inverter a ordem; recusa definitiva (4xx)
@@ -197,7 +206,9 @@
             if (semRede(e) || e.status >= 500) return false;
             return filaRemover(op.seq).then(function() {
               if (op.tipo === 'trajeto') return true; // lote recusado não merece alarme ao vigilante
-              toast((op.tipo === 'leitura' ? 'Leitura de "' + (op.rotulo || 'ponto') + '"' : 'Operação da ronda') + ' recusada: ' + e.message, 'erro');
+              var oque = op.tipo === 'leitura' ? 'Leitura de "' + (op.rotulo || 'ponto') + '"'
+                : op.tipo === 'prova' ? 'Confirmação do Sempre Alerta' : 'Operação da ronda';
+              toast(oque + ' recusada: ' + e.message, 'erro');
               return true;
             });
           });
@@ -423,7 +434,7 @@
     return '<div class="rd-topo"><div class="rd-topo-linha">' +
       '<button class="rd-topo-voltar" onclick="' + voltar + '" aria-label="Voltar">' + icon('arrow-left', 18) + '</button>' +
       '<div class="rd-topo-info">' +
-        '<div class="rd-topo-marca">' + icon('shield', 12) + 'Ronda</div>' +
+        '<div class="rd-topo-marca"><img src="logo-gss.png" alt="GSS" class="rd-topo-logo">Ronda</div>' +
         '<div class="rd-topo-titulo" id="' + id + '-titulo"></div>' +
         '<div class="rd-topo-sub" id="' + id + '-sub"></div>' +
       '</div>' +
@@ -476,6 +487,13 @@
         '<div class="rd-scanner-rodape"><p id="rd-scanner-msg">Aponte a câmera para o QR code do ponto</p>' +
           '<button class="btn" onclick="GSSRonda.fecharScanner()">Cancelar</button></div>' +
       '</div>' +
+      '<div class="rd-alarme" id="rd-alarme" role="alertdialog" aria-live="assertive">' +
+        '<img src="logo-gss.png" alt="GSS" class="rd-alarme-logo">' +
+        '<div class="rd-alarme-ico" id="rd-alarme-ico"></div>' +
+        '<h2 id="rd-alarme-titulo"></h2>' +
+        '<p id="rd-alarme-sub"></p>' +
+        '<div class="rd-alarme-acoes" id="rd-alarme-acoes"></div>' +
+      '</div>' +
       '<div class="rd-toast" id="rd-toast"></div>';
     document.body.insertAdjacentHTML('beforeend', html);
 
@@ -504,7 +522,9 @@
     st.usuario = { id: usuario.id, nome: usuario.nome, re: usuario.re };
     st.hub = rondas || [];
     if (!st.hub.length) return '';
+    setTimeout(atualizarInfoAlarme, 0);
     return '<div class="rd-hub-titulo">' + icon('shield', 14) + 'Ronda</div>' +
+      '<div class="rd-alarme-info"></div>' +
       '<div class="rd-hub-grid">' + st.hub.map(function(r, i) {
         return '<div class="rd-hub-card" onclick="GSSRonda.abrirPorIndice(' + i + ')">' +
           '<div class="ico-box">' + icon('shield', 22) + '</div>' +
@@ -541,6 +561,7 @@
     }).then(function(ctx) {
       st.ctx = ctx;
       salvarCtxCache();
+      vincularAparelho(ctx.config);
     }).catch(function(e) {
       if (semRede(e)) {
         var cache = lerCtxCache();
@@ -618,7 +639,8 @@
         icon('wifi-off', 14) + ' ' + st.filaTamanho + ' registro(s) aguardando conexão. Serão enviados automaticamente.</div>';
     }
 
-    corpo.innerHTML = html + botoesRodape();
+    corpo.innerHTML = html + '<div class="rd-alarme-info"></div>' + botoesRodape();
+    atualizarInfoAlarme();
   }
 
   function botoesRodape() {
@@ -655,6 +677,7 @@
       });
     }).then(function(ronda) {
       st.ctx.ronda = ronda;
+      informarEstadoRonda();
       st.ctx.leituras = ronda.id === id ? [] : st.ctx.leituras;
       salvarCtxCache();
       L.showScreen('ronda-exec-screen');
@@ -1051,6 +1074,7 @@
       st.ctx.ronda = null;
       st.ctx.leituras = [];
       salvarCtxCache();
+      informarEstadoRonda();
       toast(texto, 'ok');
       L.showScreen('ronda-inicio-screen');
       renderInicio();
@@ -1071,6 +1095,228 @@
         toast(e.message, 'erro');
       });
     });
+  }
+
+  // ─── ALARMES DO APARELHO (horários da ronda / Sempre Alerta) ────────────
+  // Só no app Android 1.0.3+. O celular fica fixo no posto: o vínculo é do
+  // aparelho, não do login, e não se desfaz no Sair.
+  var alarme = { info: null, atual: null, enviando: false };
+
+  function nativoAlarme() {
+    var N = window.GSSNativo;
+    return N && N.ativo && N.alarmeAgendar ? N : null;
+  }
+
+  function aparelho() {
+    try { return JSON.parse(localStorage.getItem(APARELHO_KEY)); } catch (e) { return null; }
+  }
+
+  // Posto aberto passa a ser o do aparelho; a agenda vem na config do contexto.
+  function vincularAparelho(config) {
+    var N = nativoAlarme();
+    if (!N || !st.posto || !config) return;
+    var novo = { id_posto: st.posto.id_posto, nome_posto: st.posto.nome_posto };
+    var antes = aparelho();
+    try { localStorage.setItem(APARELHO_KEY, JSON.stringify(novo)); } catch (e) {}
+    aplicarAgenda(config).then(function() {
+      informarEstadoRonda();
+      if (!antes || antes.id_posto !== novo.id_posto) conferirPermissoesAlarme(true);
+    });
+  }
+
+  function temAlgoAgendado(ag) {
+    return !!(ag && ((ag.horarios && ag.horarios.length) || ag.alerta_ativo));
+  }
+
+  function aplicarAgenda(ag) {
+    var N = nativoAlarme(), ap = aparelho();
+    if (!N || !ap) return Promise.resolve();
+    var dados = Object.assign({ horarios: [], alerta_ativo: false }, ag || {}, { id_posto: ap.id_posto, nome_posto: ap.nome_posto });
+    return N.alarmeAgendar(dados).then(function(info) {
+      alarme.info = Object.assign(info || {}, { ativo: temAlgoAgendado(dados) });
+      atualizarInfoAlarme();
+    }).catch(function() {});
+  }
+
+  // Revisão periódica pelo servidor — funciona sem ninguém logado.
+  function sincronizarAgenda() {
+    var ap = aparelho();
+    if (!nativoAlarme() || !ap || navigator.onLine === false) return;
+    api('agenda-posto', { id_posto: ap.id_posto }).then(function(res) {
+      return aplicarAgenda(res.agenda);
+    }).catch(function() {});
+  }
+
+  function informarEstadoRonda() {
+    var N = nativoAlarme(), ap = aparelho();
+    if (!N || !ap || !st.posto || st.posto.id_posto !== ap.id_posto || !st.ctx) return;
+    var r = st.ctx.ronda;
+    N.alarmeEstadoRonda({ emAndamento: !!r, iniciadaEm: r ? new Date(r.iniciada_em).getTime() : 0 }).catch(function() {});
+    if (r) esconderAlarme('ronda');
+  }
+
+  // Android 13+ pede permissão de notificação; 14+ pode barrar a tela cheia.
+  function conferirPermissoesAlarme(pedir) {
+    var N = nativoAlarme();
+    if (!N) return Promise.resolve();
+    return N.alarmePermissoes().then(function(p) {
+      if (!p.notificacoes && pedir) return N.pedirPermissaoNotificacao();
+      return p;
+    }).then(function(p) {
+      if (alarme.info && p) alarme.info.permissoes = p;
+      atualizarInfoAlarme();
+    }).catch(function() {});
+  }
+
+  function atualizarInfoAlarme() {
+    var els = document.querySelectorAll('.rd-alarme-info');
+    var i = alarme.info;
+    var html = '';
+    if (i && i.ativo && i.id_posto) {
+      var p = i.permissoes || {};
+      var faltas = [];
+      if (p.notificacoes === false) faltas.push(['notificacoes', 'Notificações do app desligadas — o alarme não toca.']);
+      if (p.telaCheia === false) faltas.push(['telaCheia', 'Alarme em tela cheia bloqueado — com a tela apagada ele não aparece.']);
+      if (p.alarmeExato === false) faltas.push(['alarmeExato', 'Alarme na hora exata bloqueado — pode tocar com atraso.']);
+      html = '<div class="rd-alarme-linha">' + icon('bell', 13) + '<span>Alarmes deste aparelho: <b>' + esc(i.nome_posto || i.id_posto) + '</b>' +
+        (i.proximo_em ? ' · próximo às <b>' + hora(new Date(i.proximo_em).toISOString()) + '</b>' : '') + '</span></div>' +
+        faltas.map(function(f) {
+          return '<div class="rd-alarme-falta">' + icon('alert-triangle', 13) + '<span>' + f[1] + '</span>' +
+            '<button class="btn btn-outline" onclick="GSSRonda.corrigirAlarme(\'' + f[0] + '\')">Corrigir</button></div>';
+        }).join('');
+    }
+    els.forEach(function(el) { el.innerHTML = html; });
+  }
+
+  function carregarInfoAlarme() {
+    var N = nativoAlarme();
+    if (!N) return;
+    N.alarmeInfo().then(function(info) {
+      if (!info || !info.id_posto) return;
+      alarme.info = Object.assign(info, { ativo: temAlgoAgendado(info) });
+      atualizarInfoAlarme();
+    }).catch(function() {});
+  }
+
+  // Alarme tocando (ou aberto por ele): mostra o aviso por cima de tudo.
+  function verificarAlarmes() {
+    var N = nativoAlarme();
+    if (!N) return;
+    N.alarmePendente().then(function(p) {
+      if (!p) return;
+      if (p.alerta) mostrarAlarme('alerta', p.alerta, p.nome_posto);
+      else if (p.ronda) mostrarAlarme('ronda', p.ronda, p.nome_posto);
+      else esconderAlarme();
+    }).catch(function() {});
+  }
+
+  function mostrarAlarme(tipo, previsto, nomePosto) {
+    alarme.atual = { tipo: tipo, previsto: previsto };
+    var el = document.getElementById('rd-alarme');
+    var h = hora(new Date(previsto).toISOString());
+    el.className = 'rd-alarme ativo ' + tipo;
+    if (tipo === 'alerta') {
+      document.getElementById('rd-alarme-ico').innerHTML = icon('heart', 44);
+      document.getElementById('rd-alarme-titulo').textContent = 'Sempre Alerta';
+      document.getElementById('rd-alarme-sub').textContent = (nomePosto || '') + ' · ' + h + ' — confirme que está tudo bem.';
+      document.getElementById('rd-alarme-acoes').innerHTML =
+        '<button class="rd-btn-grande rd-btn-ok" id="rd-btn-estoubem" onclick="GSSRonda.estouBem()">' + icon('check-circle', 28) + 'Estou bem</button>';
+    } else {
+      document.getElementById('rd-alarme-ico').innerHTML = icon('bell', 44);
+      document.getElementById('rd-alarme-titulo').textContent = 'Hora da ronda — ' + h;
+      document.getElementById('rd-alarme-sub').textContent = nomePosto || '';
+      document.getElementById('rd-alarme-acoes').innerHTML =
+        '<button class="rd-btn-grande" onclick="GSSRonda.iniciarPeloAlarme()">' + icon('play', 26) + 'Iniciar ronda</button>' +
+        '<button class="btn btn-outline rd-btn-adiar" onclick="GSSRonda.adiarAlarme()">' + icon('clock', 15) + ' Adiar 5 min</button>';
+    }
+  }
+
+  function esconderAlarme(tipo) {
+    if (tipo && alarme.atual && alarme.atual.tipo !== tipo) return;
+    alarme.atual = null;
+    var el = document.getElementById('rd-alarme');
+    if (el) el.className = 'rd-alarme';
+  }
+
+  // Posto do aparelho aberto e com contexto? Senão, sessão guardada; senão,
+  // o hub do usuário logado; por último, pede o login.
+  function iniciarPeloAlarme() {
+    var N = nativoAlarme(), ap = aparelho();
+    if (N) N.alarmeSilenciar('ronda').catch(function() {});
+    esconderAlarme();
+    setTimeout(verificarAlarmes, 300); // Sempre Alerta tocando ao mesmo tempo
+    if (!ap) return;
+    if (st.posto && st.posto.id_posto === ap.id_posto && st.ctx) {
+      if (st.ctx.ronda) { L.showScreen('ronda-exec-screen'); renderExec(); }
+      else { L.showScreen('ronda-inicio-screen'); renderInicio(); if (st.ctx.pontos.length) iniciar(); }
+      return;
+    }
+    var noHub = st.usuario && (st.hub || []).filter(function(h) { return h.id_posto === ap.id_posto; })[0];
+    if (noHub) { abrir(noHub); return; }
+    try {
+      var s = JSON.parse(localStorage.getItem(SESSAO_KEY));
+      if (s && s.posto && s.posto.id_posto === ap.id_posto && Date.now() - s.ts < SESSAO_MAX_MS && window.GSSRonda.restaurar()) return;
+    } catch (e) {}
+    toast('Faça login para iniciar a ronda.');
+  }
+
+  function adiarAlarme() {
+    var N = nativoAlarme();
+    esconderAlarme();
+    if (N) N.alarmeAdiar(5).then(function(info) {
+      if (info && alarme.info) { alarme.info.proximo_em = info.proximo_em; atualizarInfoAlarme(); }
+    }).catch(function() {});
+    toast('O alarme toca de novo em 5 minutos.');
+  }
+
+  // "Estou bem": o toque para na hora; o GPS (até 8 s) vai junto para o
+  // servidor conferir se o aparelho está no posto. Sem sinal → fila offline.
+  function estouBem() {
+    var N = nativoAlarme(), ap = aparelho(), atual = alarme.atual;
+    if (!ap || !atual || alarme.enviando) return;
+    alarme.enviando = true;
+    if (N) N.alarmeSilenciar('alerta').catch(function() {});
+    var btn = document.getElementById('rd-btn-estoubem');
+    if (btn) btn.disabled = true;
+    var respondido = new Date().toISOString();
+    var logado = st.usuario && st.usuario.id ? st.usuario.id : null;
+    var gps = Promise.race([obterLocalizacao(), new Promise(function(r) { setTimeout(function() { r(null); }, 8000); })]);
+    gps.then(function(loc) {
+      var op = {
+        tipo: 'prova', id_acesso: logado, id_posto: ap.id_posto,
+        dados: {
+          id: uuid(), previsto_em: new Date(atual.previsto).toISOString(), respondido_em: respondido,
+          lat: loc ? loc.lat : null, lng: loc ? loc.lng : null, precisao_m: loc ? loc.precisao_m : null,
+          aparelho: navigator.userAgent.slice(0, 120)
+        }
+      };
+      return filaListar().then(function(ops) {
+        if (ops.length) return filaAdicionar(op).then(function() { processarFila(); });
+        return api('prova-vida', Object.assign({ id_acesso: op.id_acesso, id_posto: op.id_posto }, op.dados))
+          .catch(function(e) { if (semRede(e) || e.status >= 500) return filaAdicionar(op); throw e; });
+      });
+    }).then(function() {
+      toast('Confirmado. Bom serviço!', 'ok');
+    }, function(e) {
+      toast('Confirmação recusada: ' + e.message, 'erro');
+    }).then(function() {
+      alarme.enviando = false;
+      esconderAlarme('alerta');
+      setTimeout(verificarAlarmes, 300);
+    });
+  }
+
+  function iniciarAlarmes() {
+    var N = nativoAlarme();
+    if (!N) return;
+    if (N.aoAlarme) N.aoAlarme(function() { verificarAlarmes(); carregarInfoAlarme(); });
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') { verificarAlarmes(); carregarInfoAlarme(); }
+    });
+    setTimeout(verificarAlarmes, 400); // app aberto a frio pelo alarme
+    carregarInfoAlarme();
+    setTimeout(sincronizarAgenda, 3000);
+    setInterval(sincronizarAgenda, AGENDA_MS);
   }
 
   // ─── API PÚBLICA (usada pelo index.html e pelos onclick) ─────────────────
@@ -1101,6 +1347,9 @@
       try { localStorage.removeItem(SESSAO_KEY); } catch (e) {}
       st.posto = null;
       st.ctx = null;
+      // Sem ninguém logado, o "Estou bem" do celular fixo sai sem nome
+      // (voltarHub guarda o usuário antes e o hub o repõe).
+      st.usuario = null;
     },
     voltarHub: function() {
       var usuario = st.usuario;
@@ -1127,10 +1376,21 @@
     escolherStatus: escolherStatus,
     confirmarRegistro: confirmarRegistro,
     cancelarRegistro: cancelarRegistro,
-    encerrar: encerrar
+    encerrar: encerrar,
+    iniciarPeloAlarme: iniciarPeloAlarme,
+    adiarAlarme: adiarAlarme,
+    estouBem: estouBem,
+    corrigirAlarme: function(qual) {
+      var N = nativoAlarme();
+      if (!N) return;
+      var abrirAjuste = function() { return N.abrirAjustesAlarme(qual); };
+      (qual === 'notificacoes' ? N.pedirPermissaoNotificacao().then(function(p) { if (!p || !p.notificacoes) return abrirAjuste(); }) : abrirAjuste())
+        .catch(function() {});
+    }
   };
 
   injetarTelas();
+  iniciarAlarmes();
   // Fila deixada por uma sessão anterior (ex.: aparelho ficou sem sinal e
   // a página foi fechada) — cada operação carrega o próprio id_acesso/posto.
   processarFila();
