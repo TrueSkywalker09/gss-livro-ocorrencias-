@@ -460,14 +460,16 @@
           '<div id="rd-abertas"></div>' +
           '<div class="rd-card">' +
             '<div class="rd-card-titulo" id="rd-sit-titulo">Situação do ponto</div>' +
+            '<div id="rd-chk-apoio"></div>' +
             '<div class="rd-escolha">' +
               '<button id="rd-op-ok" onclick="GSSRonda.escolherStatus(\'ok\')">' + icon('check-circle', 22) + '<span>Sem alteração</span></button>' +
               '<button id="rd-op-anomalia" onclick="GSSRonda.escolherStatus(\'anomalia\')">' + icon('alert-triangle', 22) + '<span>Anormalidade</span></button>' +
             '</div>' +
             '<div id="rd-anomalia-campos" style="display:none">' +
+              '<div id="rd-chk-marcar"></div>' +
               '<div class="form-field"><label>' + icon('alert-triangle', 13) + ' Urgência <span class="required">*</span></label>' +
                 '<select id="rd-urgencia">' + URGENCIAS.map(function(u) { return '<option value="' + u[0] + '">' + u[1] + '</option>'; }).join('') + '</select></div>' +
-              '<div class="form-field"><label>' + icon('file-text', 13) + ' O que foi encontrado <span class="required">*</span></label>' +
+              '<div class="form-field"><label>' + icon('file-text', 13) + ' <span id="rd-obs-rotulo">O que foi encontrado</span> <span class="required" id="rd-obs-obrig">*</span></label>' +
                 '<textarea id="rd-obs" placeholder="Descreva a anormalidade…" style="min-height:100px"></textarea></div>' +
               '<div class="form-field"><label>' + icon('camera', 13) + ' Foto <span id="rd-foto-obrig"></span></label>' +
                 '<div class="rd-fotos">' +
@@ -928,6 +930,8 @@
     atualizarGps();
     leitura.abertas = (ponto.abertas || []).slice();
     leitura.respostas = {};
+    leitura.nc = {};
+    renderChecklist();
     renderAbertas();
     L.showScreen('ronda-registro-screen');
     atualizarAbertasDoPonto(leitura);
@@ -1110,7 +1114,67 @@
     document.getElementById('rd-op-ok').className = status === 'ok' ? 'sel-ok' : '';
     document.getElementById('rd-op-anomalia').className = status === 'anomalia' ? 'sel-anomalia' : '';
     document.getElementById('rd-anomalia-campos').style.display = status === 'anomalia' ? 'block' : 'none';
-    if (status === 'anomalia') setTimeout(function() { document.getElementById('rd-obs').focus(); }, 50);
+    renderChecklist();
+    // Com checklist o vigilante começa marcando os itens; sem, escrevendo.
+    if (status === 'anomalia' && !checklistDoPonto()) setTimeout(function() { document.getElementById('rd-obs').focus(); }, 50);
+  }
+
+  // ─── CHECKLIST DO PONTO (módulo Checklists) ──────────────────────────────
+  // Só apoio: ao ler o QR mostra o que verificar, sem marcar nada. Na
+  // Anormalidade os itens viram seleção do que NÃO está OK — vão para a
+  // ocorrência sob "Itens sinalizados no checklist:".
+  function checklistDoPonto() {
+    var c = st.leitura && st.leitura.ponto.checklist;
+    return c && c.itens && c.itens.length ? c : null;
+  }
+
+  function renderChecklist() {
+    var l = st.leitura;
+    var apoio = document.getElementById('rd-chk-apoio');
+    var marcar = document.getElementById('rd-chk-marcar');
+    if (!l || !apoio || !marcar) return;
+    var c = checklistDoPonto();
+    var anomalia = l.status === 'anomalia';
+    document.getElementById('rd-obs-rotulo').textContent = c ? 'Observação' : 'O que foi encontrado';
+    document.getElementById('rd-obs-obrig').style.display = c ? 'none' : '';
+    document.getElementById('rd-obs').placeholder = c ? 'Detalhe o que foi encontrado (opcional se marcou algum item)…' : 'Descreva a anormalidade…';
+    if (!c) { apoio.innerHTML = ''; marcar.innerHTML = ''; return; }
+
+    apoio.innerHTML = anomalia ? '' :
+      '<div class="rd-chk-apoio"><div class="rd-chk-titulo">' + icon('clipboard', 14) + ' Verifique neste ponto</div><ul>' +
+      c.itens.map(function(i) { return '<li>' + esc(i.texto) + '</li>'; }).join('') + '</ul></div>';
+
+    marcar.innerHTML = !anomalia ? '' :
+      '<div class="form-field"><label>' + icon('clipboard', 13) + ' O que não está OK? <span class="rd-chk-dica">toque nos itens</span></label>' +
+      '<div class="rd-chk-lista">' + c.itens.map(function(i) {
+        var m = l.nc[i.id];
+        return '<div class="rd-chk-item' + (m ? ' nc' : '') + '">' +
+          '<button type="button" data-id="' + esc(i.id) + '" onclick="GSSRonda.marcarItemNc(this.dataset.id)">' +
+            '<span class="rd-chk-caixa">' + (m ? icon('x', 14) : '') + '</span><span>' + esc(i.texto) + '</span></button>' +
+          (m ? '<input type="text" maxlength="500" placeholder="Detalhe (opcional)" value="' + esc(m.obs || '') + '" ' +
+            'data-id="' + esc(i.id) + '" oninput="GSSRonda.obsItemNc(this.dataset.id, this.value)">' : '') +
+        '</div>';
+      }).join('') + '</div></div>';
+  }
+
+  function marcarItemNc(id) {
+    var l = st.leitura;
+    if (!l) return;
+    if (l.nc[id]) delete l.nc[id]; else l.nc[id] = { obs: '' };
+    renderChecklist();
+  }
+
+  function obsItemNc(id, valor) {
+    if (st.leitura && st.leitura.nc[id]) st.leitura.nc[id].obs = valor;
+  }
+
+  function itensNcDaLeitura(l) {
+    var c = l.ponto.checklist;
+    if (!c || !c.itens) return [];
+    return c.itens.filter(function(i) { return l.nc[i.id]; }).map(function(i) {
+      var obs = (l.nc[i.id].obs || '').trim();
+      return obs ? { item_id: i.id, texto: i.texto, obs: obs } : { item_id: i.id, texto: i.texto };
+    });
   }
 
   function comprimirImagem(arquivo, maxDim, qualidade) {
@@ -1162,8 +1226,13 @@
     var l = st.leitura;
     if (!l) return;
     var obs = document.getElementById('rd-obs').value.trim();
+    var nc = l.status === 'anomalia' ? itensNcDaLeitura(l) : [];
     if (l.status === 'anomalia') {
-      if (!obs) { toast('Descreva a anormalidade.', 'erro'); document.getElementById('rd-obs').focus(); return; }
+      if (!obs && !nc.length) {
+        toast(checklistDoPonto() ? 'Marque o que não está OK ou descreva a anormalidade.' : 'Descreva a anormalidade.', 'erro');
+        if (!checklistDoPonto()) document.getElementById('rd-obs').focus();
+        return;
+      }
       if (l.processandoFoto) { toast('Aguarde — processando a foto.'); return; }
       if (st.ctx.config && st.ctx.config.exigir_foto_anomalia && !l.foto) { toast('Este posto exige foto na anormalidade.', 'erro'); return; }
     }
@@ -1194,6 +1263,11 @@
         altitude_m: loc ? loc.altitude_m : null
       };
       if (constatacoes.length) dados.constatacoes = constatacoes;
+      if (nc.length) {
+        dados.checklist_nc = nc;
+        dados.checklist_modelo_id = l.ponto.checklist.id_modelo;
+        dados.checklist_versao = l.ponto.checklist.versao;
+      }
       Object.assign(dados, l.extras || {});
       // Trajeto recente chega antes da leitura: o servidor usa para o score.
       return descarregarTrajeto().then(function() { return enviarLeitura(dados, l.ponto); });
@@ -1627,6 +1701,8 @@
     abrirScanner: abrirScanner,
     fecharScanner: fecharScanner,
     escolherStatus: escolherStatus,
+    marcarItemNc: marcarItemNc,
+    obsItemNc: obsItemNc,
     responderAberta: responderAberta,
     fotoAberta: fotoAberta,
     urgenciaAberta: function(i, u) { var r = respostaDa(i); if (r) r.urgencia = u; },

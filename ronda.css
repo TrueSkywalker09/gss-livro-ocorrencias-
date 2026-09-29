@@ -172,3 +172,17 @@
 .rd-urg.u-URGENTE{background:#fef3c7;color:#92400e}
 .rd-urg.u-MUITO_URGENTE,.rd-urg.u-EMERGENCIA{background:#fee2e2;color:#b91c1c}
 .rd-ponto small.rd-ponto-aberta{color:#b45309;font-weight:700}
+/* Checklist do ponto (módulo Checklists) */
+.rd-chk-apoio{background:var(--bg,#f8fafc);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.rd-chk-titulo{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.rd-chk-apoio ul{margin:0;padding-left:18px}
+.rd-chk-apoio li{font-size:13.5px;color:var(--text);line-height:1.35;margin:3px 0}
+.rd-chk-dica{font-weight:400;color:var(--text3);font-size:11px;margin-left:4px}
+.rd-chk-lista{display:flex;flex-direction:column;gap:6px}
+.rd-chk-item{border:1.5px solid var(--border);border-radius:10px;background:var(--card);overflow:hidden}
+.rd-chk-item button{width:100%;display:flex;align-items:center;gap:10px;padding:11px 12px;background:none;border:0;text-align:left;font-size:14px;color:var(--text);cursor:pointer}
+.rd-chk-caixa{width:22px;height:22px;flex-shrink:0;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff}
+.rd-chk-item.nc{border-color:#dc2626;background:#fef2f2}
+.rd-chk-item.nc .rd-chk-caixa{background:#dc2626;border-color:#dc2626}
+.rd-chk-item.nc button{color:#b91c1c;font-weight:700}
+.rd-chk-item input{margin:0 10px 10px;width:calc(100% - 20px)}
