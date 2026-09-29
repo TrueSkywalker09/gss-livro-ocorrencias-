@@ -20,6 +20,10 @@
 //    antes de cada leitura, para o servidor pontuar a chegada ao ponto. Sem
 //    rede o lote entra na mesma fila. Wake Lock mantém a tela acesa: com a
 //    tela apagada o navegador para de entregar o GPS.
+//  - Anormalidade presa ao ponto: ao ler o QR de um ponto com ocorrência de
+//    ronda ABERTA, o vigilante informa a situação atual (SEM ALTERAÇÃO /
+//    AGRAVOU / FINALIZADO) — vira constatação na mesma ocorrência, não uma
+//    ocorrência nova. Lista no cache do contexto (offline) + consulta fresca.
 //  - Alarmes (app Android 1.0.3+): o celular fica fixo no posto. Ao abrir a
 //    Ronda de um posto, o aparelho passa a ser "do posto" (continua depois do
 //    Sair) e agenda no Android os horários da ronda e o Sempre Alerta; a
@@ -453,11 +457,12 @@
         '<div class="rd-corpo">' +
           '<div class="rd-card"><div class="rd-ponto-lido"><div class="ico">' + icon('check-circle', 40) + '</div>' +
             '<h2 id="rd-reg-ponto"></h2><p id="rd-reg-local"></p></div></div>' +
+          '<div id="rd-abertas"></div>' +
           '<div class="rd-card">' +
-            '<div class="rd-card-titulo">Situação do ponto</div>' +
+            '<div class="rd-card-titulo" id="rd-sit-titulo">Situação do ponto</div>' +
             '<div class="rd-escolha">' +
-              '<button id="rd-op-ok" onclick="GSSRonda.escolherStatus(\'ok\')">' + icon('check-circle', 22) + 'Sem alteração</button>' +
-              '<button id="rd-op-anomalia" onclick="GSSRonda.escolherStatus(\'anomalia\')">' + icon('alert-triangle', 22) + 'Anormalidade</button>' +
+              '<button id="rd-op-ok" onclick="GSSRonda.escolherStatus(\'ok\')">' + icon('check-circle', 22) + '<span>Sem alteração</span></button>' +
+              '<button id="rd-op-anomalia" onclick="GSSRonda.escolherStatus(\'anomalia\')">' + icon('alert-triangle', 22) + '<span>Anormalidade</span></button>' +
             '</div>' +
             '<div id="rd-anomalia-campos" style="display:none">' +
               '<div class="form-field"><label>' + icon('alert-triangle', 13) + ' Urgência <span class="required">*</span></label>' +
@@ -711,8 +716,10 @@
       if (l && l._pendente) cls += ' pendente-envio';
       if (proximo && proximo.id === p.id) cls += ' proximo';
       var ic = !l ? 'circle' : l.status === 'anomalia' ? 'alert-triangle' : 'check-circle';
+      var nAbertas = (p.abertas || []).length;
       return '<div class="rd-ponto ' + cls + '"><span class="ico">' + icon(ic, 15) + '</span><span>' + (seq ? (i + 1) + '. ' : '') + esc(p.nome) +
-        (l ? '<small>' + hora(l.lida_em) + (l._pendente ? ' · na fila' : '') + '</small>' : '') + '</span></div>';
+        (l ? '<small>' + hora(l.lida_em) + (l._pendente ? ' · na fila' : '') + '</small>' : '') +
+        (nAbertas ? '<small class="rd-ponto-aberta">' + icon('alert-triangle', 10) + ' ' + nAbertas + ' em aberto</small>' : '') + '</span></div>';
     }).join('');
 
     document.getElementById('rd-exec-corpo').innerHTML =
@@ -919,7 +926,182 @@
     btn.querySelector('span').textContent = 'Confirmar ponto';
     escolherStatus('ok');
     atualizarGps();
+    leitura.abertas = (ponto.abertas || []).slice();
+    leitura.respostas = {};
+    renderAbertas();
     L.showScreen('ronda-registro-screen');
+    atualizarAbertasDoPonto(leitura);
+  }
+
+  // ─── ANORMALIDADES EM ABERTO NO PONTO (constatações) ─────────────────────
+  var SITUACOES = [
+    ['sem_alteracao', 'SEM ALTERAÇÃO', 'continua igual'],
+    ['agravou', 'AGRAVOU', 'foto nova e urgência'],
+    ['finalizado', 'FINALIZADO', 'não está mais ocorrendo — a supervisão encerra no Livro']
+  ];
+  var ORDEM_URG = URGENCIAS.map(function(u) { return u[0]; });
+
+  function rotuloUrg(u) {
+    var x = URGENCIAS.filter(function(v) { return v[0] === u; })[0];
+    return x ? x[1] : (u || '-');
+  }
+
+  function dataHoraCurta(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + ' ' + hora(iso);
+  }
+
+  // Lista fresca do servidor (outro vigilante pode ter registrado ou alguém
+  // encerrado agora). Sem sinal em 3 s, fica a do cache.
+  function atualizarAbertasDoPonto(leitura) {
+    if (navigator.onLine === false) return;
+    var limite = new Promise(function(resolve) { setTimeout(function() { resolve(null); }, 3000); });
+    Promise.race([api('abertas-ponto', Object.assign(base(), { id_ponto: leitura.ponto.id })).catch(function() { return null; }), limite]).then(function(res) {
+      if (!res || !res.abertas || st.leitura !== leitura) return;
+      leitura.abertas = res.abertas;
+      Object.keys(leitura.respostas).forEach(function(id) {
+        if (!res.abertas.some(function(a) { return a.id === id; })) delete leitura.respostas[id];
+      });
+      leitura.ponto.abertas = res.abertas.slice();
+      salvarCtxCache();
+      renderAbertas();
+    });
+  }
+
+  function renderAbertas() {
+    var l = st.leitura;
+    var el = document.getElementById('rd-abertas');
+    if (!l || !el) return;
+    var tem = l.abertas && l.abertas.length;
+    document.getElementById('rd-sit-titulo').textContent = tem ? 'Outra anormalidade neste ponto?' : 'Situação do ponto';
+    document.querySelector('#rd-op-ok span').textContent = tem ? 'Nenhuma outra anormalidade' : 'Sem alteração';
+    document.querySelector('#rd-op-anomalia span').textContent = tem ? 'Nova anormalidade' : 'Anormalidade';
+    if (!tem) { el.innerHTML = ''; return; }
+    el.innerHTML = '<div class="rd-card rd-abertas">' +
+      '<div class="rd-card-titulo" style="color:#b45309">' + icon('alert-triangle', 13) + ' Anormalidade em aberto neste ponto' + (l.abertas.length > 1 ? ' (' + l.abertas.length + ')' : '') + '</div>' +
+      l.abertas.map(function(a, i) {
+        var r = l.respostas[a.id] || {};
+        return '<div class="rd-aberta">' +
+          '<div class="rd-aberta-topo">' +
+            (a.foto_url ? '<img class="rd-aberta-foto" src="' + esc(a.foto_url) + '" alt="" onerror="this.style.display=\'none\'" onclick="window.open(this.src)">' : '') +
+            '<div class="rd-aberta-info">' +
+              '<div class="rd-aberta-prot">' + esc(a.protocolo || '') + ' <span class="rd-urg u-' + esc(a.urgencia || '') + '">' + esc(rotuloUrg(a.urgencia)) + '</span></div>' +
+              '<div class="rd-aberta-meta">Aberta em ' + dataHoraCurta(a.inicio) + (a.colaborador ? ' por ' + esc(a.colaborador) : '') + '</div>' +
+              (a.relato ? '<div class="rd-aberta-relato">' + esc(a.relato) + '</div>' : '') +
+              '<div class="rd-aberta-meta">' + (a.constatacoes ? 'Constatada ' + a.constatacoes + ' vez' + (a.constatacoes > 1 ? 'es' : '') + ' na ronda' +
+                (a.ultima_em ? ' · última em ' + dataHoraCurta(a.ultima_em) : '') : 'Ainda não constatada por outra ronda') + '</div>' +
+              (a.finalizado_em ? '<div class="rd-aberta-final">' + icon('check-circle', 12) + ' Ronda informou FINALIZADO em ' + dataHoraCurta(a.finalizado_em) + '</div>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div class="rd-aberta-pergunta">Situação atual</div>' +
+          '<div class="rd-sit">' + SITUACOES.map(function(x) {
+            return '<button type="button" class="' + (r.situacao === x[0] ? 'sel sel-' + x[0] : '') + '" onclick="GSSRonda.responderAberta(' + i + ', \'' + x[0] + '\')">' +
+              '<b>' + x[1] + '</b><small>' + x[2] + '</small></button>';
+          }).join('') + '</div>' +
+          (r.situacao === 'agravou' ? htmlAgravou(a, i, r) : '') +
+        '</div>';
+      }).join('') + '</div>';
+  }
+
+  function htmlAgravou(a, i, r) {
+    var atual = Math.max(0, ORDEM_URG.indexOf(a.urgencia));
+    return '<div class="rd-agravou">' +
+      '<div class="form-field"><label>' + icon('camera', 13) + ' Foto de como está agora <span class="required">*</span></label>' +
+        '<div class="rd-fotos">' +
+          '<button type="button" class="btn btn-primary icon-inline" onclick="document.getElementById(\'rd-ab-cam-' + i + '\').click()">' + icon('camera', 15) + 'Tirar foto</button>' +
+          '<button type="button" class="btn btn-outline icon-inline" onclick="document.getElementById(\'rd-ab-gal-' + i + '\').click()">' + icon('image', 15) + 'Galeria</button>' +
+        '</div>' +
+        '<input type="file" accept="image/*" capture="environment" id="rd-ab-cam-' + i + '" style="display:none" onchange="GSSRonda.fotoAberta(' + i + ', this.files[0])">' +
+        '<input type="file" accept="image/*" id="rd-ab-gal-' + i + '" style="display:none" onchange="GSSRonda.fotoAberta(' + i + ', this.files[0])">' +
+        (r.foto ? '<img class="rd-preview" style="display:block" src="' + r.foto + '" alt="Prévia">' : r.processandoFoto ? '<div style="font-size:12px;color:var(--text2)">Processando a foto…</div>' : '') +
+      '</div>' +
+      '<div class="form-field"><label>' + icon('alert-triangle', 13) + ' Urgência <span class="required">*</span></label>' +
+        '<select onchange="GSSRonda.urgenciaAberta(' + i + ', this.value)">' +
+          URGENCIAS.filter(function(u, k) { return k >= atual; }).map(function(u) {
+            return '<option value="' + u[0] + '"' + ((r.urgencia || a.urgencia) === u[0] ? ' selected' : '') + '>' + u[1] + '</option>';
+          }).join('') +
+        '</select></div>' +
+      '<div class="form-field"><label>' + icon('file-text', 13) + ' O que mudou? (opcional)</label>' +
+        '<textarea placeholder="Descreva a mudança…" style="min-height:70px" oninput="GSSRonda.obsAberta(' + i + ', this.value)">' + esc(r.obs || '') + '</textarea></div>' +
+    '</div>';
+  }
+
+  function respostaDa(i) {
+    var l = st.leitura;
+    if (!l || !l.abertas[i]) return null;
+    var id = l.abertas[i].id;
+    return l.respostas[id] || (l.respostas[id] = {});
+  }
+
+  function responderAberta(i, situacao) {
+    var r = respostaDa(i);
+    if (!r) return;
+    r.situacao = situacao;
+    if (situacao === 'agravou' && !r.urgencia) r.urgencia = st.leitura.abertas[i].urgencia || 'NAO_URGENTE';
+    renderAbertas();
+  }
+
+  function fotoAberta(i, arquivo) {
+    var r = respostaDa(i), leitura = st.leitura;
+    if (!r || !arquivo) return;
+    r.processandoFoto = true;
+    renderAbertas();
+    comprimirImagem(arquivo, 1280, 0.7).then(function(dataUrl) {
+      r.foto = dataUrl;
+      r.processandoFoto = false;
+      if (st.leitura === leitura) renderAbertas();
+    }).catch(function() {
+      r.processandoFoto = false;
+      if (st.leitura === leitura) renderAbertas();
+      toast('Não foi possível processar essa foto — tente outra.', 'erro');
+    });
+  }
+
+  // Confere as respostas e monta as constatações (null = falta algo; já avisou).
+  function montarConstatacoes(l) {
+    var lista = [];
+    for (var k = 0; k < (l.abertas || []).length; k++) {
+      var a = l.abertas[k], r = l.respostas[a.id];
+      if (!r || !r.situacao) { toast('Informe a situação atual da ocorrência ' + (a.protocolo || '') + '.', 'erro'); return null; }
+      if (r.situacao === 'agravou') {
+        if (r.processandoFoto) { toast('Aguarde — processando a foto.'); return null; }
+        if (!r.foto) { toast('Em AGRAVOU, tire uma foto de como está agora.', 'erro'); return null; }
+      }
+      lista.push({
+        id: r.idConstatacao || (r.idConstatacao = uuid()),
+        id_ocorrencia: a.id, situacao: r.situacao,
+        urgencia: r.situacao === 'agravou' ? (r.urgencia || a.urgencia) : null,
+        obs: r.situacao === 'agravou' ? (r.obs || '').trim() || null : null,
+        foto: r.situacao === 'agravou' ? r.foto : null
+      });
+    }
+    return lista;
+  }
+
+  // Reflete no cache o que o aparelho acabou de registrar: o próximo
+  // vigilante neste celular vê o estado certo mesmo sem sinal.
+  function aplicarConstatacoesLocais(ponto, constatacoes, lidaEm, resultados) {
+    var abertas = ponto.abertas || [];
+    constatacoes.forEach(function(c) {
+      var a = abertas.filter(function(x) { return x.id === c.id_ocorrencia; })[0];
+      var res = (resultados || []).filter(function(x) { return x.id === c.id; })[0];
+      if (res && res.resultado === 'descartada') { ponto.abertas = abertas = abertas.filter(function(x) { return x.id !== c.id_ocorrencia; }); return; }
+      if (res && res.resultado === 'reaberta') {
+        abertas = abertas.filter(function(x) { return x.id !== c.id_ocorrencia; });
+        abertas.unshift({ id: res.id_ocorrencia, protocolo: res.protocolo, urgencia: c.urgencia || (a && a.urgencia) || 'NAO_URGENTE',
+          inicio: lidaEm, colaborador: st.usuario.nome, relato: (a && a.relato) || '', constatacoes: 0, ultima_em: null, finalizado_em: null, foto_url: a ? a.foto_url : null });
+        ponto.abertas = abertas;
+        return;
+      }
+      if (!a || (res && res.resultado === 'ja_registrada')) return;
+      if (c.situacao === 'finalizado') { a.finalizado_em = lidaEm; return; }
+      a.constatacoes = (a.constatacoes || 0) + 1;
+      a.ultima_em = lidaEm;
+      a.finalizado_em = null;
+      if (c.situacao === 'agravou' && ORDEM_URG.indexOf(c.urgencia) > ORDEM_URG.indexOf(a.urgencia)) a.urgencia = c.urgencia;
+    });
+    salvarCtxCache();
   }
 
   function escolherStatus(status) {
@@ -986,6 +1168,9 @@
       if (st.ctx.config && st.ctx.config.exigir_foto_anomalia && !l.foto) { toast('Este posto exige foto na anormalidade.', 'erro'); return; }
     }
 
+    var constatacoes = montarConstatacoes(l);
+    if (!constatacoes) return;
+
     var btn = document.getElementById('rd-btn-confirmar');
     btn.disabled = true;
     btn.querySelector('span').textContent = l.gps === undefined ? 'Obtendo localização…' : 'Salvando…';
@@ -1008,6 +1193,7 @@
         precisao_m: loc ? loc.precisao_m : null,
         altitude_m: loc ? loc.altitude_m : null
       };
+      if (constatacoes.length) dados.constatacoes = constatacoes;
       Object.assign(dados, l.extras || {});
       // Trajeto recente chega antes da leitura: o servidor usa para o score.
       return descarregarTrajeto().then(function() { return enviarLeitura(dados, l.ponto); });
@@ -1034,6 +1220,7 @@
         id_ponto: ponto.id, rotulo: ponto.nome, dados: dados
       }).then(function() {
         registrarLocal(true);
+        if (dados.constatacoes) aplicarConstatacoesLocais(ponto, dados.constatacoes, dados.lida_em, null);
         toast('"' + ponto.nome + '" salvo no aparelho — será enviado quando a conexão voltar.');
         return true;
       });
@@ -1045,7 +1232,19 @@
       if (ops.length || st.ctx.ronda._pendente) return enfileirar().then(function(r) { processarFila(); return r; });
       return api('registrar-leitura', Object.assign(base(), dados)).then(function(res) {
         registrarLocal(false, res.leitura);
-        if (res.protocolo) toast('Anormalidade lançada no Livro — protocolo ' + res.protocolo, 'ok');
+        var resultados = res.constatacoes || [];
+        if (dados.constatacoes) aplicarConstatacoesLocais(ponto, dados.constatacoes, dados.lida_em, resultados);
+        // Anormalidade nova neste ponto: aparece para o próximo vigilante que ler o QR.
+        if (res.protocolo && res.leitura && res.leitura.id_ocorrencia) {
+          ponto.abertas = [{ id: res.leitura.id_ocorrencia, protocolo: res.protocolo, urgencia: dados.urgencia, inicio: dados.lida_em,
+            colaborador: st.usuario.nome, relato: dados.obs || '', constatacoes: 0, ultima_em: null, finalizado_em: null, foto_url: null }].concat(ponto.abertas || []);
+          salvarCtxCache();
+        }
+        var reaberta = resultados.filter(function(x) { return x.resultado === 'reaberta'; })[0];
+        var registradas = resultados.filter(function(x) { return x.resultado === 'registrada'; });
+        if (reaberta) toast('A ocorrência ' + (reaberta.protocolo_anterior || '') + ' já estava encerrada — aberta nova ' + reaberta.protocolo, 'ok');
+        else if (res.protocolo) toast('Anormalidade lançada no Livro — protocolo ' + res.protocolo, 'ok');
+        else if (registradas.length) toast('Situação registrada na ocorrência ' + registradas.map(function(x) { return x.protocolo; }).join(', '), 'ok');
         else toast('"' + ponto.nome + '" registrado.', 'ok');
         if (res.leitura && res.leitura.dentro_raio === false) {
           setTimeout(function() { toast('Atenção: sua localização ficou fora do raio esperado deste posto.'); }, 3900);
@@ -1428,6 +1627,10 @@
     abrirScanner: abrirScanner,
     fecharScanner: fecharScanner,
     escolherStatus: escolherStatus,
+    responderAberta: responderAberta,
+    fotoAberta: fotoAberta,
+    urgenciaAberta: function(i, u) { var r = respostaDa(i); if (r) r.urgencia = u; },
+    obsAberta: function(i, texto) { var r = respostaDa(i); if (r) r.obs = texto; },
     confirmarRegistro: confirmarRegistro,
     cancelarRegistro: cancelarRegistro,
     encerrar: encerrar,

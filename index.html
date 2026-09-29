@@ -203,6 +203,19 @@
     .occ-card-icon.muito-urgente{background:#dc2626;color:#fff;box-shadow:0 3px 8px rgba(220,38,38,.4)}
     .occ-card-icon.emergencia{background:var(--danger);color:#fff;box-shadow:0 3px 8px rgba(185,28,28,.4)}
     .occ-card-title{font-size:15px;font-weight:700;color:#1e293b}
+    .occ-card-ronda{display:inline-flex;align-items:center;gap:4px;margin-top:3px;font-size:10.5px;font-weight:700;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:9999px;padding:1px 8px}
+    .occ-card-ronda.final{color:#15803d;background:#f0fdf4;border-color:#bbf7d0}
+    .const-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+    .const-item:last-child{border-bottom:none}
+    .const-item img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;flex-shrink:0}
+    .const-item .ci-top{font-size:12.5px;font-weight:700;color:var(--text)}
+    .const-item .ci-meta{font-size:11.5px;color:var(--text2);margin-top:1px}
+    .const-item .ci-obs{font-size:12.5px;color:var(--text);margin-top:4px;white-space:pre-wrap}
+    .const-sit{display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;margin-left:4px}
+    .const-sit.sem_alteracao{background:#eff6ff;color:#1d4ed8}
+    .const-sit.agravou{background:#fef2f2;color:#b91c1c}
+    .const-sit.finalizado{background:#f0fdf4;color:#15803d}
+    .const-sit.origem{background:#f1f5f9;color:#475569}
     .occ-card-protocolo{font-size:11px;color:#94a3b8;font-family:'SF Mono',monospace;margin-top:1px}
     .occ-card-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
     .occ-card-meta.occ-card-desktop{grid-template-columns:repeat(5,1fr)}
@@ -1915,6 +1928,8 @@
           '<div>' +
             '<div class="occ-card-title">' + escapeHtml(occ.categoria_nome || 'Ocorrência') + '</div>' +
             '<div class="occ-card-protocolo">' + escapeHtml(occ.protocolo) + '</div>' +
+            (occ.ronda_constatacoes ? '<div class="occ-card-ronda">' + icon('repeat', 10) + '<span>Ronda · constatada ' + occ.ronda_constatacoes + '×</span></div>' : '') +
+            (occ.ronda_finalizado_em && occ.status === 'ABERTA' ? '<div class="occ-card-ronda final">' + icon('check-circle', 10) + '<span>Ronda informou FINALIZADO</span></div>' : '') +
           '</div>' +
         '</div>' +
 
@@ -2011,6 +2026,12 @@
     var bodyHtml = gridHtml + protocoloHtml;
 
     bodyHtml += '<div class="detalhe-section"><div class="detalhe-section-title">' + icon('file-text', 13) + '<span>Descrição da Ocorrência</span></div><div class="detalhe-box">' + (occ.descritivo || '<em>Sem descritivo</em>') + '</div></div>';
+    // Anormalidade da ronda: acompanhamento a cada leitura do ponto (carregado sob demanda).
+    if (occ.ronda_id_ponto) {
+      bodyHtml += '<div class="detalhe-section" id="detalhe-constatacoes"><div class="detalhe-section-title">' + icon('repeat', 13) +
+        '<span>Constatações na ronda (' + (occ.ronda_constatacoes || 0) + ')</span></div><div class="detalhe-box" style="color:var(--text2)">Carregando…</div></div>';
+      setTimeout(function() { carregarConstatacoes(occ.id); }, 0);
+    }
 
     if (occ.outros_envolvidos) {
       bodyHtml += '<div class="detalhe-section"><div class="detalhe-section-title">' + icon('users', 13) + '<span>Envolvidos</span></div><div class="detalhe-box">' + escapeHtml(occ.outros_envolvidos) + '</div></div>';
@@ -2048,6 +2069,44 @@
   };
 
   window.fecharDetalhe = function() { voltarDashboard(); };
+
+  // Constatações da anormalidade feitas pela ronda (edge function rondas).
+  var ROTULO_SIT = { sem_alteracao: 'SEM ALTERAÇÃO', agravou: 'AGRAVOU', finalizado: 'FINALIZADO' };
+  function carregarConstatacoes(idOcorrencia) {
+    var el = document.getElementById('detalhe-constatacoes');
+    if (!el) return;
+    fetch(SUPABASE_EDGE + '/rondas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY },
+      body: JSON.stringify({ action: 'constatacoes', id_ocorrencia: idOcorrencia })
+    }).then(function(r) { return r.json(); }).then(function(res) {
+      el = document.getElementById('detalhe-constatacoes');
+      if (!el) return;
+      if (!res || !res.ok) throw new Error((res && res.error) || 'erro');
+      var fmt = function(iso) { return iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''; };
+      var foto = function(url) { return url ? '<img src="' + escapeHtml(url) + '" alt="" onclick="window.open(this.src)">' : ''; };
+      var itens = [];
+      if (res.origem) {
+        itens.push('<div class="const-item">' + foto(res.origem.foto_url) + '<div style="flex:1;min-width:0">' +
+          '<div class="ci-top">' + fmt(res.origem.lida_em) + '<span class="const-sit origem">REGISTRADA</span></div>' +
+          '<div class="ci-meta">' + escapeHtml(res.origem.nome || '-') + (res.origem.ponto ? ' · ' + escapeHtml(res.origem.ponto) : '') + '</div></div></div>');
+      }
+      (res.constatacoes || []).forEach(function(c) {
+        itens.push('<div class="const-item">' + foto(c.foto_url) + '<div style="flex:1;min-width:0">' +
+          '<div class="ci-top">' + fmt(c.constatada_em) + '<span class="const-sit ' + c.situacao + '">' + (ROTULO_SIT[c.situacao] || c.situacao) + '</span>' +
+            (c.situacao === 'agravou' && c.urgencia ? ' <span class="const-sit agravou">' + escapeHtml(String(c.urgencia).replace(/_/g, ' ')) + '</span>' : '') +
+            (c.abriu_ocorrencia ? ' <span class="const-sit origem">ABRIU ESTA OCORRÊNCIA</span>' : '') + '</div>' +
+          '<div class="ci-meta">' + escapeHtml(c.nome || '-') + (c.ponto ? ' · ' + escapeHtml(c.ponto) : '') + '</div>' +
+          (c.obs ? '<div class="ci-obs">' + escapeHtml(c.obs) + '</div>' : '') + '</div></div>');
+      });
+      var n = (res.constatacoes || []).filter(function(c) { return c.situacao !== 'finalizado' && !c.abriu_ocorrencia; }).length;
+      el.innerHTML = '<div class="detalhe-section-title">' + icon('repeat', 13) + '<span>Constatações na ronda (' + n + ')</span></div>' +
+        '<div class="detalhe-box">' + (itens.length ? itens.join('') : '<em>Nenhuma constatação registrada.</em>') + '</div>';
+    }).catch(function() {
+      el = document.getElementById('detalhe-constatacoes');
+      if (el) el.querySelector('.detalhe-box').innerHTML = '<em>Não foi possível carregar as constatações (sem conexão?).</em>';
+    });
+  }
 
   // Finalizar exige o procedimento realizado: o 1º toque abre o campo, o 2º
   // (Confirmar Finalização) envia.

@@ -147,3 +147,28 @@
 .rd-alarme-xiaomi .conf{color:#b45309;font-weight:700}
 .rd-alarme-xiaomi>.btn-primary{margin-top:8px}
 .rd-alarme.teste{background:linear-gradient(160deg,#052e16 0%,#166534 60%,#16a34a 100%)}
+
+/* anormalidade em aberto no ponto (constatações) */
+.rd-abertas{border:1.5px solid #fcd34d;background:#fffbeb}
+.rd-aberta{padding:10px 0;border-top:1px solid #fde68a}
+.rd-aberta:first-of-type{border-top:none;padding-top:0}
+.rd-aberta-topo{display:flex;gap:10px;align-items:flex-start}
+.rd-aberta-foto{width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0;cursor:pointer}
+.rd-aberta-info{flex:1;min-width:0}
+.rd-aberta-prot{font-size:13px;font-weight:800;color:var(--text);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.rd-aberta-meta{font-size:11.5px;color:var(--text2);margin-top:2px}
+.rd-aberta-relato{font-size:12.5px;color:var(--text);margin-top:4px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
+.rd-aberta-final{font-size:11.5px;color:#15803d;font-weight:700;margin-top:4px;display:flex;align-items:center;gap:4px}
+.rd-aberta-pergunta{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:10px 0 6px}
+.rd-sit{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.rd-sit button{border:2px solid var(--border);background:var(--card);border-radius:10px;padding:10px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text2);min-height:64px}
+.rd-sit button b{font-size:12px;font-weight:800;letter-spacing:.02em}
+.rd-sit button small{font-size:9.5px;line-height:1.2;text-align:center}
+.rd-sit button.sel-sem_alteracao{border-color:#2563eb;background:#eff6ff;color:#1d4ed8}
+.rd-sit button.sel-agravou{border-color:#dc2626;background:#fef2f2;color:#b91c1c}
+.rd-sit button.sel-finalizado{border-color:var(--success);background:var(--success-bg);color:var(--success)}
+.rd-agravou{margin-top:10px;padding:10px;border-radius:10px;background:#fff;border:1px solid #fecaca}
+.rd-urg{font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;background:var(--border);color:var(--text2);text-transform:uppercase}
+.rd-urg.u-URGENTE{background:#fef3c7;color:#92400e}
+.rd-urg.u-MUITO_URGENTE,.rd-urg.u-EMERGENCIA{background:#fee2e2;color:#b91c1c}
+.rd-ponto small.rd-ponto-aberta{color:#b45309;font-weight:700}
