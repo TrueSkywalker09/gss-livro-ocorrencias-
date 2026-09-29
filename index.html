@@ -1468,7 +1468,7 @@
     materiaisLivroAtual = [];
     try {
       var rm = new XMLHttpRequest();
-      rm.open('GET', SUPABASE_URL + '/rest/v1/gss_material_carga?id_posto=eq.' + encodeURIComponent(escala.id_posto) + '&select=id,nome,especificacao,quantidade,estado,observacao', false);
+      rm.open('GET', SUPABASE_URL + '/rest/v1/gss_material_carga?id_posto=eq.' + encodeURIComponent(escala.id_posto) + filtroLivroMaterial(escala) + '&select=id,nome,especificacao,quantidade,estado,observacao', false);
       rm.setRequestHeader('apikey', SUPABASE_ANON_KEY);
       rm.send();
       if (rm.status === 200) {
@@ -1697,11 +1697,19 @@
     } catch(e) {}
   }
 
+  // Material sem livro (NULL) vale pra todos os livros do posto; com livro,
+  // só é conferido naquele livro — mesmo filtro do veículo.
+  function filtroLivroMaterial(esc) {
+    return esc.livro
+      ? '&or=(livro.is.null,livro.eq.' + encodeURIComponent('"' + esc.livro + '"') + ')'
+      : '&livro=is.null';
+  }
+
   function buscarMaterialPosto() {
     if (!escalaAtual) return [];
     try {
       var r = new XMLHttpRequest();
-      r.open('GET', SUPABASE_URL + '/rest/v1/gss_material_carga?id_posto=eq.' + encodeURIComponent(escalaAtual.id_posto) + '&select=nome,especificacao,quantidade,estado', false);
+      r.open('GET', SUPABASE_URL + '/rest/v1/gss_material_carga?id_posto=eq.' + encodeURIComponent(escalaAtual.id_posto) + filtroLivroMaterial(escalaAtual) + '&select=nome,especificacao,quantidade,estado', false);
       r.setRequestHeader('apikey', SUPABASE_ANON_KEY);
       r.send();
       if (r.status === 200) return JSON.parse(r.responseText) || [];
