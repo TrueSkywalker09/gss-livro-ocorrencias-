@@ -24,6 +24,13 @@
 //    ronda ABERTA, o vigilante informa a situação atual (SEM ALTERAÇÃO /
 //    AGRAVOU / FINALIZADO) — vira constatação na mesma ocorrência, não uma
 //    ocorrência nova. Lista no cache do contexto (offline) + consulta fresca.
+//    Toda situação exige foto (a mais nova vira a do cartão); FINALIZADO
+//    exige também a descrição, que vai para o relato da ocorrência no Livro.
+//  - Interromper/retomar: a pausa leva motivo e fica como observação geral da
+//    ronda; pausada, o scanner e o GPS param até o "Retomar".
+//  - Ponto não lido ("Não consigo ler"): justificativa com motivo, foto
+//    opcional e, se o vigilante quiser, ocorrência no Livro. Conta como feito,
+//    mas a ronda fecha como "Concluída c/ justificativa".
 //  - Alarmes (app Android 1.0.3+): o celular fica fixo no posto. Ao abrir a
 //    Ronda de um posto, o aparelho passa a ser "do posto" (continua depois do
 //    Sair) e agenda no Android os horários da ronda e o Sempre Alerta; a
@@ -49,7 +56,9 @@
     'crosshair': '<circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line>',
     'maximize': '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>',
     'bell': '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path>',
-    'heart': '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>'
+    'heart': '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>',
+    'pause': '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>',
+    'x-circle': '<circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line>'
   };
   Object.keys(EXTRA_ICONS).forEach(function(k) { if (!L.ICONS[k]) L.ICONS[k] = EXTRA_ICONS[k]; });
 
@@ -133,6 +142,40 @@
 
   function semRede(e) { return !e || !e.status; }
 
+  // ─── PAUSA (interromper / retomar) ────────────────────────────────────────
+  // Mesma regra do servidor: pausada = última pausa sem retomada.
+  function pausaAberta(ronda) {
+    var p = (ronda && ronda.pausas) || [];
+    var u = p[p.length - 1];
+    return u && !u.retomada_em && !u.encerrada_na_pausa ? u : null;
+  }
+
+  function aplicarPausaLocal(ronda, tipo, dados) {
+    ronda.pausas = (ronda.pausas || []).slice();
+    var ja = ronda.pausas.filter(function(p) { return p.id === dados.id_pausa; })[0];
+    if (tipo === 'interromper' && !ja) {
+      ronda.pausas.push({ id: dados.id_pausa, interrompida_em: dados.em, motivo: dados.motivo, retomada_em: null });
+    }
+    if (tipo === 'retomar' && ja && !ja.retomada_em) ja.retomada_em = dados.em;
+  }
+
+  // Envia direto ou, com fila não-vazia / ronda ainda não enviada / sem rede,
+  // põe na fila (a ordem iniciar → … → encerrar precisa chegar intacta).
+  // Resolve { res } enviado, { fila: true } enfileirado; rejeita recusa (4xx).
+  function enviarOuEnfileirar(op) {
+    var enfileirar = function() {
+      return filaAdicionar(op).then(function() { processarFila(); return { fila: true }; });
+    };
+    return filaListar().then(function(ops) {
+      if (ops.length || (st.ctx && st.ctx.ronda && st.ctx.ronda._pendente)) return enfileirar();
+      return api(ACAO_DA_OP[op.tipo], Object.assign({ id_acesso: op.id_acesso, id_posto: op.id_posto }, op.dados))
+        .then(function(res) { return { res: res }; }, function(e) {
+          if (semRede(e) || e.status >= 500) return enfileirar();
+          throw e;
+        });
+    });
+  }
+
   // ─── FILA OFFLINE (IndexedDB, com fallback em memória) ────────────────────
   var db = null;
   var filaMemoria = [];
@@ -190,7 +233,10 @@
     });
   }
 
-  var ACAO_DA_OP = { iniciar: 'iniciar', leitura: 'registrar-leitura', encerrar: 'encerrar', trajeto: 'registrar-trajeto', prova: 'prova-vida' };
+  var ACAO_DA_OP = {
+    iniciar: 'iniciar', leitura: 'registrar-leitura', encerrar: 'encerrar', trajeto: 'registrar-trajeto', prova: 'prova-vida',
+    justificar: 'justificar-ponto', interromper: 'interromper', retomar: 'retomar'
+  };
 
   // Envia a fila em ordem (iniciar → leituras → encerrar). Para no primeiro
   // erro de rede/servidor para não inverter a ordem; recusa definitiva (4xx)
@@ -212,6 +258,8 @@
             return filaRemover(op.seq).then(function() {
               if (op.tipo === 'trajeto') return true; // lote recusado não merece alarme ao vigilante
               var oque = op.tipo === 'leitura' ? 'Leitura de "' + (op.rotulo || 'ponto') + '"'
+                : op.tipo === 'justificar' ? 'Justificativa de "' + (op.rotulo || 'ponto') + '"'
+                : op.tipo === 'interromper' || op.tipo === 'retomar' ? 'Interrupção da ronda'
                 : op.tipo === 'prova' ? 'Confirmação do Sempre Alerta' : 'Operação da ronda';
               toast(oque + ' recusada: ' + e.message, 'erro');
               return true;
@@ -232,7 +280,7 @@
   function marcarEnviado(op) {
     if (!st.ctx) return;
     if (op.tipo === 'iniciar' && st.ctx.ronda && st.ctx.ronda.id === op.dados.id) delete st.ctx.ronda._pendente;
-    if (op.tipo === 'leitura') {
+    if (op.tipo === 'leitura' || op.tipo === 'justificar') {
       st.ctx.leituras.forEach(function(l) { if (l.id === op.dados.id) delete l._pendente; });
     }
     salvarCtxCache();
@@ -327,7 +375,7 @@
   // Liga o rastreio da ronda em andamento (idempotente — chamado a cada render).
   function garantirRastreio() {
     var ronda = st.ctx && st.ctx.ronda;
-    if (!ronda) { pararRastreio(); return; }
+    if (!ronda || pausaAberta(ronda)) { pararRastreio(); return; } // pausada: GPS volta no "Retomar"
     if (trj.idRonda === ronda.id) return;
     if (trj.idRonda) pararRastreio();
     trj.idRonda = ronda.id;
@@ -421,9 +469,13 @@
         .sort(function(a, b) { return a.seq - b.seq; })
         .forEach(function(o) {
           if (o.tipo === 'iniciar' && !ctx.ronda) ctx.ronda = o.ronda;
-          if (o.tipo === 'leitura' && ctx.ronda && o.dados.id_ronda === ctx.ronda.id &&
+          if ((o.tipo === 'leitura' || o.tipo === 'justificar') && ctx.ronda && o.dados.id_ronda === ctx.ronda.id &&
               !ctx.leituras.some(function(l) { return l.id === o.dados.id; })) {
-            ctx.leituras.push({ id: o.dados.id, id_ponto: o.id_ponto, lida_em: o.dados.lida_em, status: o.dados.status, _pendente: true });
+            ctx.leituras.push({ id: o.dados.id, id_ponto: o.id_ponto, lida_em: o.dados.lida_em,
+              status: o.tipo === 'justificar' ? 'justificado' : o.dados.status, motivo_codigo: o.dados.motivo_codigo, _pendente: true });
+          }
+          if ((o.tipo === 'interromper' || o.tipo === 'retomar') && ctx.ronda && o.dados.id_ronda === ctx.ronda.id) {
+            aplicarPausaLocal(ctx.ronda, o.tipo, o.dados);
           }
           if (o.tipo === 'encerrar' && ctx.ronda && o.dados.id_ronda === ctx.ronda.id) {
             ctx.ronda = null;
@@ -488,6 +540,46 @@
             '</div>' +
           '</div>' +
         '</div></div>' +
+      '<div class="screen rd-screen" id="ronda-pausa-screen">' + topo('rd-pausa', 'GSSRonda.irParaExecucao()') +
+        '<div class="rd-corpo"><div class="rd-card">' +
+          '<div class="rd-card-titulo">Interromper a ronda</div>' +
+          '<p class="rd-texto-ajuda">A ronda fica pausada e você pode retomá-la depois, do ponto em que parou. O motivo fica registrado na ronda.</p>' +
+          '<div class="form-field"><label>' + icon('file-text', 13) + ' Motivo da interrupção <span class="required">*</span></label>' +
+            '<textarea id="rd-pausa-motivo" maxlength="500" placeholder="Ex.: atendimento na portaria, chegada de viatura…" style="min-height:90px"></textarea></div>' +
+          '<div class="rd-acoes">' +
+            '<button class="btn btn-primary icon-inline" id="rd-btn-pausa" onclick="GSSRonda.confirmarInterrupcao()">' + icon('pause', 16) + '<span>Interromper ronda</span></button>' +
+            '<button class="btn btn-outline" onclick="GSSRonda.irParaExecucao()">Cancelar</button>' +
+          '</div>' +
+        '</div></div></div>' +
+      '<div class="screen rd-screen" id="ronda-justif-screen">' + topo('rd-justif', 'GSSRonda.cancelarJustificativa()') +
+        '<div class="rd-corpo">' +
+          '<div class="rd-card"><div class="rd-ponto-lido rd-ponto-nao-lido"><div class="ico">' + icon('alert-triangle', 40) + '</div>' +
+            '<h2 id="rd-justif-ponto"></h2><p id="rd-justif-local"></p></div></div>' +
+          '<div id="rd-justif-abertas"></div>' +
+          '<div class="rd-card">' +
+            '<div class="rd-card-titulo">Por que não foi possível ler o QR?</div>' +
+            '<div class="rd-motivos" id="rd-justif-motivos"></div>' +
+            '<div class="form-field"><label>' + icon('file-text', 13) + ' Descreva o que aconteceu <span class="required">*</span></label>' +
+              '<textarea id="rd-justif-obs" maxlength="2000" placeholder="Ex.: maçaneta da porta quebrada, sem acesso ao ponto." style="min-height:90px"></textarea></div>' +
+            '<div class="form-field"><label>' + icon('camera', 13) + ' Foto (opcional)</label>' +
+              '<div class="rd-fotos">' +
+                '<button type="button" class="btn btn-primary icon-inline" onclick="document.getElementById(\'rd-justif-cam\').click()">' + icon('camera', 15) + 'Tirar foto</button>' +
+                '<button type="button" class="btn btn-outline icon-inline" onclick="document.getElementById(\'rd-justif-gal\').click()">' + icon('image', 15) + 'Galeria</button>' +
+              '</div>' +
+              '<input type="file" accept="image/*" capture="environment" id="rd-justif-cam" style="display:none">' +
+              '<input type="file" accept="image/*" id="rd-justif-gal" style="display:none">' +
+              '<img id="rd-justif-preview" class="rd-preview" alt="Prévia da foto"></div>' +
+            '<label class="rd-check"><input type="checkbox" id="rd-justif-livro" onchange="GSSRonda.marcarLivroJustif(this.checked)">' +
+              '<span><b>Lançar também no Livro</b><small>Abre uma ocorrência neste ponto — as próximas rondas informam se continua ou foi resolvido.</small></span></label>' +
+            '<div class="form-field" id="rd-justif-urg-campo" style="display:none"><label>' + icon('alert-triangle', 13) + ' Urgência</label>' +
+              '<select id="rd-justif-urg">' + URGENCIAS.map(function(u) { return '<option value="' + u[0] + '">' + u[1] + '</option>'; }).join('') + '</select></div>' +
+            '<div class="rd-gps" id="rd-justif-gps"></div>' +
+            '<div class="rd-acoes">' +
+              '<button class="btn btn-warning icon-inline" id="rd-btn-justif" onclick="GSSRonda.confirmarJustificativa()">' + icon('check-circle', 16) + '<span>Registrar justificativa</span></button>' +
+              '<button class="btn btn-outline" onclick="GSSRonda.cancelarJustificativa()">Cancelar</button>' +
+            '</div>' +
+          '</div>' +
+        '</div></div>' +
       '<div class="rd-scanner" id="rd-scanner">' +
         '<video id="rd-video" playsinline autoplay muted></video>' +
         '<canvas id="rd-canvas" style="display:none"></canvas>' +
@@ -507,6 +599,8 @@
 
     document.getElementById('rd-foto-camera').addEventListener('change', function(e) { processarFoto(e.target.files[0]); });
     document.getElementById('rd-foto-galeria').addEventListener('change', function(e) { processarFoto(e.target.files[0]); });
+    document.getElementById('rd-justif-cam').addEventListener('change', function(e) { fotoJustificativa(e.target.files[0]); });
+    document.getElementById('rd-justif-gal').addEventListener('change', function(e) { fotoJustificativa(e.target.files[0]); });
   }
 
   function preencherTopo(prefixo, titulo, sub) {
@@ -620,6 +714,9 @@
     if (!n) {
       html += '<div class="rd-card"><div class="rd-vazio"><div class="ico">' + icon('map-pin', 36) + '</div>' +
         'Nenhum ponto de ronda cadastrado neste posto.<br>Avise a coordenação.</div></div>';
+    } else if (st.ctx.ronda && pausaAberta(st.ctx.ronda)) {
+      html += '<button class="rd-btn-grande rd-btn-pausada" onclick="GSSRonda.irParaExecucao()">' + icon('pause', 26) +
+        'Ronda interrompida<small>às ' + hora(pausaAberta(st.ctx.ronda).interrompida_em) + ' · toque para retomar</small></button>';
     } else if (st.ctx.ronda) {
       html += '<button class="rd-btn-grande" onclick="GSSRonda.irParaExecucao()">' + icon('play', 26) +
         'Continuar Ronda<small>iniciada às ' + hora(st.ctx.ronda.iniciada_em) + '</small></button>';
@@ -633,11 +730,11 @@
     if (!hoje.length) {
       html += '<div style="font-size:13px;color:var(--text2)">Nenhuma ronda registrada hoje.</div>';
     } else {
-      var rotulos = { concluida: 'Concluída', interrompida: 'Interrompida', em_andamento: 'Em andamento' };
+      var rotulos = { concluida: 'Concluída', concluida_justificada: 'Concluída c/ justif.', interrompida: 'Interrompida', em_andamento: 'Em andamento' };
       html += hoje.map(function(r) {
         return '<div class="rd-hist-item"><span class="hora">' + hora(r.iniciada_em) + (r.encerrada_em ? ' – ' + hora(r.encerrada_em) : '') + '</span>' +
           '<span style="color:var(--text2)">' + r.total_pontos + ' pontos</span>' +
-          '<span class="res ' + r.status + '">' + rotulos[r.status] + '</span></div>';
+          '<span class="res ' + r.status + '">' + (rotulos[r.status] || r.status) + '</span></div>';
       }).join('');
     }
     html += '</div>';
@@ -711,18 +808,38 @@
     var completo = total && lidos >= total;
     var seq = sequencial();
     var proximo = seq ? proximoPonto() : null;
+    var pausa = pausaAberta(st.ctx.ronda);
+    var justificados = pontos.filter(function(p) { return mapa[p.id] && mapa[p.id].status === 'justificado'; }).length;
 
     var grade = pontos.map(function(p, i) {
       var l = mapa[p.id];
-      var cls = !l ? '' : l.status === 'anomalia' ? 'anomalia' : 'feito';
+      var cls = !l ? '' : l.status === 'anomalia' ? 'anomalia' : l.status === 'justificado' ? 'justificado' : 'feito';
       if (l && l._pendente) cls += ' pendente-envio';
       if (proximo && proximo.id === p.id) cls += ' proximo';
-      var ic = !l ? 'circle' : l.status === 'anomalia' ? 'alert-triangle' : 'check-circle';
+      var ic = !l ? 'circle' : l.status === 'anomalia' ? 'alert-triangle' : l.status === 'justificado' ? 'x-circle' : 'check-circle';
       var nAbertas = (p.abertas || []).length;
-      return '<div class="rd-ponto ' + cls + '"><span class="ico">' + icon(ic, 15) + '</span><span>' + (seq ? (i + 1) + '. ' : '') + esc(p.nome) +
-        (l ? '<small>' + hora(l.lida_em) + (l._pendente ? ' · na fila' : '') + '</small>' : '') +
-        (nAbertas ? '<small class="rd-ponto-aberta">' + icon('alert-triangle', 10) + ' ' + nAbertas + ' em aberto</small>' : '') + '</span></div>';
+      // Na sequência só o próximo pode ser justificado (a ordem continua valendo).
+      var podeJustificar = !l && !pausa && (!seq || (proximo && proximo.id === p.id));
+      return '<div class="rd-ponto ' + cls + '"><span class="ico">' + icon(ic, 15) + '</span><span class="rd-ponto-txt">' + (seq ? (i + 1) + '. ' : '') + esc(p.nome) +
+        (l ? '<small>' + hora(l.lida_em) + (l.status === 'justificado' ? ' · não lido (justificado)' : '') + (l._pendente ? ' · na fila' : '') + '</small>' : '') +
+        (nAbertas ? '<small class="rd-ponto-aberta">' + icon('alert-triangle', 10) + ' ' + nAbertas + ' em aberto</small>' : '') +
+        (podeJustificar ? '<button type="button" class="rd-ponto-justif" onclick="GSSRonda.abrirJustificativa(\'' + esc(p.id) + '\')">Não consigo ler</button>' : '') +
+        '</span></div>';
     }).join('');
+
+    var acao;
+    if (pausa) {
+      acao = '<div class="rd-card rd-pausa">' +
+          '<div class="rd-pausa-tit">' + icon('pause', 18) + ' Ronda interrompida às ' + hora(pausa.interrompida_em) + '</div>' +
+          '<div class="rd-pausa-motivo"><b>Motivo:</b> ' + esc(pausa.motivo || '') + '</div>' +
+        '</div>' +
+        '<button class="rd-btn-grande" onclick="GSSRonda.retomar()">' + icon('play', 26) + 'Retomar Ronda<small>continua do ponto em que parou</small></button>';
+    } else if (completo) {
+      acao = '<div class="rd-card" style="background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);font-size:13.5px;font-weight:700;text-align:center">' +
+        icon('check-circle', 16) + ' Todos os pontos registrados' + (justificados ? ' (' + justificados + ' com justificativa)' : '') + '. Encerre a ronda.</div>';
+    } else {
+      acao = '<button class="rd-btn-grande" onclick="GSSRonda.abrirScanner()">' + icon('maximize', 28) + 'Escanear QR do Ponto<small>' + (proximo ? 'próximo: ' + esc(proximo.nome) : 'aponte a câmera para a etiqueta') + '</small></button>';
+    }
 
     document.getElementById('rd-exec-corpo').innerHTML =
       '<div class="rd-card">' +
@@ -730,14 +847,78 @@
           '<div class="rd-progresso-hora">desde ' + hora(st.ctx.ronda.iniciada_em) + '</div></div>' +
         '<div class="rd-barra"><div class="rd-barra-fill" style="width:' + pct + '%"></div></div>' +
       '</div>' +
-      (completo
-        ? '<div class="rd-card" style="background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);font-size:13.5px;font-weight:700;text-align:center">' +
-            icon('check-circle', 16) + ' Todos os pontos lidos. Encerre a ronda.</div>'
-        : '<button class="rd-btn-grande" onclick="GSSRonda.abrirScanner()">' + icon('maximize', 28) + 'Escanear QR do Ponto<small>' + (proximo ? 'próximo: ' + esc(proximo.nome) : 'aponte a câmera para a etiqueta') + '</small></button>') +
-      '<div class="rd-gps rd-trj" id="rd-trj"></div>' +
+      acao +
+      (pausa ? '' : '<div class="rd-gps rd-trj" id="rd-trj"></div>') +
       '<div class="rd-card"><div class="rd-card-titulo">Pontos' + (seq ? ' · siga a ordem' : '') + '</div><div class="rd-pontos">' + grade + '</div></div>' +
-      '<button class="btn ' + (completo ? 'btn-success' : 'btn-outline') + ' icon-inline" onclick="GSSRonda.encerrar()">' + icon('flag', 15) + '<span>Encerrar Ronda</span></button>';
+      htmlObservacoesRonda(st.ctx.ronda) +
+      '<div class="rd-acoes-linha">' +
+        (pausa || completo ? '' : '<button class="btn btn-outline icon-inline" onclick="GSSRonda.interromper()">' + icon('pause', 15) + '<span>Interromper</span></button>') +
+        '<button class="btn ' + (completo ? 'btn-success' : 'btn-outline') + ' icon-inline" onclick="GSSRonda.encerrar()">' + icon('flag', 15) + '<span>Encerrar Ronda</span></button>' +
+      '</div>';
     atualizarIndicadorTrajeto();
+  }
+
+  // Interrupções já feitas nesta ronda (a em curso aparece no cartão de cima).
+  function htmlObservacoesRonda(ronda) {
+    var feitas = (ronda.pausas || []).filter(function(p) { return p.retomada_em; });
+    if (!feitas.length) return '';
+    return '<div class="rd-card"><div class="rd-card-titulo">Observações da ronda</div>' +
+      feitas.map(function(p) {
+        return '<div class="rd-obs-pausa">Ronda interrompida: <b>' + hora(p.interrompida_em) + '</b><br>' +
+          'Motivo: ' + esc(p.motivo || '') + '<br>' +
+          'Ronda retomada: <b>' + hora(p.retomada_em) + '</b></div>';
+      }).join('') + '</div>';
+  }
+
+  // ─── INTERROMPER / RETOMAR ───────────────────────────────────────────────
+  function interromper() {
+    if (!st.ctx || !st.ctx.ronda || pausaAberta(st.ctx.ronda)) return;
+    preencherTopo('rd-pausa', st.posto.nome_posto, 'Ronda iniciada às ' + hora(st.ctx.ronda.iniciada_em));
+    document.getElementById('rd-pausa-motivo').value = '';
+    document.getElementById('rd-btn-pausa').disabled = false;
+    L.showScreen('ronda-pausa-screen');
+    setTimeout(function() { document.getElementById('rd-pausa-motivo').focus(); }, 50);
+  }
+
+  function opPausa(tipo, dados) {
+    return { tipo: tipo, id_acesso: st.usuario.id, id_posto: st.posto.id_posto, dados: dados };
+  }
+
+  // Grava no aparelho primeiro (a tela muda na hora) e envia/enfileira.
+  // Recusa do servidor (ex.: ronda encerrada em outro aparelho) recarrega.
+  function aplicarEEnviarPausa(tipo, dados, msgOk) {
+    var ronda = st.ctx.ronda;
+    aplicarPausaLocal(ronda, tipo, dados);
+    salvarCtxCache();
+    L.showScreen('ronda-exec-screen');
+    renderExec();
+    return enviarOuEnfileirar(opPausa(tipo, dados)).then(function(r) {
+      if (r.res && r.res.ronda && st.ctx && st.ctx.ronda && st.ctx.ronda.id === r.res.ronda.id) {
+        st.ctx.ronda.pausas = r.res.ronda.pausas;
+        salvarCtxCache();
+      }
+      toast(r.fila ? msgOk + ' — será enviado quando a conexão voltar.' : msgOk, 'ok');
+    }).catch(function(e) {
+      toast(e.message, 'erro');
+      carregarContexto().then(rerender);
+    });
+  }
+
+  function confirmarInterrupcao() {
+    var motivo = document.getElementById('rd-pausa-motivo').value.trim();
+    if (!motivo) { toast('Informe o motivo da interrupção.', 'erro'); document.getElementById('rd-pausa-motivo').focus(); return; }
+    if (!st.ctx || !st.ctx.ronda || pausaAberta(st.ctx.ronda)) { L.showScreen('ronda-exec-screen'); renderExec(); return; }
+    document.getElementById('rd-btn-pausa').disabled = true;
+    var dados = { id_ronda: st.ctx.ronda.id, id_pausa: uuid(), em: new Date().toISOString(), motivo: motivo };
+    // Último lote do trajeto vai antes da pausa (o GPS para agora).
+    descarregarTrajeto();
+    aplicarEEnviarPausa('interromper', dados, 'Ronda interrompida');
+  }
+
+  function retomar() {
+    var pausa = st.ctx && st.ctx.ronda && pausaAberta(st.ctx.ronda);
+    if (!pausa) return;
+    aplicarEEnviarPausa('retomar', { id_ronda: st.ctx.ronda.id, id_pausa: pausa.id, em: new Date().toISOString() }, 'Ronda retomada');
   }
 
   // ─── SCANNER ─────────────────────────────────────────────────────────────
@@ -774,6 +955,7 @@
   }
 
   function abrirScanner() {
+    if (st.ctx && st.ctx.ronda && pausaAberta(st.ctx.ronda)) { toast('Retome a ronda para ler os pontos.'); return; }
     document.getElementById('rd-scanner').classList.add('aberto');
     msgScanner('Aponte a câmera para o QR code do ponto');
     prepararDetector().then(function() {
@@ -939,9 +1121,9 @@
 
   // ─── ANORMALIDADES EM ABERTO NO PONTO (constatações) ─────────────────────
   var SITUACOES = [
-    ['sem_alteracao', 'SEM ALTERAÇÃO', 'continua igual'],
+    ['sem_alteracao', 'SEM ALTERAÇÃO', 'continua igual — foto de como está'],
     ['agravou', 'AGRAVOU', 'foto nova e urgência'],
-    ['finalizado', 'FINALIZADO', 'não está mais ocorrendo — a supervisão encerra no Livro']
+    ['finalizado', 'FINALIZADO', 'foi resolvido — foto e o que foi feito']
   ];
   var ORDEM_URG = URGENCIAS.map(function(u) { return u[0]; });
 
@@ -1003,15 +1185,24 @@
             return '<button type="button" class="' + (r.situacao === x[0] ? 'sel sel-' + x[0] : '') + '" onclick="GSSRonda.responderAberta(' + i + ', \'' + x[0] + '\')">' +
               '<b>' + x[1] + '</b><small>' + x[2] + '</small></button>';
           }).join('') + '</div>' +
-          (r.situacao === 'agravou' ? htmlAgravou(a, i, r) : '') +
+          (r.situacao ? htmlSituacao(a, i, r) : '') +
         '</div>';
       }).join('') + '</div>';
   }
 
-  function htmlAgravou(a, i, r) {
+  // Campos da situação escolhida: foto sempre (a nova vira a do cartão do
+  // ponto); urgência só no AGRAVOU; descrição obrigatória no FINALIZADO.
+  var TEXTO_SITUACAO = {
+    sem_alteracao: { foto: 'Foto de como está agora', obs: 'Observação (opcional)', ph: 'Algo a acrescentar…', obrig: false },
+    agravou: { foto: 'Foto de como está agora', obs: 'O que mudou? (opcional)', ph: 'Descreva a mudança…', obrig: false },
+    finalizado: { foto: 'Foto de como ficou', obs: 'O que foi resolvido?', ph: 'Ex.: maçaneta trocada pela manutenção, porta abrindo normalmente.', obrig: true }
+  };
+
+  function htmlSituacao(a, i, r) {
     var atual = Math.max(0, ORDEM_URG.indexOf(a.urgencia));
-    return '<div class="rd-agravou">' +
-      '<div class="form-field"><label>' + icon('camera', 13) + ' Foto de como está agora <span class="required">*</span></label>' +
+    var t = TEXTO_SITUACAO[r.situacao];
+    return '<div class="rd-agravou rd-sit-' + r.situacao + '">' +
+      '<div class="form-field"><label>' + icon('camera', 13) + ' ' + t.foto + ' <span class="required">*</span></label>' +
         '<div class="rd-fotos">' +
           '<button type="button" class="btn btn-primary icon-inline" onclick="document.getElementById(\'rd-ab-cam-' + i + '\').click()">' + icon('camera', 15) + 'Tirar foto</button>' +
           '<button type="button" class="btn btn-outline icon-inline" onclick="document.getElementById(\'rd-ab-gal-' + i + '\').click()">' + icon('image', 15) + 'Galeria</button>' +
@@ -1020,14 +1211,15 @@
         '<input type="file" accept="image/*" id="rd-ab-gal-' + i + '" style="display:none" onchange="GSSRonda.fotoAberta(' + i + ', this.files[0])">' +
         (r.foto ? '<img class="rd-preview" style="display:block" src="' + r.foto + '" alt="Prévia">' : r.processandoFoto ? '<div style="font-size:12px;color:var(--text2)">Processando a foto…</div>' : '') +
       '</div>' +
-      '<div class="form-field"><label>' + icon('alert-triangle', 13) + ' Urgência <span class="required">*</span></label>' +
+      (r.situacao === 'agravou' ? '<div class="form-field"><label>' + icon('alert-triangle', 13) + ' Urgência <span class="required">*</span></label>' +
         '<select onchange="GSSRonda.urgenciaAberta(' + i + ', this.value)">' +
           URGENCIAS.filter(function(u, k) { return k >= atual; }).map(function(u) {
             return '<option value="' + u[0] + '"' + ((r.urgencia || a.urgencia) === u[0] ? ' selected' : '') + '>' + u[1] + '</option>';
           }).join('') +
-        '</select></div>' +
-      '<div class="form-field"><label>' + icon('file-text', 13) + ' O que mudou? (opcional)</label>' +
-        '<textarea placeholder="Descreva a mudança…" style="min-height:70px" oninput="GSSRonda.obsAberta(' + i + ', this.value)">' + esc(r.obs || '') + '</textarea></div>' +
+        '</select></div>' : '') +
+      '<div class="form-field"><label>' + icon('file-text', 13) + ' ' + t.obs + (t.obrig ? ' <span class="required">*</span>' : '') + '</label>' +
+        '<textarea placeholder="' + esc(t.ph) + '" style="min-height:70px" oninput="GSSRonda.obsAberta(' + i + ', this.value)">' + esc(r.obs || '') + '</textarea></div>' +
+      (r.situacao === 'finalizado' ? '<div class="rd-texto-ajuda">A foto e a descrição vão para a ocorrência no Livro, para quem for encerrá-la.</div>' : '') +
     '</div>';
   }
 
@@ -1067,17 +1259,17 @@
     var lista = [];
     for (var k = 0; k < (l.abertas || []).length; k++) {
       var a = l.abertas[k], r = l.respostas[a.id];
-      if (!r || !r.situacao) { toast('Informe a situação atual da ocorrência ' + (a.protocolo || '') + '.', 'erro'); return null; }
-      if (r.situacao === 'agravou') {
-        if (r.processandoFoto) { toast('Aguarde — processando a foto.'); return null; }
-        if (!r.foto) { toast('Em AGRAVOU, tire uma foto de como está agora.', 'erro'); return null; }
-      }
+      var prot = a.protocolo ? ' (' + a.protocolo + ')' : '';
+      if (!r || !r.situacao) { toast('Informe a situação atual da ocorrência' + prot + '.', 'erro'); return null; }
+      if (r.processandoFoto) { toast('Aguarde — processando a foto.'); return null; }
+      if (!r.foto) { toast('Tire uma foto de como está agora' + prot + '.', 'erro'); return null; }
+      if (r.situacao === 'finalizado' && !(r.obs || '').trim()) { toast('Em FINALIZADO, descreva o que foi resolvido' + prot + '.', 'erro'); return null; }
       lista.push({
         id: r.idConstatacao || (r.idConstatacao = uuid()),
         id_ocorrencia: a.id, situacao: r.situacao,
         urgencia: r.situacao === 'agravou' ? (r.urgencia || a.urgencia) : null,
-        obs: r.situacao === 'agravou' ? (r.obs || '').trim() || null : null,
-        foto: r.situacao === 'agravou' ? r.foto : null
+        obs: (r.obs || '').trim() || null,
+        foto: r.foto
       });
     }
     return lista;
@@ -1333,12 +1525,146 @@
     });
   }
 
+  // ─── PONTO NÃO LIDO (justificativa) ─────────────────────────────────────
+  var MOTIVOS_NAO_LIDO = [
+    ['acesso_bloqueado', 'Acesso bloqueado / porta trancada'],
+    ['porta_danificada', 'Porta ou maçaneta danificada'],
+    ['qr_danificado', 'QR code danificado ou ilegível'],
+    ['area_interditada', 'Área interditada'],
+    ['outro', 'Outro motivo']
+  ];
+
+  function abrirJustificativa(idPonto) {
+    if (!st.ctx || !st.ctx.ronda || pausaAberta(st.ctx.ronda)) return;
+    var ponto = st.ctx.pontos.filter(function(p) { return p.id === idPonto; })[0];
+    if (!ponto || lidasPorPonto()[ponto.id]) return;
+    if (sequencial()) {
+      var proximo = proximoPonto();
+      if (proximo && proximo.id !== ponto.id) { toast('Siga a ordem da ronda: o próximo ponto é "' + proximo.nome + '".', 'erro'); return; }
+    }
+    var j = st.justif = { ponto: ponto, motivo: null, foto: null, processandoFoto: false, lida_em: new Date().toISOString(), gps: undefined };
+    j.gpsPromise = obterLocalizacao().then(function(loc) {
+      j.gps = loc;
+      if (st.justif === j) atualizarGpsJustif();
+      return loc;
+    });
+    preencherTopo('rd-justif', 'Ponto não lido', st.posto.nome_posto + ' · ' + hora(j.lida_em));
+    document.getElementById('rd-justif-ponto').textContent = ponto.nome;
+    document.getElementById('rd-justif-local').textContent = ponto.local_descricao || '';
+    document.getElementById('rd-justif-obs').value = '';
+    document.getElementById('rd-justif-cam').value = '';
+    document.getElementById('rd-justif-gal').value = '';
+    document.getElementById('rd-justif-preview').style.display = 'none';
+    document.getElementById('rd-justif-livro').checked = false;
+    document.getElementById('rd-justif-urg').value = 'NAO_URGENTE';
+    document.getElementById('rd-justif-urg-campo').style.display = 'none';
+    var btn = document.getElementById('rd-btn-justif');
+    btn.disabled = false;
+    btn.querySelector('span').textContent = 'Registrar justificativa';
+    var abertas = ponto.abertas || [];
+    document.getElementById('rd-justif-abertas').innerHTML = !abertas.length ? '' :
+      '<div class="rd-card rd-abertas"><div class="rd-card-titulo" style="color:#b45309">' + icon('alert-triangle', 13) + ' Já em aberto neste ponto</div>' +
+      abertas.map(function(a) {
+        return '<div class="rd-aberta-meta"><b>' + esc(a.protocolo || '') + '</b> · ' + esc(a.relato || '') + '</div>';
+      }).join('') +
+      '<div class="rd-aberta-meta" style="margin-top:6px">Se for o mesmo problema, não precisa lançar de novo no Livro.</div></div>';
+    renderMotivos();
+    atualizarGpsJustif();
+    L.showScreen('ronda-justif-screen');
+  }
+
+  function renderMotivos() {
+    var j = st.justif;
+    document.getElementById('rd-justif-motivos').innerHTML = MOTIVOS_NAO_LIDO.map(function(m) {
+      return '<button type="button" class="' + (j && j.motivo === m[0] ? 'sel' : '') + '" onclick="GSSRonda.escolherMotivo(\'' + m[0] + '\')">' + m[1] + '</button>';
+    }).join('');
+  }
+
+  function atualizarGpsJustif() {
+    var el = document.getElementById('rd-justif-gps');
+    var j = st.justif;
+    if (!j || !el) return;
+    if (j.gps === undefined) { el.className = 'rd-gps'; el.innerHTML = icon('crosshair', 14) + 'Obtendo localização…'; return; }
+    if (j.gps === null) { el.className = 'rd-gps falha'; el.innerHTML = icon('alert-triangle', 14) + 'Localização indisponível — a justificativa será registrada sem GPS.'; return; }
+    el.className = 'rd-gps ok';
+    el.innerHTML = icon('map-pin', 14) + 'Localização capturada (±' + Math.round(j.gps.precisao_m) + ' m)';
+  }
+
+  function fotoJustificativa(arquivo) {
+    var j = st.justif;
+    if (!j || !arquivo) return;
+    j.processandoFoto = true;
+    comprimirImagem(arquivo, 1280, 0.7).then(function(dataUrl) {
+      j.foto = dataUrl;
+      j.processandoFoto = false;
+      var prev = document.getElementById('rd-justif-preview');
+      prev.src = dataUrl;
+      prev.style.display = 'block';
+    }).catch(function() {
+      j.processandoFoto = false;
+      toast('Não foi possível processar essa foto — tente outra.', 'erro');
+    });
+  }
+
+  function cancelarJustificativa() {
+    st.justif = null;
+    L.showScreen('ronda-exec-screen');
+    renderExec();
+  }
+
+  function confirmarJustificativa() {
+    var j = st.justif;
+    if (!j) return;
+    var obs = document.getElementById('rd-justif-obs').value.trim();
+    if (!j.motivo) { toast('Escolha o motivo.', 'erro'); return; }
+    if (!obs) { toast('Descreva por que o ponto não pôde ser lido.', 'erro'); document.getElementById('rd-justif-obs').focus(); return; }
+    if (j.processandoFoto) { toast('Aguarde — processando a foto.'); return; }
+    var lancar = document.getElementById('rd-justif-livro').checked;
+    var btn = document.getElementById('rd-btn-justif');
+    btn.disabled = true;
+    btn.querySelector('span').textContent = j.gps === undefined ? 'Obtendo localização…' : 'Salvando…';
+
+    var ponto = j.ponto;
+    var limite = new Promise(function(resolve) { setTimeout(function() { resolve(null); }, 8000); });
+    Promise.race([j.gpsPromise, limite]).then(function(loc) {
+      btn.querySelector('span').textContent = 'Salvando…';
+      var dados = {
+        id: uuid(), id_ronda: st.ctx.ronda.id, id_ponto: ponto.id,
+        motivo_codigo: j.motivo, obs: obs, foto: j.foto,
+        lancar_livro: lancar, urgencia: lancar ? document.getElementById('rd-justif-urg').value : null,
+        lida_em: j.lida_em,
+        lat: loc ? loc.lat : null, lng: loc ? loc.lng : null,
+        precisao_m: loc ? loc.precisao_m : null, altitude_m: loc ? loc.altitude_m : null
+      };
+      var op = { tipo: 'justificar', id_acesso: st.usuario.id, id_posto: st.posto.id_posto, id_ponto: ponto.id, rotulo: ponto.nome, dados: dados };
+      return descarregarTrajeto().then(function() { return enviarOuEnfileirar(op); }).then(function(r) {
+        st.ctx.leituras.push({ id: dados.id, id_ponto: ponto.id, lida_em: dados.lida_em, status: 'justificado', motivo_codigo: dados.motivo_codigo, _pendente: r.fila || undefined });
+        if (r.res && r.res.protocolo && r.res.leitura && r.res.leitura.id_ocorrencia) {
+          ponto.abertas = [{ id: r.res.leitura.id_ocorrencia, protocolo: r.res.protocolo, urgencia: dados.urgencia, inicio: dados.lida_em,
+            colaborador: st.usuario.nome, relato: 'PONTO NÃO LIDO NA RONDA — ' + obs, constatacoes: 0, ultima_em: null, finalizado_em: null, foto_url: null }].concat(ponto.abertas || []);
+        }
+        salvarCtxCache();
+        toast(r.fila ? 'Justificativa salva no aparelho — será enviada quando a conexão voltar.'
+          : r.res.protocolo ? 'Justificativa registrada e lançada no Livro — protocolo ' + r.res.protocolo : '"' + ponto.nome + '" justificado.', 'ok');
+        st.justif = null;
+        L.showScreen('ronda-exec-screen');
+        renderExec();
+      });
+    }).catch(function(e) {
+      btn.disabled = false;
+      btn.querySelector('span').textContent = 'Registrar justificativa';
+      toast(e.message, 'erro');
+      if (e.status === 409) carregarContexto().then(rerender);
+    });
+  }
+
   // ─── ENCERRAR ────────────────────────────────────────────────────────────
   function encerrar() {
     var mapa = lidasPorPonto();
     var faltam = st.ctx.pontos.filter(function(p) { return !mapa[p.id]; }).length;
     var msg = faltam
-      ? 'Ainda faltam ' + faltam + ' ponto(s). Encerrar mesmo assim?\n\nA ronda ficará registrada como INTERROMPIDA.'
+      ? 'Ainda faltam ' + faltam + ' ponto(s). Encerrar mesmo assim?\n\nA ronda ficará registrada como INTERROMPIDA e NÃO poderá ser retomada.\n\n' +
+        'Para pausar e continuar depois, cancele e use "Interromper". Ponto que não dá para ler: "Não consigo ler".'
       : 'Encerrar a ronda?';
     if (!window.confirm(msg)) return;
 
@@ -1363,7 +1689,8 @@
     descarregarTrajeto().then(filaListar).then(function(ops) {
       if (ops.length || st.ctx.ronda._pendente) return enfileirar();
       return api('encerrar', Object.assign(base(), dados)).then(function(res) {
-        concluir(res.ronda && res.ronda.status === 'concluida' ? 'Ronda concluída. Bom trabalho!' : 'Ronda encerrada.');
+        var s = res.ronda && res.ronda.status;
+        concluir(s === 'concluida' ? 'Ronda concluída. Bom trabalho!' : s === 'concluida_justificada' ? 'Ronda concluída (com justificativa).' : 'Ronda encerrada.');
       }, function(e) {
         if (semRede(e) || e.status >= 500) return enfileirar();
         toast(e.message, 'erro');
@@ -1710,6 +2037,14 @@
     confirmarRegistro: confirmarRegistro,
     cancelarRegistro: cancelarRegistro,
     encerrar: encerrar,
+    interromper: interromper,
+    confirmarInterrupcao: confirmarInterrupcao,
+    retomar: retomar,
+    abrirJustificativa: abrirJustificativa,
+    escolherMotivo: function(m) { if (st.justif) { st.justif.motivo = m; renderMotivos(); } },
+    marcarLivroJustif: function(on) { document.getElementById('rd-justif-urg-campo').style.display = on ? '' : 'none'; },
+    confirmarJustificativa: confirmarJustificativa,
+    cancelarJustificativa: cancelarJustificativa,
     iniciarPeloAlarme: iniciarPeloAlarme,
     testarAlarme: function() {
       var N = nativoAlarme();
@@ -1719,6 +2054,33 @@
         atualizarInfoAlarme();
         toast('Teste em 1 minuto: bloqueie a tela agora e aguarde o alarme.', 'ok');
       }).catch(function() { toast('Esta versão do app não tem o teste. Instale o APK mais novo.', 'erro'); });
+    },
+    // Alarme de checklist agendado (módulo Checklists, checklist.js).
+    abrirChecklistPeloAlarme: function() {
+      var N = nativoAlarme(), ap = aparelho();
+      if (N) N.alarmeSilenciar('checklist').catch(function() {});
+      esconderAlarme('checklist');
+      setTimeout(verificarAlarmes, 300);
+      if (window.GSSChecklist && ap && window.GSSChecklist.abrirDoAparelho(ap)) return;
+      toast('Faça login para responder o checklist.');
+    },
+    fecharChecklist: function() {
+      var N = nativoAlarme();
+      if (N) N.alarmeSilenciar('checklist').catch(function() {});
+      esconderAlarme('checklist');
+      setTimeout(verificarAlarmes, 300);
+    },
+    // O card "Checklists do posto" também torna o aparelho "do posto" (para
+    // os alarmes dos checklists agendados), como abrir a Ronda.
+    vincularPosto: function(posto) {
+      var N = nativoAlarme();
+      if (!N || !posto) return;
+      var antes = aparelho();
+      if (!antes || antes.id_posto !== posto.id_posto) {
+        try { localStorage.setItem(APARELHO_KEY, JSON.stringify({ id_posto: posto.id_posto, nome_posto: posto.nome_posto })); } catch (e) {}
+        conferirPermissoesAlarme(true);
+      }
+      sincronizarAgenda();
     },
     fecharTeste: function() {
       var N = nativoAlarme();

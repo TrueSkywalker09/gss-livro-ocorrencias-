@@ -216,6 +216,11 @@
     .const-sit.agravou{background:#fef2f2;color:#b91c1c}
     .const-sit.finalizado{background:#f0fdf4;color:#15803d}
     .const-sit.origem{background:#f1f5f9;color:#475569}
+    .const-final{display:flex;gap:10px;padding:10px 12px;margin-bottom:8px;border:1.5px solid #86efac;background:#f0fdf4;border-radius:10px}
+    .const-final img{width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;flex-shrink:0}
+    .const-final .cf-tit{font-size:13px;font-weight:800;color:#15803d;display:flex;align-items:center;gap:5px}
+    .const-final .ci-meta{font-size:11.5px;color:var(--text2);margin-top:1px}
+    .const-final .ci-obs{font-size:13px;color:var(--text);margin-top:4px;white-space:pre-wrap}
     .occ-card-protocolo{font-size:11px;color:#94a3b8;font-family:'SF Mono',monospace;margin-top:1px}
     .occ-card-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
     .occ-card-meta.occ-card-desktop{grid-template-columns:repeat(5,1fr)}
@@ -2108,7 +2113,18 @@
           (c.obs ? '<div class="ci-obs">' + escapeHtml(c.obs) + '</div>' : '') + '</div></div>');
       });
       var n = (res.constatacoes || []).filter(function(c) { return c.situacao !== 'finalizado' && !c.abriu_ocorrencia; }).length;
-      el.innerHTML = '<div class="detalhe-section-title">' + icon('repeat', 13) + '<span>Constatações na ronda (' + n + ')</span></div>' +
+      // Ronda informou FINALIZADO (e nada depois): foto e descrição em destaque
+      // para quem for encerrar a ocorrência.
+      var ult = (res.constatacoes || []).slice(-1)[0];
+      var finalHtml = ult && ult.situacao === 'finalizado' && res.ocorrencia && res.ocorrencia.ronda_finalizado_em && res.ocorrencia.status === 'ABERTA'
+        ? '<div class="const-final">' + foto(ult.foto_url) + '<div style="flex:1;min-width:0">' +
+            '<div class="cf-tit">' + icon('check-circle', 13) + ' Ronda informou FINALIZADO</div>' +
+            '<div class="ci-meta">' + fmt(ult.constatada_em) + ' · ' + escapeHtml(ult.nome || '-') + (ult.ponto ? ' · ' + escapeHtml(ult.ponto) : '') + '</div>' +
+            (ult.obs ? '<div class="ci-obs">' + escapeHtml(ult.obs) + '</div>' : '') +
+            '<div class="ci-meta" style="margin-top:4px">Confira e encerre a ocorrência com o procedimento realizado.</div>' +
+          '</div></div>'
+        : '';
+      el.innerHTML = '<div class="detalhe-section-title">' + icon('repeat', 13) + '<span>Constatações na ronda (' + n + ')</span></div>' + finalHtml +
         '<div class="detalhe-box">' + (itens.length ? itens.join('') : '<em>Nenhuma constatação registrada.</em>') + '</div>';
     }).catch(function() {
       el = document.getElementById('detalhe-constatacoes');
