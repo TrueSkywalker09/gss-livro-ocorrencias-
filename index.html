@@ -139,6 +139,27 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 #sigCanvas{display:block;width:100%;height:180px;touch-action:none}
 
 .foot-actions{position:sticky;bottom:0;background:var(--bg);padding:16px 0 4px;margin-top:8px}
+/* ─── UNIFORMES ─── */
+.unif-card{flex-wrap:wrap}
+.unif-card .mat-info{min-width:140px}
+.unif-tams{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.unif-tam{min-width:42px;height:34px;padding:0 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--card);color:var(--text);font-size:13px;font-weight:600;cursor:pointer}
+.unif-tam.sel{background:var(--primary);border-color:var(--primary);color:#fff}
+.unif-sec{font-size:13px;font-weight:600;color:var(--text2);margin:18px 0 8px;display:flex;align-items:center;gap:6px}
+.unif-sec:first-child{margin-top:0}
+.unif-ped{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:10px;cursor:pointer}
+.unif-ped-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.unif-ped-nome{font-weight:600;font-size:14px;color:var(--text)}
+.unif-ped-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.unif-ped-itens{font-size:12.5px;color:var(--text);margin-top:8px}
+.unif-selo{font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.unif-selo.pendente{background:var(--warning-bg);color:#a35a00}
+.unif-selo.aprovado{background:var(--success-bg);color:var(--success)}
+.unif-selo.recusado{background:var(--danger-bg);color:var(--danger)}
+.unif-selo.entregue{background:var(--primary-light);color:var(--primary)}
+.unif-selo.fila{background:var(--warning-bg);color:#a35a00}
+.unif-obs{margin-top:8px;font-size:12px;padding:6px 8px;border-radius:6px;background:var(--bg);color:var(--text2)}
+.dd-painel .sig-wrap{margin-top:6px}
 
 .empty-state{text-align:center;padding:60px 20px;color:var(--text2)}
 .empty-state .ic{color:var(--text3);margin-bottom:10px;display:flex;justify-content:center}
@@ -221,7 +242,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     </div>
     <nav class="app-nav">
       <div class="app-nav-item active" id="nav-materiais" onclick="irParaMeusPedidos()"></div>
-      <div class="app-nav-item disabled" id="nav-uniformes"></div>
+      <div class="app-nav-item" id="nav-uniformes" onclick="irParaUniformes()"></div>
       <div class="app-nav-item" id="nav-epi" onclick="irParaEpiInicio()"></div>
     </nav>
     <div class="app-sidebar-footer">
@@ -307,9 +328,19 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   var epiEmpresaFilial = ''; // '01' GSS SEGURANÇA | '02' GSS SERVIÇOS
   var epiColabResultados = [];
   var epiColabBuscaTimer = null;
+  var colabModo = 'epi'; // 'epi' | 'unif' — qual formulário usa a busca de colaborador
+
+  // ─── UNIFORMES — catálogo, pedido em construção e pedidos do posto ─────
+  var catalogoUnif = [];
+  var unifSel = {};        // material_id → { tamanho, qtd }
+  var unifMotivo = '';
+  var unifPedidos = [];    // pedidos do posto (servidor + fila)
+
+  // Redesenha o formulário que está usando a busca de colaborador.
+  function renderColabTela() { if (colabModo === 'unif') renderUnifForm(); else renderEpiForm(); }
 
   document.getElementById('nav-materiais').innerHTML = '<span class="ico-wrap">' + icon('package', 17) + '</span><span class="lbl">Requisição de Materiais</span>';
-  document.getElementById('nav-uniformes').innerHTML = '<span class="ico-wrap">' + icon('shirt', 17) + '</span><span class="lbl">Requisição de Uniformes</span><span class="badge-em-breve">Em breve</span>';
+  document.getElementById('nav-uniformes').innerHTML = '<span class="ico-wrap">' + icon('shirt', 17) + '</span><span class="lbl">Requisição de Uniformes</span>';
   document.getElementById('nav-epi').innerHTML = '<span class="ico-wrap">' + icon('shield', 17) + '</span><span class="lbl">Formulário de EPI</span>';
   document.getElementById('btn-switch-app').innerHTML = '<span class="ico-wrap">' + icon('repeat', 15) + '</span><span class="lbl">Ir para Livro de Ocorrências</span>';
   document.getElementById('btn-logout').innerHTML = icon('log-out', 14) + '<span class="lbl">Sair</span>';
@@ -504,6 +535,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   }
 
   function setNavAtivo(id) {
+    if (typeof fecharPainelUnif === 'function') fecharPainelUnif();
     ['nav-materiais', 'nav-uniformes', 'nav-epi'].forEach(function(n) {
       document.getElementById(n).classList.toggle('active', n === id);
     });
@@ -632,7 +664,8 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     el.innerHTML = '<div class="empty-state">Carregando catálogo...</div>';
 
     try {
-      var url = SUPABASE_URL + '/rest/v1/req_materiais_posto?select=*&posto=eq.' + encodeURIComponent(usuarioLogado.posto) + '&ativo=eq.true&order=categoria,descricao';
+      // Uniformes têm tela própria (Requisição de Uniformes): ficam fora daqui.
+      var url = SUPABASE_URL + '/rest/v1/req_materiais_posto?select=*&posto=eq.' + encodeURIComponent(usuarioLogado.posto) + '&ativo=eq.true&or=' + encodeURIComponent('(categoria.is.null,categoria.neq.Uniforme)') + '&order=categoria,descricao';
       catalogo = await restComCache('catalogo_' + usuarioLogado.posto, url);
     } catch (e) {
       el.innerHTML = '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' Erro ao carregar catálogo: ' + escapeHtml(e.message) + '</div>';
@@ -819,6 +852,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 
   // ─── FORMULÁRIO DE EPI ──────────────────────────────────────────────────
   window.irParaEpiInicio = async function() {
+    colabModo = 'epi';
     setNavAtivo('nav-epi');
     setTopbar('Formulário de EPI', false);
     epiColaborador = null;
@@ -851,15 +885,10 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     renderEpiForm();
   };
 
-  function renderEpiForm() {
-    var el = document.getElementById('app-content');
-    var html = '<div class="err-box" id="epi-err"></div>';
-
-    // ─── Passo 1: empresa + busca do colaborador (RE ou nome) — mesmo padrão
-    // de busca usado em "Emitir Comprovante" no desktop ─────────────────────
-    if (!epiColaborador) {
-      var empBloqueado = !epiEmpresaFilial;
-      html += '<div class="form-field">' +
+  // Passo 1 dos formulários de EPI e de Uniforme: empresa + busca do colaborador.
+  function colabBuscaHtml() {
+    var empBloqueado = !epiEmpresaFilial;
+    return '<div class="form-field">' +
         '<label>Empresa</label>' +
         '<div style="display:flex;gap:8px">' +
         '<button onclick="setEpiEmpresa(\'02\')" style="flex:1;padding:10px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:' + (epiEmpresaFilial === '02' ? '2.5px solid #b45309' : '1.5px solid var(--border)') + ';background:' + (epiEmpresaFilial === '02' ? '#fef3c7' : 'var(--card)') + ';color:' + (epiEmpresaFilial === '02' ? '#b45309' : 'var(--text2)') + '">GSS SERVIÇOS</button>' +
@@ -870,7 +899,16 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
         '<input type="text" id="epi-colab-busca" placeholder="' + (empBloqueado ? 'Selecione a empresa acima primeiro...' : 'Buscar RE ou nome...') + '" oninput="buscarColaboradorEpiInput(this.value)" autocomplete="off"/>' +
         '<div id="epi-colab-drop" style="display:none;position:absolute;top:66px;left:0;right:0;background:var(--card);border:1.5px solid var(--border);border-radius:9px;z-index:20;max-height:240px;overflow-y:auto;box-shadow:0 8px 20px rgba(0,0,0,.12)"></div>' +
         '</div>';
-      el.innerHTML = html;
+  }
+
+  function renderEpiForm() {
+    var el = document.getElementById('app-content');
+    var html = '<div class="err-box" id="epi-err"></div>';
+
+    // ─── Passo 1: empresa + busca do colaborador (RE ou nome) — mesmo padrão
+    // de busca usado em "Emitir Comprovante" no desktop ─────────────────────
+    if (!epiColaborador) {
+      el.innerHTML = html + colabBuscaHtml();
       return;
     }
 
@@ -907,7 +945,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     epiEmpresaFilial = filial;
     epiColaborador = null;
     epiColabResultados = [];
-    renderEpiForm();
+    renderColabTela();
   };
 
   // Busca com debounce (RE ou nome) — mesmo padrão de "Emitir Comprovante" no
@@ -993,13 +1031,14 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     var c = epiColabResultados[idx];
     if (!c) return;
     epiColaborador = { re: c.re, nome: c.nome };
-    renderEpiForm();
+    renderColabTela();
   };
 
   window.limparColaboradorEpi = function() {
     epiColaborador = null;
     epiQuantidades = {};
-    renderEpiForm();
+    unifSel = {};
+    renderColabTela();
   };
 
   window.irParaAssinaturaEpi = function() {
@@ -1061,6 +1100,283 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
       errEl.style.display = 'block';
     }
   };
+
+  // ─── REQUISIÇÃO DE UNIFORMES ─────────────────────────────────────────
+  // Pedido por colaborador → a sede aprova no desktop → o responsável entrega
+  // e o colaborador assina aqui. Catálogo = materiais de Suprimentos com Tipo
+  // "Uniforme" (req_materiais_posto, com tamanhos). Fila offline: pedido e
+  // entrega feitos sem internet vão quando a conexão voltar.
+  var MOTIVOS_UNIF = ['Admissão', 'Troca por desgaste', 'Tamanho errado', 'Extravio / perda', 'Outro'];
+
+  function dataCurta(v) {
+    var d = new Date(v);
+    return isNaN(d) ? '' : String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+  }
+
+  function resumoUnif(itens, aprovada) {
+    return (itens || []).map(function(i) {
+      var q = aprovada && i.qtd_aprovada != null ? i.qtd_aprovada : i.quantidade;
+      return q > 0 ? escapeHtml(i.descricao) + (i.tamanho ? ' <b>' + escapeHtml(i.tamanho) + '</b>' : '') + ' ×' + q : null;
+    }).filter(Boolean).join(' · ');
+  }
+
+  window.irParaUniformes = async function() {
+    colabModo = 'unif';
+    setNavAtivo('nav-uniformes');
+    setTopbar('Requisição de Uniformes', false);
+    fecharPainelUnif();
+    var el = document.getElementById('app-content');
+    el.innerHTML = '<div class="empty-state">Carregando pedidos de uniforme...</div>';
+
+    var erro = null, usandoCopia = false, chave = 'unif_ped_' + usuarioLogado.posto;
+    try {
+      var resp = await fetch(SUPABASE_EDGE + '/req-uniformes', { method: 'POST', headers: headersJson(), body: JSON.stringify({ action: 'listar-posto', posto: usuarioLogado.posto }) });
+      var body = await resp.json();
+      if (!resp.ok || body.error) throw Object.assign(new Error(body.error || 'Falha ao carregar.'), { status: resp.status });
+      unifPedidos = body.pedidos || [];
+      GSSReqCache.set(chave, unifPedidos);
+    } catch (e) {
+      var copia = !e.status || e.status >= 500 ? GSSReqCache.get(chave) : null;
+      if (copia) { unifPedidos = copia; usandoCopia = true; } else { unifPedidos = []; erro = e.message; }
+    }
+
+    // Fila do celular: pedidos ainda não enviados e entregas ainda não enviadas.
+    var ops = await GSSReqFila.listar();
+    var noServidor = {};
+    unifPedidos.forEach(function(p) { noServidor[p.id] = true; });
+    ops.forEach(function(op) {
+      if (op.tipo === 'uniforme' && op.corpo.posto === usuarioLogado.posto && !noServidor[op.corpo.id]) {
+        unifPedidos.unshift({ id: op.corpo.id, nome_colaborador: op.corpo.nome_colaborador, re_colaborador: op.corpo.re_colaborador, itens: op.corpo.itens, status: 'pendente', criado_em: op.corpo.registrado_em, _fila: true });
+      }
+      if (op.tipo === 'uniforme-entrega') {
+        var p = unifPedidos.find(function(x) { return x.id === op.corpo.id; });
+        if (p && p.status === 'aprovado') { p.status = 'entregue'; p.entregue_em = op.corpo.entregue_em; p._filaEntrega = true; }
+      }
+    });
+
+    var grupos = { aprovado: [], pendente: [], recusado: [], entregue: [] };
+    unifPedidos.forEach(function(p) { (grupos[p.status] || grupos.pendente).push(p); });
+
+    var html = avisoRecusadas() +
+      (usandoCopia ? '<div class="err-box" style="display:block">' + icon('wifi-off', 14) + ' Sem internet — mostrando a última cópia dos pedidos.</div>' : '') +
+      (erro ? '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' Não foi possível carregar os pedidos agora (' + escapeHtml(erro) + ').</div>' : '');
+
+    function secao(titulo, ico, lista) {
+      if (!lista.length) return '';
+      return '<div class="unif-sec">' + icon(ico, 14) + titulo + ' (' + lista.length + ')</div>' + lista.map(cardPedido).join('');
+    }
+    html += secao('Prontos para entregar', 'check-circle', grupos.aprovado) +
+      secao('Aguardando aprovação da sede', 'clock', grupos.pendente) +
+      secao('Recusados', 'x', grupos.recusado) +
+      secao('Entregues', 'shirt', grupos.entregue.slice(0, 20));
+    if (!unifPedidos.length && !erro) {
+      html += '<div class="empty-state"><div class="ic">' + icon('shirt', 40) + '</div>Nenhum pedido de uniforme ainda.<br/>Faça o primeiro abaixo.</div>';
+    }
+    html += '<div class="foot-actions"><button class="btn btn-primary" onclick="novoPedidoUniforme()">' + icon('plus', 15) + ' Novo Pedido de Uniforme</button></div>';
+    el.innerHTML = html;
+  };
+
+  function cardPedido(p) {
+    var selo = p._fila ? '<span class="unif-selo fila">Na fila</span>'
+      : p._filaEntrega ? '<span class="unif-selo fila">Entrega na fila</span>'
+      : '<span class="unif-selo ' + p.status + '">' + ({ pendente: 'Aguardando', aprovado: 'Aprovado', recusado: 'Recusado', entregue: 'Entregue' })[p.status] + '</span>';
+    var quando = p.status === 'entregue' ? 'Entregue em ' + dataCurta(p.entregue_em || p.data_entrega) : 'Pedido em ' + dataCurta(p.registrado_em || p.criado_em);
+    return '<div class="unif-ped" onclick="abrirPedidoUnif(\'' + p.id + '\')">' +
+      '<div class="unif-ped-top"><div><div class="unif-ped-nome">' + escapeHtml(p.nome_colaborador || '') + '</div>' +
+      '<div class="unif-ped-sub">RE ' + escapeHtml(p.re_colaborador || '') + ' · ' + quando + '</div></div>' + selo + '</div>' +
+      '<div class="unif-ped-itens">' + resumoUnif(p.itens, p.status === 'aprovado' || p.status === 'entregue') + '</div>' +
+      (p.obs_sede ? '<div class="unif-obs">' + icon('edit', 12) + ' Sede: ' + escapeHtml(p.obs_sede) + '</div>' : '') +
+      '</div>';
+  }
+
+  // ─── Painel lateral do pedido (detalhe e entrega com assinatura) ───
+  function fecharPainelUnif() {
+    var el = document.getElementById('unif-painel');
+    if (el) el.remove();
+  }
+  window.fecharPainelUnif = fecharPainelUnif;
+
+  window.abrirPedidoUnif = function(id) {
+    var p = unifPedidos.find(function(x) { return x.id === id; });
+    if (!p) return;
+    var podeEntregar = p.status === 'aprovado' && !p._filaEntrega;
+    var itensHtml = (p.itens || []).map(function(i) {
+      var q = i.qtd_aprovada != null ? i.qtd_aprovada : i.quantidade;
+      var ajustado = i.qtd_aprovada != null && i.qtd_aprovada !== i.quantidade;
+      return '<div class="hist-item-row"><span>' + escapeHtml(i.descricao) + (i.tamanho ? ' · ' + escapeHtml(i.tamanho) : '') +
+        (ajustado ? ' <span style="color:var(--text3);font-size:11px">(pedido ' + i.quantidade + ')</span>' : '') + '</span><span class="qtd">' + q + '</span></div>';
+    }).join('');
+
+    var html = '<div class="dd-fundo" onclick="fecharPainelUnif()"></div><aside class="dd-painel" role="dialog" aria-label="Pedido de uniforme">' +
+      '<div class="dd-cab"><div><div class="dd-nome">' + escapeHtml(p.nome_colaborador || '') + '</div>' +
+      '<div class="dd-sub">RE ' + escapeHtml(p.re_colaborador || '') + ' · pedido em ' + dataCurta(p.registrado_em || p.criado_em) + '</div></div>' +
+      '<button class="dd-fechar" onclick="fecharPainelUnif()" aria-label="Fechar">' + icon('x', 16) + '</button></div>' +
+      '<div class="dd-corpo">' +
+        '<div class="dd-lbl">' + (p.status === 'aprovado' || p.status === 'entregue' ? 'Peças aprovadas' : 'Peças pedidas') + '</div>' + itensHtml +
+        (p.motivo ? '<div class="dd-lbl" style="margin-top:14px">Motivo</div><div style="font-size:13px">' + escapeHtml(p.motivo) + '</div>' : '') +
+        (p.obs_sede ? '<div class="unif-obs" style="margin-top:14px">' + icon('edit', 12) + ' Sede: ' + escapeHtml(p.obs_sede) + '</div>' : '') +
+        (podeEntregar
+          ? '<div class="dd-lbl" style="margin-top:18px">Entregue as peças e peça para <b>' + escapeHtml(p.nome_colaborador || '') + '</b> assinar abaixo</div>' +
+            '<div class="sig-wrap"><canvas id="sigCanvas"></canvas></div>' +
+            '<button class="btn btn-outline" style="margin-top:8px" onclick="limparAssinatura()">' + icon('rotate-ccw', 14) + ' Limpar assinatura</button>' +
+            '<div class="err-box" id="unif-entrega-err" style="margin-top:10px"></div>'
+          : p.status === 'pendente' ? '<div class="unif-obs" style="margin-top:14px">' + icon('clock', 12) + ' Aguardando a aprovação da sede. Quando aprovar, a entrega é feita por aqui.</div>'
+          : p.status === 'entregue' ? '<div class="unif-obs" style="margin-top:14px">' + icon('check-circle', 12) + (p._filaEntrega ? ' Entrega guardada no celular — será enviada quando a internet voltar.' : ' Entregue em ' + dataCurta(p.entregue_em || p.data_entrega) + '.') + '</div>'
+          : '') +
+      '</div>' +
+      (podeEntregar ? '<div class="dd-rodape"><button class="btn btn-outline" onclick="fecharPainelUnif()">Cancelar</button><button class="btn btn-primary" id="btn-entregar-unif" onclick="confirmarEntregaUnif(\'' + p.id + '\')">' + icon('edit', 15) + ' Confirmar entrega</button></div>' : '') +
+      '</aside>';
+    fecharPainelUnif();
+    var div = document.createElement('div');
+    div.id = 'unif-painel';
+    div.innerHTML = html;
+    document.body.appendChild(div);
+    if (podeEntregar) initSignature();
+  };
+
+  window.confirmarEntregaUnif = async function(id) {
+    var errEl = document.getElementById('unif-entrega-err');
+    errEl.style.display = 'none';
+    if (sig.empty) { errEl.innerHTML = icon('alert-triangle', 14) + ' O colaborador precisa assinar antes de confirmar.'; errEl.style.display = 'block'; return; }
+    var p = unifPedidos.find(function(x) { return x.id === id; });
+    var btn = document.getElementById('btn-entregar-unif');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    var agora = new Date();
+    try {
+      var r = await GSSReqFila.enviar({
+        tipo: 'uniforme-entrega',
+        rotulo: 'Entrega de uniforme para ' + (p ? p.nome_colaborador : ''),
+        url: SUPABASE_EDGE + '/req-uniformes',
+        headers: headersJson(),
+        corpo: { action: 'entregar', id: id, entregue_em: agora.toISOString(), data_entrega: agora.toISOString().slice(0, 10), assinatura: sig.canvas.toDataURL('image/png') }
+      });
+      fecharPainelUnif();
+      mostrarSucessoUnif(!!r.enfileirado, true, p ? p.nome_colaborador : '');
+    } catch (e) {
+      btn.disabled = false; btn.innerHTML = icon('edit', 15) + ' Confirmar entrega';
+      errEl.textContent = e.message || 'Erro ao enviar.';
+      errEl.style.display = 'block';
+    }
+  };
+
+  // ─── Novo pedido ───
+  window.novoPedidoUniforme = async function() {
+    colabModo = 'unif';
+    setNavAtivo('nav-uniformes');
+    setTopbar('Novo Pedido de Uniforme', true, function() { irParaUniformes(); });
+    epiColaborador = null;
+    epiEmpresaFilial = '';
+    epiColabResultados = [];
+    unifSel = {};
+    unifMotivo = '';
+    var el = document.getElementById('app-content');
+    el.innerHTML = '<div class="empty-state">Carregando uniformes...</div>';
+    try {
+      var url = SUPABASE_URL + '/rest/v1/req_materiais_posto?select=*&posto=eq.' + encodeURIComponent(usuarioLogado.posto) + '&categoria=eq.Uniforme&ativo=eq.true&order=descricao';
+      catalogoUnif = await restComCache('unif_cat_' + usuarioLogado.posto, url);
+    } catch (e) {
+      el.innerHTML = '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' Erro ao carregar os uniformes: ' + escapeHtml(e.message) + '</div>';
+      return;
+    }
+    ['01', '02'].forEach(baixarColaboradores);
+    if (!catalogoUnif || !catalogoUnif.length) {
+      el.innerHTML = '<div class="empty-state"><div class="ic">' + icon('shirt', 40) + '</div>Nenhum uniforme cadastrado ainda.<br/>Fale com a administração.</div>';
+      return;
+    }
+    renderUnifForm();
+  };
+
+  function renderUnifForm() {
+    var el = document.getElementById('app-content');
+    var html = '<div class="err-box" id="unif-err"></div>';
+    if (!epiColaborador) { el.innerHTML = html + colabBuscaHtml(); return; }
+
+    html += '<div class="hist-card" style="display:flex;justify-content:space-between;align-items:center">' +
+      '<div><div style="font-size:11px;color:var(--text3)">RE ' + escapeHtml(epiColaborador.re) + '</div>' +
+      '<div style="font-weight:700;color:var(--text)">' + escapeHtml(epiColaborador.nome) + '</div></div>' +
+      '<button class="btn btn-outline" style="width:auto;padding:8px 12px" onclick="limparColaboradorEpi()">' + icon('x', 14) + ' Trocar</button></div>';
+
+    html += '<div class="cat-header">' + icon('shirt', 14) + 'Escolha as peças, o tamanho e a quantidade</div>';
+    catalogoUnif.forEach(function(u) {
+      var sel = unifSel[u.material_id] || {};
+      var fotoHtml = u.foto_url ? '<img src="' + u.foto_url + '" alt="" onerror="fotoFalhou(this,\'shirt\')"/>' : '<div class="mat-ph">' + icon('shirt', 44) + '</div>';
+      var tams = (u.tamanhos || []).map(function(t) {
+        return '<button type="button" class="unif-tam' + (sel.tamanho === t ? ' sel' : '') + '" onclick="setTamUnif(\'' + u.material_id + '\',\'' + escapeHtml(t).replace(/'/g, '') + '\')">' + escapeHtml(t) + '</button>';
+      }).join('');
+      html += '<div class="mat-card unif-card">' + fotoHtml +
+        '<div class="mat-info"><div class="mat-nome">' + escapeHtml(u.descricao) + '</div>' +
+        (tams ? '<div class="unif-tams">' + tams + '</div>' : '<div class="mat-un">Tamanho único</div>') + '</div>' +
+        '<input type="number" min="0" step="1" placeholder="0" value="' + (sel.qtd || '') + '" oninput="setQtdUnif(\'' + u.material_id + '\', this.value)"/>' +
+        '</div>';
+    });
+
+    html += '<div class="form-field" style="margin-top:14px"><label>Motivo</label><select id="unif-motivo" onchange="unifMotivoSel(this.value)" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--card)">' +
+      '<option value="">Selecione...</option>' + MOTIVOS_UNIF.map(function(m) { return '<option' + (unifMotivo === m ? ' selected' : '') + '>' + m + '</option>'; }).join('') + '</select></div>';
+    html += '<div class="foot-actions"><button class="btn btn-primary" id="btn-enviar-unif" onclick="enviarPedidoUniforme()">' + icon('check-circle', 15) + ' Enviar pedido para a sede</button></div>';
+    el.innerHTML = html;
+  }
+
+  window.unifMotivoSel = function(v) { unifMotivo = v; };
+  window.setTamUnif = function(id, t) {
+    unifSel[id] = unifSel[id] || {};
+    unifSel[id].tamanho = t;
+    if (!unifSel[id].qtd) unifSel[id].qtd = 1; // escolheu o tamanho: já conta 1 peça
+    renderUnifForm();
+  };
+  window.setQtdUnif = function(id, v) {
+    var n = parseInt(v, 10);
+    unifSel[id] = unifSel[id] || {};
+    unifSel[id].qtd = n > 0 ? n : 0;
+  };
+
+  window.enviarPedidoUniforme = async function() {
+    var errEl = document.getElementById('unif-err');
+    function erro(msg) { errEl.innerHTML = icon('alert-triangle', 14) + ' ' + msg; errEl.style.display = 'block'; window.scrollTo(0, 0); }
+    var itens = [];
+    for (var i = 0; i < catalogoUnif.length; i++) {
+      var u = catalogoUnif[i], sel = unifSel[u.material_id];
+      if (!sel || !sel.qtd) continue;
+      if ((u.tamanhos || []).length && !sel.tamanho) return erro('Escolha o tamanho de "' + escapeHtml(u.descricao) + '".');
+      itens.push({ material_id: u.material_id, descricao: u.descricao, tamanho: sel.tamanho || '', quantidade: sel.qtd });
+    }
+    if (!itens.length) return erro('Escolha pelo menos uma peça e a quantidade.');
+    if (!unifMotivo) return erro('Selecione o motivo do pedido.');
+
+    var btn = document.getElementById('btn-enviar-unif');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    try {
+      var r = await GSSReqFila.enviar({
+        tipo: 'uniforme',
+        rotulo: 'Pedido de uniforme para ' + epiColaborador.nome,
+        url: SUPABASE_EDGE + '/req-uniformes',
+        headers: headersJson(),
+        corpo: {
+          action: 'solicitar', id: uuid(), registrado_em: new Date().toISOString(),
+          id_acesso: usuarioLogado.id, posto: usuarioLogado.posto, solicitante_nome: usuarioLogado.nome,
+          re_colaborador: epiColaborador.re, nome_colaborador: epiColaborador.nome, filial: epiEmpresaFilial,
+          itens: itens, motivo: unifMotivo
+        }
+      });
+      mostrarSucessoUnif(!!r.enfileirado, false, epiColaborador.nome);
+    } catch (e) {
+      btn.disabled = false; btn.innerHTML = icon('check-circle', 15) + ' Enviar pedido para a sede';
+      erro(escapeHtml(e.message || 'Erro ao enviar.'));
+    }
+  };
+
+  function mostrarSucessoUnif(naFila, entrega, nome) {
+    setTopbar(entrega ? 'Entrega de Uniforme' : 'Pedido de Uniforme', false);
+    var titulo = naFila ? (entrega ? 'Entrega guardada no celular' : 'Pedido guardado no celular') : (entrega ? 'Entrega registrada!' : 'Pedido enviado!');
+    var texto = naFila ? 'Você está sem internet. Será enviado automaticamente quando a conexão voltar — não precisa refazer.'
+      : entrega ? 'A entrega para ' + escapeHtml(nome) + ' foi registrada com a assinatura.'
+      : 'O pedido para ' + escapeHtml(nome) + ' foi para a sede. Quando for aprovado, aparece em "Prontos para entregar".';
+    document.getElementById('app-content').innerHTML =
+      '<div class="success-wrap"><div class="ic"' + (naFila ? ' style="color:#b45309"' : '') + '>' + icon(naFila ? 'clock' : 'check-circle', 56) + '</div>' +
+      '<h1 style="font-size:19px;font-weight:600">' + titulo + '</h1>' +
+      '<div style="font-size:13px;color:var(--text2);margin:10px 0 24px">' + texto + '</div>' +
+      '<button class="btn btn-primary" style="max-width:260px" onclick="irParaUniformes()">Ver pedidos de uniforme</button></div>';
+  }
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') fecharPainelUnif(); });
 
   function mostrarSucessoEpi(naFila) {
     setTopbar(naFila ? 'Entrega Guardada' : 'Entrega Registrada', false);
