@@ -1,0 +1,183 @@
+/* GSS — design system (mesmos tokens do desktop, src/css/tokens.css) para as páginas
+   externas: Requisições, Livro de Ocorrências, Ronda, Checklist e Visto.
+   FONTE ÚNICA: dist/shared/gss-web.css. Os deploys copiam este arquivo e a pasta fonts/
+   para cada site — não edite as cópias em dist/gss-requisicoes ou dist/livro-remoto.
+   Carregado DEPOIS do <style> de cada página: as variáveis antigas (--primary, --bg,
+   --card, --text…) passam a apontar para os tokens, e as cores fixas dos componentes
+   comuns são trocadas aqui. Só tema claro por enquanto. */
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/ibm-plex-sans-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/ibm-plex-sans-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/ibm-plex-sans-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/ibm-plex-sans-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/ibm-plex-mono-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/ibm-plex-mono-latin-500-normal.woff2) format("woff2")}
+
+:root{
+  /* tokens (iguais ao desktop) */
+  --brand-900:#121c4d;--brand-700:#1f2f7a;--brand-100:#e8ecfa;--accent-600:#c8242b;
+  --surface-0:#ffffff;--surface-50:#f5f6f9;--surface-100:#eceef3;
+  --border-strong:#8a91a5;--ink:#151a26;--ink-muted:#566074;--ink-on-brand:#ffffff;--sidebar-ink:#c3cae6;
+  --success-600:#1d7a46;--success-100:#e3f4ea;--warning-600:#a35a00;--warning-100:#fdf0dc;
+  --danger-600:#b42318;--danger-100:#fdeceb;--info-600:#0b67a8;--info-100:#e2f0fa;
+  --titlebar:#0b1233;--focus:#2f6bff;
+  --radius-xs:6px;--radius-md:14px;--radius-xl:28px;--radius-full:999px;
+  --font-sans:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",Consolas,monospace;
+  --shadow-1:0 1px 2px rgba(16,24,40,.06);--shadow-3:0 12px 32px rgba(16,24,40,.16);
+  --ease-out:cubic-bezier(.2,.8,.2,1);
+
+  /* variáveis antigas das páginas → tokens */
+  --primary:var(--brand-700);--primary-hover:var(--brand-900);--primary-light:var(--brand-100);
+  --bg:var(--surface-50);--card:var(--surface-0);
+  --text:var(--ink);--text2:var(--ink-muted);--text3:#7a8296;
+  --border:#d9dce5;--border-focus:var(--focus);
+  --success:var(--success-600);--success-bg:var(--success-100);--success-border:#b9e2c9;
+  --warning:#d98200;--warning-bg:var(--warning-100);--warning-border:#f3d199;
+  --danger:var(--danger-600);--danger-bg:var(--danger-100);--danger-border:#f6c4bf;
+  --radius:10px;--radius-sm:10px;--radius-lg:14px;
+  --shadow:var(--shadow-1);--shadow-md:0 4px 12px rgba(16,24,40,.10);
+}
+
+body{font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
+input,select,textarea,button{font-family:inherit}
+input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px var(--brand-100)!important}
+
+/* ── Botões (padrão .btn-p / .btn-o do desktop) ── */
+.btn{font-weight:600;border-radius:var(--radius-sm)}
+.btn-primary{background:var(--brand-700)}
+.btn-primary:hover{background:var(--brand-900)}
+.btn-primary:disabled{background:var(--border-strong)}
+.btn-outline{background:var(--surface-0);border:1px solid var(--border)}
+.btn-outline:hover{background:var(--surface-0);border-color:var(--brand-700);color:var(--brand-700)}
+
+/* ── Menu lateral: mesmo azul-marinho do desktop ── */
+.app-sidebar{background:var(--brand-900)!important}
+.app-nav-item{color:var(--sidebar-ink)}
+.app-nav-item:hover{background:rgba(255,255,255,.07)}
+.app-nav-item.active{background:rgba(255,255,255,.12)!important;border-left-color:#fff!important;font-weight:600!important}
+.app-avatar{background:var(--brand-700)!important;border-radius:50%!important}
+.app-switch-btn{color:#a9b2d6!important}
+.app-switch-btn:hover{color:#fff!important}
+
+/* ── Topo e títulos ── */
+.app-topbar{background:var(--surface-0)!important;border-bottom-color:var(--border)!important}
+.app-topbar .title{font-weight:600!important}
+.cat-header,.hist-mes-header{background:var(--brand-900)!important;text-transform:none!important;letter-spacing:0!important;font-weight:600!important;font-size:13px!important}
+
+/* ── Cartões ── */
+.card-box,.mat-card,.hist-card,.avulso-form,.rd-card,.card{border-radius:var(--radius-md)}
+.mat-card,.hist-card{border-width:1px}
+.hist-item-row .qtd{color:var(--brand-700)}
+
+/* ── Ronda / Checklist / Visto ── */
+.rd-topo,.rd-hub-card{background:var(--brand-900)!important}
+.chk-hub-card{background:var(--brand-700)!important}
+.rd-alarme .rd-btn-grande{color:var(--brand-900)!important}
+.rd-topo-marca{color:#a9b2d6!important}
+.rd-card-titulo{text-transform:none!important;letter-spacing:0!important;font-size:12.5px!important;font-weight:600!important;color:var(--ink-muted)!important}
+.titulo,.resumo b{color:var(--ink)!important}
+.titulo{font-weight:600!important}
+
+/* ═══ Shell no padrão do desktop (src/css/shell.css): menu lateral flutuante,
+   cabeçalho de página e painel lateral (dd-painel). ═══ */
+:root{--sb-w:240px;--sb-mini:64px;--sb-gap:12px}
+.app-sidebar{top:var(--sb-gap)!important;left:var(--sb-gap)!important;bottom:var(--sb-gap)!important;min-height:0!important;width:var(--sb-mini)!important;
+  border-radius:var(--radius-lg);box-shadow:var(--shadow-3)!important;transition:width var(--dur-base,200ms) var(--ease-out),box-shadow 200ms!important}
+.app-sidebar:hover{width:var(--sb-w)!important;box-shadow:0 18px 48px rgba(11,18,51,.35)!important;transition:width 320ms var(--ease-out) 120ms,box-shadow 320ms 120ms!important}
+.app-sidebar-header{min-height:64px!important;padding:14px!important;border-bottom-color:rgba(255,255,255,.08)!important}
+.app-sidebar-header img{width:36px!important;height:36px!important;border-radius:var(--radius-sm)!important}
+.app-sidebar-header .txt{font-weight:600!important;font-size:13px!important}
+.app-sidebar-header .txt span{color:#8f9bc4!important;font-size:12px!important}
+.app-nav{padding:10px 8px!important}
+.app-nav-item{min-height:38px;margin:1px 0;padding:7px 12px 7px 14px!important;border-left:0!important;border-radius:var(--radius-sm);font-size:14px!important;gap:12px!important}
+.app-nav-item.active{box-shadow:inset 3px 0 0 #fff}
+.app-nav-item .ico-wrap{width:20px}
+.app-sidebar-footer{padding:10px 8px!important}
+.app-user{padding:6px 7px;border-radius:var(--radius-sm)}
+.app-avatar{width:34px!important;height:34px!important;font-weight:600!important}
+.app-user .nome{font-size:13px!important}
+.app-user .posto{font-size:12px!important;color:#a9b2d6!important}
+.app-switch-btn,.app-logout{padding:6px 7px!important;border-radius:var(--radius-sm);font-size:13px!important;font-weight:500!important}
+.app-switch-btn:hover,.app-logout:hover{background:rgba(255,255,255,.07)}
+.app-logout{color:#a9b2d6!important}
+.app-logout:hover{color:#fff!important}
+
+.app-main{margin-left:calc(var(--sb-mini) + var(--sb-gap) * 2)!important;background:var(--surface-50)}
+.app-topbar{height:auto!important;min-height:0!important;background:var(--surface-50)!important;border-bottom:0!important;padding:20px 28px 4px 4px!important;gap:10px!important}
+.app-topbar .title{font-size:22px!important;line-height:28px;font-weight:600!important;color:var(--ink)!important}
+.app-topbar .back-btn{width:34px;height:34px;justify-content:center;border:1px solid var(--border)!important;background:var(--surface-0)!important;border-radius:var(--radius-sm)!important}
+.app-topbar .back-btn:hover{border-color:var(--brand-700)!important;color:var(--brand-700)!important}
+.app-content{padding:14px 28px 28px 4px!important}
+
+/* Painel lateral flutuante (igual ao .dd-painel do desktop). Use:
+   <div class="dd-fundo"></div><aside class="dd-painel"><div class="dd-cab">…</div>
+   <div class="dd-corpo">…</div><div class="dd-rodape">…</div></aside> */
+.dd-fundo,.painel-fundo{position:fixed;inset:0;z-index:299;background:rgba(11,18,51,.28);animation:gss-fade 200ms}
+.painel-fundo{display:none}
+body.com-painel .painel-fundo{display:block}
+.dd-painel,body.com-painel .detalhe-screen.active{position:fixed;top:12px;right:12px;bottom:12px;width:min(480px,calc(100vw - 24px));max-width:none!important;margin:0!important;
+  z-index:300;display:flex;flex-direction:column;background:var(--surface-0);color:var(--ink);border:1px solid var(--border);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-3);overflow:hidden;animation:gss-painel 320ms var(--ease-out)}
+.dd-cab{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.dd-nome{font-size:17px;line-height:22px;font-weight:600}
+.dd-sub{font-size:13px;color:var(--ink-muted);margin-top:4px}
+.dd-fechar{width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-0);color:var(--ink-muted);cursor:pointer;flex:none}
+.dd-fechar:hover{border-color:var(--brand-700);color:var(--brand-700)}
+.dd-corpo{flex:1;overflow-y:auto;padding:16px 20px 20px}
+.dd-rodape{display:flex;align-items:center;gap:8px;padding:14px 20px;border-top:1px solid var(--border);background:var(--surface-0)}
+.dd-rodape .btn{flex:1;width:auto}
+.dd-lbl{font-size:12px;font-weight:500;color:var(--ink-muted);margin-bottom:4px}
+/* detalhe da ocorrência dentro do painel */
+body.com-painel .detalhe-screen .detalhe-card{display:flex;flex-direction:column;height:100%;border-radius:0;box-shadow:none}
+body.com-painel .detalhe-screen .detalhe-body{flex:1;overflow-y:auto}
+.detalhe-header{background:var(--surface-0)!important;color:var(--ink)!important;border-bottom:1px solid var(--border)}
+.detalhe-header h2{font-weight:600!important}
+.detalhe-header .subtitle{color:var(--ink-muted);opacity:1!important}
+@keyframes gss-fade{from{opacity:0}to{opacity:1}}
+@keyframes gss-painel{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+
+/* Celular: menu flutuante mais estreito, painel ocupa a tela */
+@media (max-width:600px){
+  :root{--sb-mini:56px;--sb-gap:8px}
+  .app-topbar{padding:14px 14px 2px 2px!important}
+  .app-topbar .title{font-size:18px!important}
+  .app-content{padding:10px 12px 20px 2px!important}
+  .dd-painel,body.com-painel .detalhe-screen.active{top:8px;right:8px;bottom:8px;width:calc(100vw - 16px)}
+}
+.detalhe-badge-pill{border-radius:var(--radius-xs)!important;font-weight:500!important;font-size:12px!important;background:var(--neutral-100,#edeff3)!important;color:var(--ink-muted)!important}
+.detalhe-badge-pill.cat,.detalhe-badge-pill.status-aberta{background:var(--brand-100)!important;color:var(--brand-700)!important}
+.detalhe-badge-pill.status-finalizada{background:var(--success-100)!important;color:var(--success-600)!important}
+.detalhe-badge-pill.urg-pouco-urgente{background:var(--info-100)!important;color:var(--info-600)!important}
+.detalhe-badge-pill.urg-urgente{background:var(--warning-100)!important;color:var(--warning-600)!important}
+.detalhe-badge-pill.urg-muito-urgente,.detalhe-badge-pill.urg-emergencia{background:var(--danger-100)!important;color:var(--danger-600)!important}
+
+/* ═══ Login em duas colunas (igual ao desktop, src/css/shell.css) ═══
+   A página mostra com style.display='flex': colunas são filhos flex. */
+.login-screen{background:var(--surface-0)!important;align-items:stretch!important;justify-content:stretch!important;overflow-y:auto}
+.login-screen>*{flex:1 1 0;min-width:0}
+.lg-marca{display:flex;flex-direction:column;justify-content:space-between;padding:48px 56px;background:var(--brand-900);color:#dfe4f5;position:relative;overflow:hidden}
+.lg-marca::after{content:"";position:absolute;right:-140px;bottom:-140px;width:420px;height:420px;border-radius:50%;border:56px solid rgba(255,255,255,.04)}
+.lg-logo{display:inline-grid;place-items:center;width:84px;height:60px;border-radius:var(--radius-md);background:#fff}
+.lg-logo img{width:70px;height:46px;object-fit:contain}
+.lg-logo-mob{display:none;margin-bottom:22px}
+.lg-titulo{font-size:34px;line-height:40px;font-weight:600;color:#fff}
+.lg-unidade{margin-top:6px;font-size:15px;color:#a9b2d6}
+.lg-texto{margin-top:20px;max-width:360px;font-size:15px;line-height:22px;color:#c3cae6}
+.lg-marca-rodape{font-size:12px;color:#8f9bc4}
+.lg-lado-form{display:grid;place-items:center;padding:32px}
+.lg-form{width:100%;max-width:360px;display:flex;flex-direction:column;animation:gss-up 320ms var(--ease-out)}
+.lg-h1{font-size:26px;line-height:32px;font-weight:600;color:var(--ink);margin:0}
+.lg-dica{margin:4px 0 26px;font-size:14px;color:var(--ink-muted)}
+.lg-lbl{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:6px}
+.lg-campo{position:relative;display:flex;align-items:center;margin-bottom:16px}
+.lg-campo .lg-ic{position:absolute;left:12px;color:var(--ink-muted);pointer-events:none}
+.lg-campo input{width:100%;height:42px;padding:0 42px 0 40px!important;font-size:15px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--surface-0);color:var(--ink)}
+.lg-campo input:focus{outline:none;border-color:var(--focus)}
+.lg-campo .pw-eye{position:absolute;right:6px;width:32px;height:32px;display:grid;place-items:center;border-radius:var(--radius-sm);color:var(--ink-muted);cursor:pointer}
+.lg-campo .pw-eye:hover{background:var(--surface-100);color:var(--ink)}
+.lg-caps{margin:-8px 0 12px;font-size:12px;color:var(--warning-600)}
+.lg-caps[hidden]{display:none}
+.login-screen .login-err{margin:0 0 14px;padding:8px 12px;border-radius:var(--radius-sm);border:0;background:var(--danger-100);color:var(--danger-600);font-size:13px}
+.login-screen #btn-login{height:44px;margin-top:6px;font-size:15px;font-weight:600}
+@keyframes gss-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (max-width:900px){.lg-marca{display:none}.lg-logo-mob{display:inline-grid}.lg-lado-form{padding:24px 20px}}
