@@ -220,15 +220,18 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     <div class="lg-form">
       <span class="lg-logo lg-logo-mob"><img src="logo-gss.png" alt="GSS"/></span>
       <h1 class="lg-h1">Entrar</h1>
-      <p class="lg-dica">Use o login de responsável de posto.</p>
+      <p class="lg-dica">Entre com a empresa, sua matrícula (RE) e a senha.</p>
       <div class="login-err" id="login-erro"></div>
-      <label class="lg-lbl" for="login-input">Usuário</label>
-      <div class="lg-campo"><svg class="lg-ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input type="text" id="login-input" placeholder="nome.sobrenome" autocomplete="username"/></div>
+      <label class="lg-lbl" id="lg-lbl-emp">Empresa</label>
+      <div class="lg-emp" id="lg-emp" role="radiogroup"><button type="button" data-filial="01" role="radio" aria-checked="false" onclick="GSSLogin.escolher('01')">GSS Segurança</button><button type="button" data-filial="02" role="radio" aria-checked="false" onclick="GSSLogin.escolher('02')">GSS Serviços</button></div>
+      <label class="lg-lbl" for="login-input" id="lg-lbl-usuario">RE (matrícula)</label>
+      <div class="lg-campo"><svg class="lg-ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input type="text" id="login-input" placeholder="Ex.: 123456" inputmode="numeric" autocomplete="username"/></div>
       <label class="lg-lbl" for="senha-input">Senha</label>
       <div class="lg-campo pw-wrap"><svg class="lg-ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><input type="password" id="senha-input" autocomplete="current-password"/>
         <span class="pw-eye" id="pw-eye-toggle" onclick="togglePw()"></span></div>
       <div class="lg-caps" id="lg-caps" hidden>Caps Lock está ativado</div>
       <button class="btn btn-primary" id="btn-login" onclick="fazerLogin()">Entrar</button>
+      <button type="button" class="lg-legado" id="lg-legado" onclick="GSSLogin.alternar()">Entrar com o login antigo (usuário)</button>
     </div>
   </div>
 </div>
@@ -297,7 +300,8 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   </main>
 </div>
 
-<script src="gss-sessao.js" data-edge="https://ihjtgyijvaszuwvvnnas.supabase.co/functions/v1" data-chave="gss_token_requisicoes"></script>
+<script src="gss-sessao.js" data-edge="https://xyfllrcdrcvjimzwbfsm.supabase.co/functions/v1 https://ihjtgyijvaszuwvvnnas.supabase.co/functions/v1" data-chave="gss_token_app"></script>
+<script src="gss-login.js"></script>
 <script src="fila.js"></script>
 <script src="gss-assinatura.js"></script>
 <script>
@@ -307,6 +311,10 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   var SUPABASE_URL = 'https://ihjtgyijvaszuwvvnnas.supabase.co';
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloanRneWlqdmFzenV3dnZubmFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzYxMzYsImV4cCI6MjEwMjU1MjEzNn0.0vxDxbEsTqghZg-1yBwVWcvyZT0xH0TyQN2JXcEj6iU';
   var SUPABASE_EDGE = SUPABASE_URL + '/functions/v1';
+  // Login único (cadastro no projeto do Livro): login e troca de senha vão para lá.
+  var LIVRO_EDGE = 'https://xyfllrcdrcvjimzwbfsm.supabase.co/functions/v1';
+  var LIVRO_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5ZmxscmNkcmN2amltendiZnNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNzQ4NzUsImV4cCI6MjA5Nzg1MDg3NX0.nHgqNJnfWQW5BTfEWQTK92LRPLqNadiC-xios5zN4_A';
+  function headersLivro() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + LIVRO_ANON_KEY }; }
 
   var SESSION_KEY = 'gss_req_session';
   var SESSION_MAX_AGE = 8 * 60 * 60 * 1000; // 8 horas
@@ -488,6 +496,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   window.sair = function() {
     localStorage.removeItem(SESSION_KEY);
     window.GSSSessao.limpar();
+    window.GSSLogin.esquecer();
     usuarioLogado = null;
     podeAlternar = false;
     document.getElementById('app-shell').classList.remove('active');
@@ -506,18 +515,19 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 
   // ─── LOGIN ────────────────────────────────────────────────────────────
   window.fazerLogin = async function() {
-    var login = document.getElementById('login-input').value.trim();
     var senha = document.getElementById('senha-input').value;
     var errEl = document.getElementById('login-erro');
     errEl.style.display = 'none';
-    if (!login || !senha) { errEl.textContent = 'Preencha login e senha.'; errEl.style.display = 'block'; return; }
+    // Login único: empresa + RE (ou o login antigo, na transição) — gss-login.js.
+    var pedido = window.GSSLogin.corpo(senha);
+    if (pedido.erro) { errEl.textContent = pedido.erro; errEl.style.display = 'block'; return; }
 
     var btn = document.getElementById('btn-login');
     btn.disabled = true; btn.textContent = 'Entrando...';
     try {
-      var resp = await fetch(SUPABASE_EDGE + '/auth-form', {
-        method: 'POST', headers: headersJson(),
-        body: JSON.stringify({ action: 'login', login: login, senha: senha })
+      var resp = await fetch(LIVRO_EDGE + '/auth-form', {
+        method: 'POST', headers: headersLivro(),
+        body: JSON.stringify(pedido.body)
       });
       var body = await resp.json();
       btn.disabled = false; btn.textContent = 'Entrar';
@@ -526,10 +536,16 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
         errEl.style.display = 'block';
         return;
       }
+      if (!window.GSSLogin.tem(body.user, 'requisicoes')) {
+        errEl.textContent = 'Seu acesso não inclui as Requisições. Fale com a supervisão.';
+        errEl.style.display = 'block';
+        return;
+      }
       usuarioLogado = body.user;
       window.GSSSessao.definir(body.token);
+      window.GSSLogin.lembrarUsuario(body.user);
+      podeAlternar = window.GSSLogin.tem(body.user, 'livro') || window.GSSLogin.tem(body.user, 'ronda');
       salvarSessao();
-      verificarAcessoOutroSistema();
       if (window.GSSReqFila) window.GSSReqFila.processar();
       if (usuarioLogado.primeiro_acesso) {
         document.getElementById('login-screen').style.display = 'none';
@@ -553,13 +569,14 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     if (nova !== conf) { errEl.textContent = 'As senhas não coincidem.'; errEl.style.display = 'block'; return; }
 
     try {
-      var resp = await fetch(SUPABASE_EDGE + '/auth-form', {
-        method: 'POST', headers: headersJson(),
+      var resp = await fetch(LIVRO_EDGE + '/auth-form', {
+        method: 'POST', headers: headersLivro(),
         body: JSON.stringify({ action: 'trocar-senha', id_acesso: usuarioLogado.id, nova_senha: nova })
       });
       var body = await resp.json();
       if (!resp.ok || body.error) { errEl.textContent = body.error || 'Erro ao trocar senha.'; errEl.style.display = 'block'; return; }
       usuarioLogado.primeiro_acesso = false;
+      window.GSSLogin.lembrarUsuario(usuarioLogado);
       salvarSessao();
       document.getElementById('trocar-senha-screen').classList.remove('active');
       entrarNoApp();
@@ -1768,6 +1785,15 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   // ─── INICIALIZAÇÃO ────────────────────────────────────────────────────
   if (restaurarSessao()) {
     entrarNoApp();
+  } else {
+    // App GSS Legion: quem já entrou pelo Livro abre as Requisições direto.
+    var lembrado = window.GSSLogin.usuarioLembrado();
+    if (lembrado && window.GSSSessao.token() && window.GSSLogin.tem(lembrado, 'requisicoes') && !lembrado.primeiro_acesso) {
+      usuarioLogado = lembrado;
+      podeAlternar = window.GSSLogin.tem(lembrado, 'livro') || window.GSSLogin.tem(lembrado, 'ronda');
+      salvarSessao();
+      entrarNoApp();
+    }
   }
 })();
 </script>

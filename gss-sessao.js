@@ -17,7 +17,9 @@
   'use strict';
 
   var tag = document.currentScript;
-  var EDGE = (tag && tag.getAttribute('data-edge')) || '';
+  // data-edge aceita mais de um endereço separado por espaço (login único:
+  // Requisições fala com as funções do Livro e com as suas).
+  var EDGES = ((tag && tag.getAttribute('data-edge')) || '').split(/\s+/).filter(Boolean);
   var CHAVE = (tag && tag.getAttribute('data-chave')) || 'gss_token';
   var memoria = '';
   var expirando = false;
@@ -27,7 +29,7 @@
   }
 
   function ehDoProjeto(url) {
-    return !!EDGE && typeof url === 'string' && url.indexOf(EDGE) === 0;
+    return typeof url === 'string' && EDGES.some(function(e) { return url.indexOf(e) === 0; });
   }
 
   function expirou() {
