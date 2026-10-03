@@ -160,6 +160,35 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 .unif-selo.fila{background:var(--warning-bg);color:#a35a00}
 .unif-obs{margin-top:8px;font-size:12px;padding:6px 8px;border-radius:6px;background:var(--bg);color:var(--text2)}
 .dd-painel .sig-wrap{margin-top:6px}
+/* ─── DOCUMENTOS PARA ASSINAR ─── */
+.nav-cont{margin-left:auto;margin-right:10px;min-width:20px;height:18px;padding:0 6px;border-radius:999px;background:var(--accent-600,#c8242b);color:#fff;font-size:10.5px;font-weight:600;display:none;align-items:center;justify-content:center}
+.nav-cont.on{display:inline-flex}
+.app-sidebar:not(:hover) .nav-cont.on{position:absolute;left:34px;top:4px;margin:0;min-width:16px;height:16px;padding:0 4px}
+.app-nav-item{position:relative}
+.doc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:10px;cursor:pointer}
+.doc-card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.doc-card-tit{font-weight:600;font-size:14px;color:var(--text)}
+.doc-card-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.doc-barra{height:6px;border-radius:3px;background:var(--bg);overflow:hidden;margin-top:10px}
+.doc-barra div{height:100%;background:var(--success)}
+.doc-instr{background:var(--primary-light);color:var(--primary);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;margin-bottom:12px}
+.doc-paginas{display:flex;flex-direction:column;align-items:center;gap:14px;padding-bottom:90px}
+.doc-pg{position:relative;background:#fff;box-shadow:var(--shadow-md);max-width:100%}
+.doc-pg canvas{display:block;width:100%;height:auto}
+.doc-pg-num{font-size:11px;color:var(--text3);text-align:center;margin-bottom:4px}
+.doc-campo{position:absolute;border:2px solid var(--primary);background:rgba(31,47,122,.12);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;animation:doc-pulso 1.6s ease-in-out infinite}
+.doc-campo.livre{border-style:dashed;border-color:var(--success);background:rgba(29,122,70,.12)}
+.doc-campo.ok{border:1px solid var(--success);background:rgba(29,122,70,.08);animation:none;cursor:default}
+.doc-campo.fila{border:1px dashed #a35a00;background:rgba(245,158,11,.12);animation:none;cursor:default}
+.doc-campo span{font-size:10.5px;font-weight:600;line-height:1.15;color:var(--primary);padding:1px 4px;text-align:center;overflow:hidden;max-height:100%}
+.doc-campo.livre span{color:var(--success)}
+.doc-campo.ok span{color:var(--success)}
+.doc-campo.fila span{color:#a35a00}
+@keyframes doc-pulso{50%{box-shadow:0 0 0 4px rgba(31,47,122,.15)}}
+.doc-rodape{position:fixed;left:calc(var(--sb-mini,56px) + var(--sb-gap,12px) * 2);right:0;bottom:0;padding:12px 16px;background:var(--card);border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;z-index:40}
+.doc-rodape .btn{width:auto;flex:1}
+.doc-rodape-info{font-size:12.5px;color:var(--text2);flex:1}
+.dd-painel #sigCanvas{height:200px}
 
 .empty-state{text-align:center;padding:60px 20px;color:var(--text2)}
 .empty-state .ic{color:var(--text3);margin-bottom:10px;display:flex;justify-content:center}
@@ -244,6 +273,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
       <div class="app-nav-item active" id="nav-materiais" onclick="irParaMeusPedidos()"></div>
       <div class="app-nav-item" id="nav-uniformes" onclick="irParaUniformes()"></div>
       <div class="app-nav-item" id="nav-epi" onclick="irParaEpiInicio()"></div>
+      <div class="app-nav-item" id="nav-docs" onclick="irParaDocumentos()"></div>
     </nav>
     <div class="app-sidebar-footer">
       <div class="app-user">
@@ -337,11 +367,12 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   var unifPedidos = [];    // pedidos do posto (servidor + fila)
 
   // Redesenha o formulário que está usando a busca de colaborador.
-  function renderColabTela() { if (colabModo === 'unif') renderUnifForm(); else renderEpiForm(); }
+  function renderColabTela() { if (colabModo === 'unif') renderUnifForm(); else if (colabModo === 'doc') renderPainelDocColab(); else renderEpiForm(); }
 
   document.getElementById('nav-materiais').innerHTML = '<span class="ico-wrap">' + icon('package', 17) + '</span><span class="lbl">Requisição de Materiais</span>';
   document.getElementById('nav-uniformes').innerHTML = '<span class="ico-wrap">' + icon('shirt', 17) + '</span><span class="lbl">Requisição de Uniformes</span>';
   document.getElementById('nav-epi').innerHTML = '<span class="ico-wrap">' + icon('shield', 17) + '</span><span class="lbl">Formulário de EPI</span>';
+  document.getElementById('nav-docs').innerHTML = '<span class="ico-wrap">' + icon('edit', 17) + '</span><span class="lbl">Documentos para assinar</span><span class="nav-cont" id="nav-docs-cont"></span>';
   document.getElementById('btn-switch-app').innerHTML = '<span class="ico-wrap">' + icon('repeat', 15) + '</span><span class="lbl">Ir para Livro de Ocorrências</span>';
   document.getElementById('btn-logout').innerHTML = icon('log-out', 14) + '<span class="lbl">Sair</span>';
   document.getElementById('pw-eye-toggle').innerHTML = icon('eye', 17);
@@ -532,11 +563,13 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     document.getElementById('sidebar-avatar').textContent = (usuarioLogado.nome || '?').trim().charAt(0).toUpperCase();
     document.getElementById('btn-switch-app').classList.toggle('hidden', !podeAlternar);
     irParaMeusPedidos();
+    atualizarContagemDocs();
   }
 
   function setNavAtivo(id) {
     if (typeof fecharPainelUnif === 'function') fecharPainelUnif();
-    ['nav-materiais', 'nav-uniformes', 'nav-epi'].forEach(function(n) {
+    if (typeof fecharPainelDoc === 'function') fecharPainelDoc();
+    ['nav-materiais', 'nav-uniformes', 'nav-epi', 'nav-docs'].forEach(function(n) {
       document.getElementById(n).classList.toggle('active', n === id);
     });
   }
@@ -1377,6 +1410,331 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
       '<button class="btn btn-primary" style="max-width:260px" onclick="irParaUniformes()">Ver pedidos de uniforme</button></div>';
   }
   document.addEventListener('keydown', function(e) { if (e.key === 'Escape') fecharPainelUnif(); });
+
+  // ─── DOCUMENTOS PARA ASSINAR ─────────────────────────────────────────
+  // PDF enviado pelo desktop com os campos de assinatura marcados. O líder abre
+  // o documento, toca no campo, confirma o colaborador e ele assina; a próxima
+  // assinatura abre sozinha. Sem internet: o PDF já aberto fica guardado no
+  // celular e as assinaturas vão pela fila. Backend: req-documentos.
+  var CAT_DOC = { disciplinar: 'Medida disciplinar', treinamento: 'Treinamento', comprovante: 'Comprovante / entrega', outros: 'Documento' };
+  var docsPosto = [], docAtual = null, docCampoId = null;
+
+  function chamarDocs(corpo) {
+    return fetch(SUPABASE_EDGE + '/req-documentos', { method: 'POST', headers: headersJson(), body: JSON.stringify(corpo) })
+      .then(function(r) { return r.json().then(function(b) { if (!r.ok || b.error) throw Object.assign(new Error(b.error || ('Erro ' + r.status)), { status: r.status }); return b; }); });
+  }
+
+  // PDF guardado no aparelho (IndexedDB) para abrir sem internet.
+  function idbDocs() {
+    return new Promise(function(ok) {
+      try {
+        var rq = indexedDB.open('gss-req-docs', 1);
+        rq.onupgradeneeded = function() { rq.result.createObjectStore('pdf'); };
+        rq.onsuccess = function() { ok(rq.result); };
+        rq.onerror = function() { ok(null); };
+      } catch (e) { ok(null); }
+    });
+  }
+  function pdfGuardar(id, bytes) {
+    return idbDocs().then(function(db) { if (!db) return; return new Promise(function(ok) { var tx = db.transaction('pdf', 'readwrite'); tx.objectStore('pdf').put(bytes, id); tx.oncomplete = ok; tx.onerror = ok; }); });
+  }
+  function pdfLer(id) {
+    return idbDocs().then(function(db) { if (!db) return null; return new Promise(function(ok) { var rq = db.transaction('pdf', 'readonly').objectStore('pdf').get(id); rq.onsuccess = function() { ok(rq.result || null); }; rq.onerror = function() { ok(null); }; }); });
+  }
+  function pdfLimpar(idsValidos) {
+    return idbDocs().then(function(db) {
+      if (!db) return;
+      var st = db.transaction('pdf', 'readwrite').objectStore('pdf');
+      var rq = st.getAllKeys ? st.getAllKeys() : null;
+      if (rq) rq.onsuccess = function() { (rq.result || []).forEach(function(k) { if (idsValidos.indexOf(k) < 0) st.delete(k); }); };
+    });
+  }
+
+  var _pdfjs = null;
+  function carregarPdfjs() {
+    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    if (_pdfjs) return _pdfjs;
+    _pdfjs = new Promise(function(ok, falha) {
+      var sc = document.createElement('script');
+      sc.src = 'lib/pdf.min.js';
+      sc.onload = function() { window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'lib/pdf.worker.min.js'; ok(window.pdfjsLib); };
+      sc.onerror = function() { _pdfjs = null; falha(new Error('não foi possível carregar o leitor de PDF')); };
+      document.head.appendChild(sc);
+    });
+    return _pdfjs;
+  }
+
+  // Assinaturas feitas sem internet ainda na fila entram como "na fila".
+  async function mesclarFilaDocs(lista) {
+    var ops = await GSSReqFila.listar();
+    ops.forEach(function(op) {
+      if (op.tipo !== 'doc-assinatura') return;
+      var d = lista.find(function(x) { return x.id === op.corpo.documento_id; });
+      if (d && !(d.assinaturas || []).some(function(a) { return a.campo_id === op.corpo.campo_id; })) {
+        d.assinaturas = (d.assinaturas || []).concat([{ campo_id: op.corpo.campo_id, re: op.corpo.re, nome: op.corpo.nome, assinado_em: op.corpo.assinado_em, _fila: true }]);
+      }
+    });
+    return lista;
+  }
+
+  function faltam(d) { return (d.campos || []).length - (d.assinaturas || []).length; }
+
+  async function atualizarContagemDocs() {
+    try {
+      var b = await chamarDocs({ action: 'listar-posto', posto: usuarioLogado.posto });
+      GSSReqCache.set('docs_' + usuarioLogado.posto, b.documentos || []);
+      docsPosto = await mesclarFilaDocs(b.documentos || []);
+    } catch (e) { docsPosto = await mesclarFilaDocs(GSSReqCache.get('docs_' + usuarioLogado.posto) || []); }
+    var n = docsPosto.filter(function(d) { return d.status === 'aberto' && faltam(d) > 0; }).length;
+    var el = document.getElementById('nav-docs-cont');
+    if (el) { el.textContent = n; el.classList.toggle('on', n > 0); }
+  }
+
+  window.irParaDocumentos = async function() {
+    colabModo = 'doc';
+    setNavAtivo('nav-docs');
+    setTopbar('Documentos para assinar', false);
+    fecharPainelDoc();
+    docAtual = null;
+    var el = document.getElementById('app-content');
+    el.innerHTML = '<div class="empty-state">Carregando documentos...</div>';
+    var usandoCopia = false, erro = null;
+    try {
+      var b = await chamarDocs({ action: 'listar-posto', posto: usuarioLogado.posto });
+      docsPosto = b.documentos || [];
+      GSSReqCache.set('docs_' + usuarioLogado.posto, docsPosto);
+      pdfLimpar(docsPosto.map(function(d) { return d.id; }));
+    } catch (e) {
+      var copia = !e.status || e.status >= 500 ? GSSReqCache.get('docs_' + usuarioLogado.posto) : null;
+      if (copia) { docsPosto = copia; usandoCopia = true; } else { docsPosto = []; erro = e.message; }
+    }
+    docsPosto = await mesclarFilaDocs(docsPosto);
+    var n = docsPosto.filter(function(d) { return d.status === 'aberto' && faltam(d) > 0; }).length;
+    var cont = document.getElementById('nav-docs-cont');
+    if (cont) { cont.textContent = n; cont.classList.toggle('on', n > 0); }
+
+    var html = avisoRecusadas() +
+      (usandoCopia ? '<div class="err-box" style="display:block">' + icon('wifi-off', 14) + ' Sem internet — mostrando a última cópia. Só abrem os documentos já abertos antes neste celular.</div>' : '') +
+      (erro ? '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' Não foi possível carregar os documentos (' + escapeHtml(erro) + ').</div>' : '');
+    if (!docsPosto.length && !erro) {
+      html += '<div class="empty-state"><div class="ic">' + icon('check-circle', 40) + '</div>Nenhum documento para assinar.<br/>Quando a sede enviar, ele aparece aqui.</div>';
+    }
+    docsPosto.forEach(function(d) {
+      var tot = (d.campos || []).length, feitas = (d.assinaturas || []).length;
+      var completo = feitas >= tot;
+      var vencido = d.prazo && d.prazo < new Date().toISOString().slice(0, 10);
+      html += '<div class="doc-card" onclick="abrirDocumento(\'' + d.id + '\')">' +
+        '<div class="doc-card-top"><div><div class="doc-card-tit">' + escapeHtml(d.titulo) + '</div>' +
+        '<div class="doc-card-sub">' + escapeHtml(CAT_DOC[d.categoria] || 'Documento') + (d.prazo ? ' · prazo ' + dataCurta(d.prazo + 'T12:00:00') : '') + '</div></div>' +
+        (completo ? '<span class="unif-selo aprovado">Completo</span>' : vencido ? '<span class="unif-selo recusado">Prazo vencido</span>' : '<span class="unif-selo pendente">' + (tot - feitas) + ' pendente' + (tot - feitas > 1 ? 's' : '') + '</span>') + '</div>' +
+        '<div class="doc-barra"><div style="width:' + (tot ? Math.round(feitas / tot * 100) : 0) + '%"></div></div>' +
+        '<div class="doc-card-sub" style="margin-top:6px">' + feitas + ' de ' + tot + ' assinatura' + (tot > 1 ? 's' : '') + (completo ? ' — aguardando a sede finalizar' : '') + '</div></div>';
+    });
+    el.innerHTML = html;
+  };
+
+  window.abrirDocumento = async function(id) {
+    var d = docsPosto.find(function(x) { return x.id === id; });
+    if (!d) return;
+    docAtual = d;
+    colabModo = 'doc';
+    setTopbar(d.titulo, true, function() { irParaDocumentos(); });
+    var el = document.getElementById('app-content');
+    el.innerHTML = '<div class="empty-state">Abrindo o documento...</div>';
+    var bytes = null;
+    try {
+      var b = await chamarDocs({ action: 'abrir', id: id, posto: usuarioLogado.posto });
+      var r = await fetch(b.pdf_url);
+      if (!r.ok) throw new Error('Erro ' + r.status);
+      bytes = new Uint8Array(await r.arrayBuffer());
+      pdfGuardar(id, bytes);
+    } catch (e) {
+      if (e.status && e.status < 500) { el.innerHTML = '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' ' + escapeHtml(e.message) + '</div>'; return; }
+      bytes = await pdfLer(id);
+      if (!bytes) { el.innerHTML = '<div class="err-box" style="display:block">' + icon('wifi-off', 14) + ' Sem internet e este documento ainda não foi aberto neste celular. Conecte-se uma vez para baixá-lo.</div>'; return; }
+    }
+    try {
+      var pdfjs = await carregarPdfjs();
+      var pdf = await pdfjs.getDocument({ data: bytes.slice() }).promise;
+      el.innerHTML = (d.instrucoes ? '<div class="doc-instr">' + icon('edit', 13) + ' ' + escapeHtml(d.instrucoes) + '</div>' : '') +
+        '<div class="doc-paginas" id="doc-paginas"></div>' +
+        '<div class="doc-rodape" id="doc-rodape"></div>';
+      var box = document.getElementById('doc-paginas');
+      var largura = Math.min(box.clientWidth, 820);
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      for (var n = 1; n <= pdf.numPages; n++) {
+        var page = await pdf.getPage(n);
+        var vp1 = page.getViewport({ scale: 1 });
+        var vp = page.getViewport({ scale: largura / vp1.width * dpr });
+        var num = document.createElement('div');
+        num.className = 'doc-pg-num'; num.textContent = 'Página ' + n + ' de ' + pdf.numPages;
+        var pg = document.createElement('div');
+        pg.className = 'doc-pg'; pg.dataset.pagina = n; pg.style.width = largura + 'px';
+        var cv = document.createElement('canvas');
+        cv.width = vp.width; cv.height = vp.height;
+        pg.appendChild(cv);
+        var wrap = document.createElement('div');
+        wrap.appendChild(num); wrap.appendChild(pg);
+        box.appendChild(wrap);
+        await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+      }
+      desenharCamposDoc();
+    } catch (e) {
+      el.innerHTML = '<div class="err-box" style="display:block">' + icon('alert-triangle', 14) + ' Não foi possível mostrar o PDF: ' + escapeHtml(e.message) + '</div>';
+    }
+  };
+
+  function assinaturaDoCampo(campoId) {
+    return (docAtual.assinaturas || []).find(function(a) { return a.campo_id === campoId; });
+  }
+  function proximoCampoLivre(depoisDe) {
+    var cs = docAtual.campos || [];
+    var ini = depoisDe ? cs.findIndex(function(c) { return c.id === depoisDe; }) + 1 : 0;
+    for (var k = 0; k < cs.length; k++) {
+      var c = cs[(ini + k) % cs.length];
+      if (!assinaturaDoCampo(c.id)) return c;
+    }
+    return null;
+  }
+
+  function desenharCamposDoc() {
+    if (!docAtual) return;
+    document.querySelectorAll('.doc-pg').forEach(function(pg) {
+      pg.querySelectorAll('.doc-campo').forEach(function(x) { x.remove(); });
+      var n = Number(pg.dataset.pagina);
+      (docAtual.campos || []).forEach(function(c, i) {
+        if (c.pagina !== n) return;
+        var a = assinaturaDoCampo(c.id);
+        var div = document.createElement('div');
+        div.className = 'doc-campo' + (a ? (a._fila ? ' fila' : ' ok') : (c.re ? '' : ' livre'));
+        div.style.left = (c.x * 100) + '%'; div.style.top = (c.y * 100) + '%';
+        div.style.width = (c.w * 100) + '%'; div.style.height = (c.h * 100) + '%';
+        div.innerHTML = '<span>' + (a ? (a._fila ? '⏳ ' : '✓ ') + escapeHtml(a.nome) : (i + 1) + '. ' + (c.re ? escapeHtml(c.nome || '') : 'Toque para assinar')) + '</span>';
+        if (!a && docAtual.status === 'aberto') div.onclick = function() { abrirCampoDoc(c.id); };
+        pg.appendChild(div);
+      });
+    });
+    var tot = (docAtual.campos || []).length, feitas = (docAtual.assinaturas || []).length;
+    var rod = document.getElementById('doc-rodape');
+    if (rod) {
+      var prox = docAtual.status === 'aberto' ? proximoCampoLivre() : null;
+      rod.innerHTML = '<div class="doc-rodape-info"><b>' + feitas + ' de ' + tot + '</b> assinatura' + (tot > 1 ? 's' : '') + '</div>' +
+        (prox ? '<button class="btn btn-primary" onclick="abrirCampoDoc(\'' + prox.id + '\')">' + icon('edit', 15) + ' ' + (feitas ? 'Próxima assinatura' : 'Começar a colher') + '</button>'
+          : '<span class="unif-selo aprovado">' + (docAtual.status === 'aberto' ? 'Todas colhidas' : 'Completo') + '</span>');
+    }
+  }
+
+  function fecharPainelDoc() {
+    var el = document.getElementById('doc-painel');
+    if (el) el.remove();
+  }
+  window.fecharPainelDoc = fecharPainelDoc;
+
+  window.abrirCampoDoc = function(campoId) {
+    var c = (docAtual.campos || []).find(function(x) { return x.id === campoId; });
+    if (!c || assinaturaDoCampo(campoId)) return;
+    docCampoId = campoId;
+    colabModo = 'doc';
+    if (c.re) {
+      epiColaborador = { re: c.re, nome: c.nome || '', filial: c.filial || '' };
+      epiEmpresaFilial = c.filial || '';
+    } else {
+      epiColaborador = null;
+      epiColabResultados = [];
+      ['01', '02'].forEach(baixarColaboradores);
+    }
+    var idx = (docAtual.campos || []).indexOf(c) + 1, tot = (docAtual.campos || []).length;
+    var html = '<div class="dd-fundo" onclick="fecharPainelDoc()"></div><aside class="dd-painel" role="dialog" aria-label="Assinatura">' +
+      '<div class="dd-cab"><div><div class="dd-nome">Assinatura ' + idx + ' de ' + tot + '</div>' +
+      '<div class="dd-sub">' + escapeHtml(docAtual.titulo) + '</div></div>' +
+      '<button class="dd-fechar" onclick="fecharPainelDoc()" aria-label="Fechar">' + icon('x', 16) + '</button></div>' +
+      '<div class="dd-corpo" id="doc-painel-corpo"></div>' +
+      '<div class="dd-rodape"><button class="btn btn-outline" onclick="fecharPainelDoc()">Fechar</button><button class="btn btn-primary" id="btn-assinar-doc" onclick="confirmarAssinaturaDoc()">' + icon('check-circle', 15) + ' Confirmar assinatura</button></div>' +
+      '</aside>';
+    fecharPainelDoc();
+    var div = document.createElement('div');
+    div.id = 'doc-painel';
+    div.innerHTML = html;
+    document.body.appendChild(div);
+    renderPainelDocColab();
+  };
+
+  // Corpo do painel: colaborador (fixo do campo ou escolhido na busca) + assinatura.
+  function renderPainelDocColab() {
+    var corpo = document.getElementById('doc-painel-corpo');
+    if (!corpo || !docAtual) return;
+    var c = (docAtual.campos || []).find(function(x) { return x.id === docCampoId; });
+    var btn = document.getElementById('btn-assinar-doc');
+    if (!epiColaborador) {
+      corpo.innerHTML = '<div class="err-box" id="doc-err"></div><div class="dd-lbl" style="margin-bottom:8px">Quem vai assinar?</div>' + colabBuscaHtml();
+      if (btn) btn.disabled = true;
+      return;
+    }
+    var jaAssinou = !c.re && (docAtual.assinaturas || []).some(function(a) { return a.re && String(a.re).replace(/^0+/, '') === String(epiColaborador.re).replace(/^0+/, ''); });
+    corpo.innerHTML = '<div class="err-box" id="doc-err"' + (jaAssinou ? ' style="display:block"' : '') + '>' + (jaAssinou ? icon('alert-triangle', 14) + ' ' + escapeHtml(epiColaborador.nome) + ' já assinou este documento.' : '') + '</div>' +
+      '<div class="hist-card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+        '<div><div style="font-size:11px;color:var(--text3)">RE ' + escapeHtml(epiColaborador.re) + '</div><div style="font-weight:600;color:var(--text)">' + escapeHtml(epiColaborador.nome) + '</div></div>' +
+        (c.re ? '' : '<button class="btn btn-outline" style="width:auto;padding:8px 12px" onclick="limparColaboradorEpi()">' + icon('x', 14) + ' Trocar</button>') + '</div>' +
+      '<div class="dd-lbl">Entregue o celular para <b>' + escapeHtml(epiColaborador.nome) + '</b> assinar abaixo</div>' +
+      '<div class="sig-wrap"><canvas id="sigCanvas"></canvas></div>' +
+      '<button class="btn btn-outline" style="margin-top:8px" onclick="limparAssinatura()">' + icon('rotate-ccw', 14) + ' Limpar assinatura</button>';
+    if (btn) btn.disabled = jaAssinou;
+    initSignature();
+  }
+
+  function posicaoAtual() {
+    return new Promise(function(ok) {
+      if (!navigator.geolocation) return ok(null);
+      var feito = false;
+      setTimeout(function() { if (!feito) { feito = true; ok(null); } }, 4000);
+      navigator.geolocation.getCurrentPosition(function(p) { if (!feito) { feito = true; ok(p.coords); } }, function() { if (!feito) { feito = true; ok(null); } }, { enableHighAccuracy: true, timeout: 4000, maximumAge: 60000 });
+    });
+  }
+
+  window.confirmarAssinaturaDoc = async function() {
+    var errEl = document.getElementById('doc-err');
+    function erro(m) { errEl.innerHTML = icon('alert-triangle', 14) + ' ' + m; errEl.style.display = 'block'; }
+    if (!epiColaborador) return erro('Escolha o colaborador.');
+    if (sig.empty) return erro('O colaborador precisa assinar antes de confirmar.');
+    var btn = document.getElementById('btn-assinar-doc');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    var gps = await posicaoAtual();
+    var agora = new Date().toISOString();
+    var campoId = docCampoId, colab = epiColaborador;
+    try {
+      var r = await GSSReqFila.enviar({
+        tipo: 'doc-assinatura',
+        rotulo: 'Assinatura de ' + colab.nome + ' em "' + docAtual.titulo + '"',
+        url: SUPABASE_EDGE + '/req-documentos',
+        headers: headersJson(),
+        corpo: {
+          action: 'assinar', id: uuid(), documento_id: docAtual.id, campo_id: campoId,
+          re: colab.re, nome: colab.nome, filial: colab.filial || epiEmpresaFilial || '',
+          posto: usuarioLogado.posto, id_acesso: usuarioLogado.id, coletado_por: usuarioLogado.nome,
+          assinatura: sig.canvas.toDataURL('image/png'), assinado_em: agora,
+          lat: gps ? gps.latitude : null, lng: gps ? gps.longitude : null, precisao: gps ? gps.accuracy : null,
+          dispositivo: (navigator.userAgent || '').slice(0, 180)
+        }
+      });
+      docAtual.assinaturas = (docAtual.assinaturas || []).concat([{ campo_id: campoId, re: colab.re, nome: colab.nome, assinado_em: agora, _fila: !!r.enfileirado }]);
+      fecharPainelDoc();
+      desenharCamposDoc();
+      var prox = proximoCampoLivre(campoId);
+      if (prox) setTimeout(function() { abrirCampoDoc(prox.id); }, 350);
+      else mostrarConcluidoDoc(!!r.enfileirado);
+    } catch (e) {
+      btn.disabled = false; btn.innerHTML = icon('check-circle', 15) + ' Confirmar assinatura';
+      erro(escapeHtml(e.message || 'Erro ao enviar.'));
+    }
+  };
+
+  function mostrarConcluidoDoc(naFila) {
+    var rod = document.getElementById('doc-rodape');
+    if (rod) rod.innerHTML = '<div class="doc-rodape-info">' + icon(naFila ? 'clock' : 'check-circle', 16) + ' <b>Todas as assinaturas colhidas.</b> ' +
+      (naFila ? 'Serão enviadas quando a internet voltar.' : 'A sede vai finalizar o documento.') + '</div>' +
+      '<button class="btn btn-primary" onclick="irParaDocumentos()">Voltar aos documentos</button>';
+  }
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') fecharPainelDoc(); });
 
   function mostrarSucessoEpi(naFila) {
     setTopbar(naFila ? 'Entrega Guardada' : 'Entrega Registrada', false);
