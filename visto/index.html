@@ -40,7 +40,7 @@
     .form-field input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);font-family:inherit}
     .form-field input:focus{outline:none;border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(30,94,255,.12)}
     .assinatura-wrap{border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
-    .assinatura-wrap canvas{width:100%;height:220px;touch-action:none;cursor:crosshair;display:block}
+    .assinatura-wrap canvas{width:100%;height:200px;touch-action:manipulation;cursor:pointer;display:block}
     .assinatura-actions{display:flex;justify-content:flex-end;margin-top:6px}
     .link-limpar{background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;text-decoration:underline}
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 20px;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;margin-top:6px}
@@ -49,6 +49,7 @@
     .icone-topo{text-align:center;font-size:40px;margin-bottom:8px}
   </style>
   <link rel="stylesheet" href="../gss-web.css"/>
+  <script src="../gss-assinatura.js"></script>
 </head>
 <body>
 
@@ -189,53 +190,19 @@
     });
   }
 
+  // Componente compartilhado (../gss-assinatura.js): tela cheia na horizontal.
+  var assinaturaCtrl = null;
   function initAssinatura() {
     assinaturaCanvas = document.getElementById('assinatura-canvas');
-    assinaturaCtx = assinaturaCanvas.getContext('2d');
     assinaturaTemPixels = false;
-    assinaturaCtx.strokeStyle = '#000';
-    assinaturaCtx.lineWidth = 4;
-    assinaturaCtx.lineCap = 'round';
-    assinaturaCtx.lineJoin = 'round';
-    assinaturaCtx.fillStyle = '#fff';
-    assinaturaCtx.fillRect(0, 0, assinaturaCanvas.width, assinaturaCanvas.height);
-    assinaturaCanvas.onpointerdown = onAssinaturaStart;
-    assinaturaCanvas.onpointermove = onAssinaturaMove;
-    assinaturaCanvas.onpointerup = onAssinaturaEnd;
-    assinaturaCanvas.onpointerleave = onAssinaturaEnd;
+    assinaturaCtrl = GSSAssinatura.ligar(assinaturaCanvas, {
+      titulo: 'Rubrica do dia', fundo: '#fff',
+      aoMudar: function(url) { assinaturaTemPixels = !!url; }
+    });
   }
-
-  function getCanvasPos(e) {
-    var rect = assinaturaCanvas.getBoundingClientRect();
-    return { x: (e.clientX - rect.left) * (assinaturaCanvas.width / rect.width), y: (e.clientY - rect.top) * (assinaturaCanvas.height / rect.height) };
-  }
-
-  function onAssinaturaStart(e) {
-    assinaturaDesenhando = true;
-    var pos = getCanvasPos(e);
-    assinaturaCtx.beginPath();
-    assinaturaCtx.arc(pos.x, pos.y, assinaturaCtx.lineWidth / 2, 0, Math.PI * 2);
-    assinaturaCtx.fill();
-    assinaturaCtx.beginPath();
-    assinaturaCtx.moveTo(pos.x, pos.y);
-  }
-
-  function onAssinaturaMove(e) {
-    if (!assinaturaDesenhando) return;
-    var pos = getCanvasPos(e);
-    assinaturaCtx.lineTo(pos.x, pos.y);
-    assinaturaCtx.stroke();
-    assinaturaCtx.beginPath();
-    assinaturaCtx.moveTo(pos.x, pos.y);
-    assinaturaTemPixels = true;
-  }
-
-  function onAssinaturaEnd() { assinaturaDesenhando = false; }
 
   window.limparAssinatura = function() {
-    if (!assinaturaCtx) return;
-    assinaturaCtx.fillStyle = '#fff';
-    assinaturaCtx.fillRect(0, 0, assinaturaCanvas.width, assinaturaCanvas.height);
+    if (assinaturaCtrl) assinaturaCtrl.limpar();
     assinaturaTemPixels = false;
   };
 
@@ -253,7 +220,7 @@
     var btnTextoOriginal = btn.textContent;
     btn.textContent = 'Enviando...';
 
-    var assinatura = assinaturaCanvas.toDataURL('image/png');
+    var assinatura = assinaturaCtrl.url();
 
     fetch(SUPABASE_EDGE + '/visto-diario', {
       method: 'POST',

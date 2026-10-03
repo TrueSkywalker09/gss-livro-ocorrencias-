@@ -267,7 +267,7 @@
     /* ─── ASSINATURA ─── */
     .assinar-screen{flex-direction:column;width:100%;max-width:600px;margin:0 auto}
     .assinatura-canvas-wrap{border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#fff}
-    .assinatura-canvas-wrap canvas{width:100%;height:280px;touch-action:none;cursor:crosshair;display:block}
+    .assinatura-canvas-wrap canvas{width:100%;height:200px;touch-action:manipulation;cursor:pointer;display:block}
 
     /* ─── DETALHE ─── */
     .detalhe-screen{flex-direction:column;width:100%;max-width:760px;margin:0 auto}
@@ -335,6 +335,7 @@
   </style>
   <link rel="stylesheet" href="ronda.css"/>
   <link rel="stylesheet" href="gss-web.css"/>
+  <script src="gss-assinatura.js"></script>
 </head>
 <body>
 
@@ -826,7 +827,7 @@
       <div class="assinatura-canvas-wrap">
         <canvas id="assinatura-canvas" width="920" height="400"></canvas>
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-top:4px">Assine com o mouse (desktop) ou dedo/caneta (mobile)</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">Toque na caixa para assinar em tela cheia</div>
     </div>
     <div id="assinar-erro" class="alert alert-error" style="display:none"></div>
     <div style="margin-top:12px">
@@ -2449,55 +2450,22 @@
     showScreen('assinar-screen');
   }
 
+  // Componente compartilhado (gss-assinatura.js): a caixa é a prévia; tocar
+  // abre a tela cheia na horizontal com linha de apoio. Fundo branco, como antes.
+  var assinaturaCtrl = null;
   function initAssinatura() {
     assinaturaCanvas = document.getElementById('assinatura-canvas');
-    assinaturaCtx = assinaturaCanvas.getContext('2d');
-    assinaturaTemPixels = false;
     assinaturaAtual = null;
-    assinaturaCtx.strokeStyle = '#000';
-    assinaturaCtx.lineWidth = 4;
-    assinaturaCtx.lineCap = 'round';
-    assinaturaCtx.lineJoin = 'round';
-    assinaturaCtx.fillStyle = '#fff';
-    assinaturaCtx.fillRect(0, 0, assinaturaCanvas.width, assinaturaCanvas.height);
-    assinaturaCanvas.onpointerdown = onAssinaturaStart;
-    assinaturaCanvas.onpointermove = onAssinaturaMove;
-    assinaturaCanvas.onpointerup = onAssinaturaEnd;
-    assinaturaCanvas.onpointerleave = onAssinaturaEnd;
+    assinaturaTemPixels = false;
+    assinaturaCtrl = GSSAssinatura.ligar(assinaturaCanvas, {
+      titulo: 'Sua assinatura', fundo: '#fff',
+      aoMudar: function(url) { assinaturaTemPixels = !!url; document.getElementById('assinar-erro').style.display = 'none'; }
+    });
     document.getElementById('assinar-erro').style.display = 'none';
   }
 
-  function getCanvasPos(e) {
-    var rect = assinaturaCanvas.getBoundingClientRect();
-    return { x: (e.clientX - rect.left) * (assinaturaCanvas.width / rect.width), y: (e.clientY - rect.top) * (assinaturaCanvas.height / rect.height) };
-  }
-
-  function onAssinaturaStart(e) {
-    assinaturaDesenhando = true;
-    var pos = getCanvasPos(e);
-    assinaturaCtx.beginPath();
-    assinaturaCtx.arc(pos.x, pos.y, assinaturaCtx.lineWidth / 2, 0, Math.PI * 2);
-    assinaturaCtx.fill();
-    assinaturaCtx.beginPath();
-    assinaturaCtx.moveTo(pos.x, pos.y);
-  }
-
-  function onAssinaturaMove(e) {
-    if (!assinaturaDesenhando) return;
-    var pos = getCanvasPos(e);
-    assinaturaCtx.lineTo(pos.x, pos.y);
-    assinaturaCtx.stroke();
-    assinaturaCtx.beginPath();
-    assinaturaCtx.moveTo(pos.x, pos.y);
-    assinaturaTemPixels = true;
-  }
-
-  function onAssinaturaEnd() { assinaturaDesenhando = false; }
-
   window.limparAssinatura = function() {
-    if (!assinaturaCtx) return;
-    assinaturaCtx.fillStyle = '#fff';
-    assinaturaCtx.fillRect(0, 0, assinaturaCanvas.width, assinaturaCanvas.height);
+    if (assinaturaCtrl) assinaturaCtrl.limpar();
     assinaturaTemPixels = false;
     assinaturaAtual = null;
     document.getElementById('assinar-erro').style.display = 'none';
@@ -2518,7 +2486,7 @@
       btnConfirmar.disabled = true;
     }
     try {
-      assinaturaAtual = assinaturaCanvas.toDataURL('image/png');
+      assinaturaAtual = assinaturaCtrl.url();
       if (window._passagemTexto) {
         // Passagem: save to gss_passagens_servico, then logout
         try {
