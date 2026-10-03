@@ -189,19 +189,6 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 .doc-rodape .btn{width:auto;flex:1}
 .doc-rodape-info{font-size:12.5px;color:var(--text2);flex:1}
 .dd-painel #sigCanvas{height:200px}
-/* ─── ASSINATURA EM TELA CHEIA (horizontal, com linha de apoio) ─── */
-#sig-full{position:fixed;inset:0;z-index:7000;background:#fff;touch-action:none;overflow:hidden}
-.sigf-box{position:absolute;top:0;left:0;display:flex;flex-direction:column;transform-origin:top left;background:#fff}
-.sigf-topo{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)}
-.sigf-tit{flex:1;font-size:15px;font-weight:600;color:var(--text)}
-.sigf-btn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;color:var(--text);font-size:14px;font-weight:600;cursor:pointer}
-.sigf-ok{background:var(--primary);border-color:var(--primary);color:#fff}
-.sigf-area{position:relative;flex:1;min-height:0}
-.sigf-area canvas{position:absolute;inset:0;display:block;touch-action:none;z-index:2}
-.sigf-linha{position:absolute;left:6%;right:6%;top:68%;border-bottom:2px solid #94a3b8;z-index:1;pointer-events:none}
-.sigf-x{position:absolute;left:0;bottom:4px;font-size:26px;line-height:1;color:#94a3b8}
-.sigf-rot{position:absolute;left:6%;right:6%;top:calc(68% + 8px);text-align:center;font-size:12px;color:#94a3b8;z-index:1;pointer-events:none}
-.sigf-msg{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:13px;color:var(--danger);pointer-events:none}
 
 .empty-state{text-align:center;padding:60px 20px;color:var(--text2)}
 .empty-state .ic{color:var(--text3);margin-bottom:10px;display:flex;justify-content:center}
@@ -311,6 +298,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 </div>
 
 <script src="fila.js"></script>
+<script src="gss-assinatura.js"></script>
 <script>
 (function() {
   'use strict';
@@ -818,156 +806,23 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
       '<div class="sig-wrap"><canvas id="sigCanvas"></canvas></div>' +
       '<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-outline" onclick="limparAssinatura()">' + icon('rotate-ccw', 14) + ' Limpar</button></div>' +
       '<div class="foot-actions"><div class="err-box" id="assinatura-err"></div><button class="btn btn-primary" id="btn-enviar-req" onclick="enviarRequisicao()">' + icon('edit', 15) + ' Confirmar e Enviar</button></div>';
-    initSignature();
+    initSignature('Assinatura do responsável');
   };
 
   // ─── ASSINATURA (canvas) ──────────────────────────────────────────────
-  // A caixa (#sigCanvas) é só a prévia: tocar nela abre a assinatura em tela
-  // cheia, na horizontal, com linha de apoio (a linha não entra na imagem).
-  // A imagem final (recortada no traço) fica em sig.dataUrl → sigDataURL().
-  function initSignature() {
-    var canvas = document.getElementById('sigCanvas');
-    var rect = canvas.getBoundingClientRect();
-    var dpr = window.devicePixelRatio || 1;
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    sig.canvas = canvas; sig.ctx = canvas.getContext('2d'); sig.drawing = false; sig.empty = true; sig.dataUrl = null;
-    canvas.style.cursor = 'pointer';
-    canvas.onclick = abrirAssinaturaTelaCheia;
-    desenharPreviaAssinatura();
+  // Assinatura: componente compartilhado (gss-assinatura.js) — a caixa é a
+  // prévia; tocar abre a tela cheia na horizontal com linha de apoio.
+  function initSignature(titulo) {
+    sig.dataUrl = null; sig.empty = true;
+    sig.ctrl = GSSAssinatura.ligar(document.getElementById('sigCanvas'), {
+      titulo: titulo,
+      aoMudar: function(url) { sig.dataUrl = url; sig.empty = !url; }
+    });
   }
 
   function sigDataURL() { return sig.dataUrl; }
 
-  function desenharPreviaAssinatura() {
-    var c = sig.canvas, ctx = sig.ctx;
-    if (!c || !ctx) return;
-    var W = c.width, H = c.height, k = W / (c.getBoundingClientRect().width || W);
-    ctx.clearRect(0, 0, W, H);
-    if (sig.dataUrl) {
-      var img = new Image();
-      img.onload = function() {
-        var esc = Math.min((W * 0.9) / img.width, (H * 0.8) / img.height);
-        var w = img.width * esc, h = img.height * esc;
-        ctx.clearRect(0, 0, W, H);
-        ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
-      };
-      img.src = sig.dataUrl;
-      return;
-    }
-    var yLinha = H * 0.68;
-    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5 * k;
-    ctx.setLineDash([6 * k, 5 * k]);
-    ctx.beginPath(); ctx.moveTo(W * 0.08, yLinha); ctx.lineTo(W * 0.92, yLinha); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = '#94a3b8'; ctx.font = (18 * k) + 'px sans-serif';
-    ctx.fillText('✕', W * 0.08, yLinha - 8 * k);
-    ctx.fillStyle = '#64748b'; ctx.font = '600 ' + (15 * k) + 'px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('Toque aqui para assinar', W / 2, H * 0.4);
-    ctx.textAlign = 'left';
-  }
-
-  function abrirAssinaturaTelaCheia() {
-    if (document.getElementById('sig-full')) return;
-    var ov = document.createElement('div');
-    ov.id = 'sig-full';
-    ov.innerHTML = '<div class="sigf-box">' +
-      '<div class="sigf-topo"><span class="sigf-tit">Assine sobre a linha</span>' +
-      '<button type="button" class="sigf-btn" data-a="limpar">' + icon('rotate-ccw', 15) + ' Limpar</button>' +
-      '<button type="button" class="sigf-btn" data-a="cancelar">Cancelar</button>' +
-      '<button type="button" class="sigf-btn sigf-ok" data-a="ok">' + icon('check-circle', 15) + ' Concluir</button></div>' +
-      '<div class="sigf-area"><canvas></canvas><div class="sigf-linha"><span class="sigf-x">✕</span></div><div class="sigf-rot">Assinatura</div></div>' +
-      '<div class="sigf-msg"></div></div>';
-    document.body.appendChild(ov);
-    var box = ov.querySelector('.sigf-box'), area = ov.querySelector('.sigf-area'), cv = ov.querySelector('canvas'), msg = ov.querySelector('.sigf-msg');
-    var ctx = cv.getContext('2d'), girado = false, riscou = false, desenhando = false;
-    var toque = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-
-    // Em pé: gira a área 90° (a pessoa vira o celular). Deitado: tela normal.
-    function montar() {
-      if (riscou) return; // não apaga uma assinatura em andamento
-      var vw = window.innerWidth, vh = window.innerHeight;
-      girado = vh > vw;
-      box.style.width = (girado ? vh : vw) + 'px';
-      box.style.height = (girado ? vw : vh) + 'px';
-      box.style.transform = girado ? 'translateX(' + vw + 'px) rotate(90deg)' : 'none';
-      var dpr = window.devicePixelRatio || 1;
-      cv.width = area.offsetWidth * dpr; cv.height = area.offsetHeight * dpr;
-      cv.style.width = area.offsetWidth + 'px'; cv.style.height = area.offsetHeight + 'px';
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#0f172a';
-    }
-    montar();
-    window.addEventListener('resize', montar);
-    // Quando o navegador permite (Android em tela cheia), gira a tela de verdade.
-    if (toque) {
-      try {
-        var fs = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
-        if (fs && fs.then) fs.then(function() { return screen.orientation && screen.orientation.lock ? screen.orientation.lock('landscape') : null; })
-          .then(function() { setTimeout(montar, 250); }).catch(function() {});
-      } catch (e) {}
-    }
-
-    function ponto(e) {
-      var r = cv.getBoundingClientRect();
-      return girado ? { x: e.clientY - r.top, y: r.right - e.clientX } : { x: e.clientX - r.left, y: e.clientY - r.top };
-    }
-    cv.addEventListener('pointerdown', function(e) {
-      e.preventDefault(); desenhando = true; riscou = true; msg.textContent = '';
-      try { cv.setPointerCapture(e.pointerId); } catch (x) {}
-      var p = ponto(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 0.1, p.y + 0.1); ctx.stroke();
-    });
-    cv.addEventListener('pointermove', function(e) {
-      if (!desenhando) return;
-      e.preventDefault();
-      var p = ponto(e); ctx.lineTo(p.x, p.y); ctx.stroke();
-    });
-    function soltar() { desenhando = false; }
-    cv.addEventListener('pointerup', soltar);
-    cv.addEventListener('pointercancel', soltar);
-
-    function fechar() {
-      window.removeEventListener('resize', montar);
-      ov.remove();
-      try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
-      try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function() {}); } catch (e) {}
-    }
-
-    // Recorta a imagem no traço (com margem): preenche melhor os campos do PDF.
-    function recortada() {
-      var W = cv.width, H = cv.height, d = ctx.getImageData(0, 0, W, H).data;
-      var x0 = W, y0 = H, x1 = -1, y1 = -1;
-      for (var y = 0; y < H; y += 2) for (var x = 0; x < W; x += 2) {
-        if (d[(y * W + x) * 4 + 3] > 10) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-      }
-      if (x1 < 0) return null;
-      var m = Math.round(12 * (window.devicePixelRatio || 1));
-      x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(W - 1, x1 + m); y1 = Math.min(H - 1, y1 + m);
-      var out = document.createElement('canvas');
-      out.width = x1 - x0 + 1; out.height = y1 - y0 + 1;
-      out.getContext('2d').drawImage(cv, x0, y0, out.width, out.height, 0, 0, out.width, out.height);
-      return out.toDataURL('image/png');
-    }
-
-    ov.querySelector('.sigf-topo').addEventListener('click', function(e) {
-      var b = e.target.closest('[data-a]');
-      if (!b) return;
-      var a = b.getAttribute('data-a');
-      if (a === 'limpar') { riscou = false; montar(); return; }
-      if (a === 'cancelar') { fechar(); return; }
-      var url = riscou ? recortada() : null;
-      if (!url) { msg.textContent = 'Assine sobre a linha antes de concluir.'; return; }
-      sig.dataUrl = url; sig.empty = false;
-      fechar();
-      desenharPreviaAssinatura();
-    });
-  }
-
-  window.limparAssinatura = function() {
-    sig.dataUrl = null;
-    sig.empty = true;
-    desenharPreviaAssinatura();
-  };
+  window.limparAssinatura = function() { if (sig.ctrl) sig.ctrl.limpar(); };
 
   // ─── ENVIAR ───────────────────────────────────────────────────────────
   window.enviarRequisicao = async function() {
@@ -1217,7 +1072,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
       '<div class="sig-wrap"><canvas id="sigCanvas"></canvas></div>' +
       '<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-outline" onclick="limparAssinatura()">' + icon('rotate-ccw', 14) + ' Limpar</button></div>' +
       '<div class="foot-actions"><div class="err-box" id="assinatura-err"></div><button class="btn btn-primary" id="btn-enviar-epi" onclick="enviarEntregaEpi()">' + icon('edit', 15) + ' Confirmar e Enviar</button></div>';
-    initSignature();
+    initSignature('Assinatura de ' + epiColaborador.nome);
   };
 
   window.enviarEntregaEpi = async function() {
@@ -1393,7 +1248,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
     div.id = 'unif-painel';
     div.innerHTML = html;
     document.body.appendChild(div);
-    if (podeEntregar) initSignature();
+    if (podeEntregar) initSignature('Assinatura de ' + (p.nome_colaborador || ''));
   };
 
   window.confirmarEntregaUnif = async function(id) {
@@ -1808,7 +1663,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
       '<div class="sig-wrap"><canvas id="sigCanvas"></canvas></div>' +
       '<button class="btn btn-outline" style="margin-top:8px" onclick="limparAssinatura()">' + icon('rotate-ccw', 14) + ' Limpar assinatura</button>';
     if (btn) btn.disabled = jaAssinou;
-    initSignature();
+    initSignature('Assinatura de ' + epiColaborador.nome);
   }
 
   function posicaoAtual() {
