@@ -297,6 +297,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   </main>
 </div>
 
+<script src="gss-sessao.js" data-edge="https://ihjtgyijvaszuwvvnnas.supabase.co/functions/v1" data-chave="gss_token_requisicoes"></script>
 <script src="fila.js"></script>
 <script src="gss-assinatura.js"></script>
 <script>
@@ -486,10 +487,21 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
 
   window.sair = function() {
     localStorage.removeItem(SESSION_KEY);
+    window.GSSSessao.limpar();
     usuarioLogado = null;
     podeAlternar = false;
     document.getElementById('app-shell').classList.remove('active');
     document.getElementById('login-screen').style.display = 'flex';
+  };
+
+  // Sessão vencida ou recusada pelas Edge Functions (gss-sessao.js): volta ao
+  // login avisando. Pedidos na fila offline ficam guardados e saem depois.
+  window.GSSSessao.aoExpirar = function() {
+    if (document.getElementById('login-screen').style.display === 'flex') return;
+    window.sair();
+    var errEl = document.getElementById('login-erro');
+    errEl.textContent = 'Sua sessão expirou. Entre novamente — os pedidos guardados no aparelho serão enviados.';
+    errEl.style.display = 'block';
   };
 
   // ─── LOGIN ────────────────────────────────────────────────────────────
@@ -515,8 +527,10 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
         return;
       }
       usuarioLogado = body.user;
+      window.GSSSessao.definir(body.token);
       salvarSessao();
       verificarAcessoOutroSistema();
+      if (window.GSSReqFila) window.GSSReqFila.processar();
       if (usuarioLogado.primeiro_acesso) {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('trocar-senha-screen').classList.add('active');
@@ -978,18 +992,24 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
   };
 
   // Lista de colaboradores ativos da empresa guardada no aparelho (renovada 1x
-  // por dia com internet): a busca do EPI funciona sem sinal. O REST devolve
-  // no máximo 1000 linhas por vez, então pagina.
+  // por dia com internet): a busca do EPI funciona sem sinal. Vem da req-epis
+  // (com sessão) em páginas de 1000.
   var COLAB_VALIDADE_MS = 24 * 60 * 60 * 1000;
+  function buscarColaboradoresServidor(filtro) {
+    return fetch(SUPABASE_EDGE + '/req-epis', {
+      method: 'POST', headers: headersJson(),
+      body: JSON.stringify(Object.assign({ action: 'listar-colaboradores' }, filtro))
+    }).then(function(r) {
+      if (!r.ok) throw new Error('Erro ' + r.status);
+      return r.json();
+    }).then(function(body) { return body.colaboradores || []; });
+  }
   async function baixarColaboradores(filial) {
     if (navigator.onLine === false || GSSReqCache.idade('colab_' + filial) < COLAB_VALIDADE_MS) return;
     try {
       var todos = [];
       for (var offset = 0; offset < 50000; offset += 1000) {
-        var url = SUPABASE_URL + '/rest/v1/req_colaboradores_ref?select=re,nome&filial=eq.' + filial + '&ativo=eq.true&order=nome&limit=1000&offset=' + offset;
-        var resp = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
-        if (!resp.ok) return;
-        var pagina = await resp.json();
+        var pagina = await buscarColaboradoresServidor({ filial: filial, offset: offset });
         todos = todos.concat(pagina);
         if (pagina.length < 1000) break;
       }
@@ -1017,10 +1037,7 @@ svg.icon{flex-shrink:0;vertical-align:-3px}
         epiColabResultados = local;
       } else {
         try {
-          var orFiltro = '(nome.ilike.*' + termo + '*,re.ilike.*' + termo + '*)';
-          var url = SUPABASE_URL + '/rest/v1/req_colaboradores_ref?select=re,nome&filial=eq.' + epiEmpresaFilial + '&ativo=eq.true&or=' + encodeURIComponent(orFiltro) + '&order=nome&limit=10';
-          var resp = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
-          epiColabResultados = await resp.json() || [];
+          epiColabResultados = await buscarColaboradoresServidor({ filial: epiEmpresaFilial, termo: termo });
         } catch (e) {
           // Caiu a internet no meio: usa a lista guardada.
           epiColabResultados = buscarColaboradorLocal(termo);

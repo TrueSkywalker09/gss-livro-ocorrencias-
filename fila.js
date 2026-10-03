@@ -81,7 +81,9 @@
     });
   }
 
-  function semRede(e) { return !e || !e.status || e.status >= 500; }
+  // Sem rede, erro do servidor ou sessão vencida (401): o pedido fica na fila.
+  // No 401 o gss-sessao.js leva ao login; o reenvio sai com o token novo.
+  function semRede(e) { return !e || !e.status || e.status >= 500 || e.status === 401; }
 
   // Envia a fila em ordem; para no primeiro erro de rede para não inverter.
   function processar() {
