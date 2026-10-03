@@ -140,7 +140,9 @@
     });
   }
 
-  function semRede(e) { return !e || !e.status; }
+  // 401 = sessão vencida: tratado como "sem rede" para nada sair da fila — o
+  // gss-sessao.js leva ao login e o reenvio sai com o token novo.
+  function semRede(e) { return !e || !e.status || e.status === 401; }
 
   // ─── PAUSA (interromper / retomar) ────────────────────────────────────────
   // Mesma regra do servidor: pausada = última pausa sem retomada.

@@ -335,6 +335,7 @@
   </style>
   <link rel="stylesheet" href="ronda.css"/>
   <link rel="stylesheet" href="gss-web.css"/>
+  <script src="gss-sessao.js" data-edge="https://xyfllrcdrcvjimzwbfsm.supabase.co/functions/v1" data-chave="gss_token_livro"></script>
   <script src="gss-assinatura.js"></script>
 </head>
 <body>
@@ -1297,6 +1298,7 @@
         return;
       }
       usuarioLogado = user;
+      window.GSSSessao.definir(body.token);
       salvarSessao();
       verificarAcessoOutroSistema();
       if (user.primeiro_acesso) {
@@ -1339,7 +1341,6 @@
         showErro(erroEl, body.error || 'Erro ao salvar nova senha.');
         return;
       }
-      usuarioLogado.senha_hash = body.senha_hash;
       usuarioLogado.primeiro_acesso = false;
       salvarSessao();
       await carregarLivros(usuarioLogado);
@@ -2699,6 +2700,7 @@
     ocorrenciasDashboard = [];
     acessosLocalDashboard = [];
     limparSessao();
+    window.GSSSessao.limpar();
     document.getElementById('login-input').value = '';
     document.getElementById('senha-input').value = '';
     document.getElementById('senha-input').type = 'password';
@@ -2707,6 +2709,14 @@
     document.getElementById('login-erro').style.display = 'none';
     showScreen('login-screen');
     document.getElementById('login-input').focus();
+  };
+
+  // Sessão vencida ou recusada pelas Edge Functions (gss-sessao.js): volta ao
+  // login avisando — o colaborador entra de novo e segue de onde parou.
+  window.GSSSessao.aoExpirar = function() {
+    if (document.getElementById('login-screen').style.display === 'flex') return;
+    window.fazerLogout();
+    showErro(document.getElementById('login-erro'), 'Sua sessão expirou. Entre novamente.');
   };
 
   // ─── PONTE PARA O MÓDULO DE RONDA (ronda.js) ───────────────────────────
