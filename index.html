@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Livro de Ocorrências — GSS</title>
+  <title>App GSS</title>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -346,9 +346,9 @@
   <div class="lg-marca">
     <div><span class="lg-logo"><img src="logo-gss.png" alt="GSS"/></span></div>
     <div>
-      <div class="lg-titulo">Livro de Ocorrências</div>
-      <div class="lg-unidade">GSS RJ — Acesso Restrito</div>
-      <p class="lg-texto">Ocorrências, passagem de serviço e rondas do posto — num só lugar.</p>
+      <div class="lg-titulo">App GSS</div>
+      <div class="lg-unidade">Acesso do colaborador</div>
+      <p class="lg-texto">Comunicados, documentos e as ferramentas do seu posto — num só lugar.</p>
     </div>
     <div class="lg-marca-rodape">GSS Segurança · GSS Serviços</div>
   </div>
@@ -409,6 +409,8 @@
     <p id="livros-subtitulo">Selecione o livro de ocorrência</p>
   </div>
   <div id="livros-user-info" class="user-bar" style="display:none"></div>
+  <!-- App GSS (app-gss.js): comunicados e documentos, para todo colaborador. -->
+  <div id="app-gss-secao"></div>
   <div id="rondas-secao"></div>
   <div class="livros-secao-titulo hidden" id="livros-secao-titulo" style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin:6px 0 -6px"></div>
   <div class="livros-grid" id="livros-lista"></div>
@@ -1093,6 +1095,7 @@
   // chega às Requisições sem passar por ele. Mesma regra do botão da barra
   // lateral (habilitado_outro_sistema).
   function renderAtalhoRequisicoes() {
+    if (window.GSSApp) window.GSSApp.atualizarHub();
     var el = document.getElementById('requisicoes-secao');
     if (!el) return;
     renderVersaoApp();
@@ -1135,7 +1138,7 @@
     var t = document.getElementById('livros-secao-titulo');
     if (!t) return;
     t.innerHTML = icon('clipboard', 14) + ' Livro de Ocorrências';
-    t.classList.toggle('hidden', !hubAtual.livros || !(hubAtual.rondas || podeAlternar));
+    t.classList.toggle('hidden', !hubAtual.livros || !(window.GSSApp || hubAtual.rondas || podeAlternar));
   }
 
   window.irParaOutroSistema = function() {
@@ -1386,7 +1389,8 @@
       // Espera a verificação de acesso no máximo 4 s (sinal ruim não trava).
       if (livros.length === 0 && rondas.length === 1) {
         await Promise.race([acessoVerificado, new Promise(function(r) { setTimeout(r, 4000); })]);
-        if (!podeAlternar) {
+        var selos = window.GSSApp ? await window.GSSApp.selos() : null;
+        if (!podeAlternar && !(selos && (selos.comunicados || selos.documentos))) {
           window.GSSRonda.abrirDireto(user, rondas[0]);
           return;
         }
@@ -1402,12 +1406,12 @@
     hubAtual = { rondas: 0, livros: 0 };
     renderAtalhoRequisicoes();
     document.getElementById('livros-secao-titulo').classList.add('hidden');
-    document.getElementById('livros-titulo').textContent = 'Livros Disponíveis';
-    document.getElementById('livros-subtitulo').textContent = 'Selecione o livro de ocorrência';
+    document.getElementById('livros-titulo').textContent = window.GSSApp ? 'Início' : 'Livros Disponíveis';
+    document.getElementById('livros-subtitulo').textContent = window.GSSApp ? 'Comunicados e documentos da empresa' : 'Selecione o livro de ocorrência';
     var infoEl = document.getElementById('livros-user-info');
     infoEl.innerHTML = '<span>' + icon('user', 13) + 'Olá <strong>' + escapeHtml(user.nome) + '</strong></span>';
     infoEl.style.display = 'flex';
-    document.getElementById('livros-lista').innerHTML =
+    document.getElementById('livros-lista').innerHTML = window.GSSApp ? '' :
       '<div class="no-livro"><div class="no-livro-icon">' + icon('inbox', 44) + '</div>' +
       '<h3 style="font-size:16px;font-weight:700;margin-bottom:8px">Nenhum Livro Disponível</h3>' +
       '<p style="font-size:13px;color:var(--text2)">Você não possui livro cadastrado.<br/>Contate o administrador.</p></div>';
@@ -2767,5 +2771,6 @@
 </script>
 <script src="app-nativo.js"></script>
 <script src="ronda.js"></script>
+<script src="app-gss.js"></script>
 </body>
 </html>

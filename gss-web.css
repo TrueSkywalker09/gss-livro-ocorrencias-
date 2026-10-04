@@ -203,3 +203,27 @@ body.com-painel .detalhe-screen .detalhe-body{flex:1;overflow-y:auto}
 .lg-emp button.ativo{border-color:var(--focus);background:var(--brand-100);color:var(--brand-700);font-weight:600;box-shadow:inset 0 0 0 1px var(--focus)}
 .lg-legado{align-self:center;margin-top:14px;padding:4px;background:none;border:0;color:var(--ink-muted);font-size:13px;text-decoration:underline;cursor:pointer}
 .lg-legado:hover{color:var(--ink)}
+
+/* App GSS (F4): comunicados e documentos do colaborador. */
+.app-gss-screen{flex-direction:column;min-height:100vh;width:100%;padding:16px 20px 32px;max-width:760px;margin:0 auto}
+.ag-topo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.ag-topo h1{font-size:20px;font-weight:700;margin:0;color:var(--text)}
+.ag-voltar{width:38px;height:38px;display:grid;place-items:center;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);cursor:pointer}
+.ag-vazio{padding:40px 16px;text-align:center;color:var(--text2);font-size:14px}
+.ag-erro{color:var(--danger)}
+.ag-card .livro-item-icon{color:var(--primary)}
+.ag-selo{position:absolute;top:14px;right:14px;min-width:22px;height:22px;padding:0 7px;border-radius:11px;background:var(--danger,#dc2626);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
+.ag-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer}
+.ag-item-novo{border-color:var(--primary);box-shadow:inset 3px 0 0 var(--primary)}
+.ag-item-tit{font-weight:700;font-size:15px;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ag-item-sub{font-size:12px;color:var(--text2);margin-top:4px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.ag-item-prev{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.4}
+.ag-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.ag-novo{background:var(--primary-light,#e0e7ff);color:var(--primary)}
+.ag-pend{background:var(--warning-bg,#fef3c7);color:var(--warning,#b45309)}
+.ag-doc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
+.ag-doc h2{font-size:18px;font-weight:700;margin:0 0 12px;color:var(--text)}
+.ag-texto{font-size:15px;line-height:1.55;color:var(--text);white-space:normal;word-wrap:break-word}
+.ag-img{display:block;max-width:100%;margin-top:14px;border-radius:10px;border:1px solid var(--border)}
+.ag-btn{display:inline-flex;align-items:center;gap:8px;justify-content:center;margin-top:16px;width:100%;text-decoration:none}
+.ag-ok{margin-top:16px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--success);background:var(--success-bg);border:1px solid var(--success-border);padding:10px 12px;border-radius:10px}
